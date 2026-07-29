@@ -1,0 +1,2268 @@
+
+
+--- PAGE 1 ---
+Lift Off Exams
+Software Requirements Specification (SRS)
+Version: 2 Founder Draft
+1. Project Overview
+1.1 Purpose
+Lift Off Exams is a DECA exam preparation platform designed to help users practice for official
+DECA examinations through quizzes, tests, and infinite-run study modes.
+The platform will support seeded test generation using Test IDs, a centralized question
+repository, question reporting, administrative question management, and user accounts.
+The platform is designed to generate tests from a global question repository rather than storing
+completed tests.
+2. User Roles
+2.1 Standard User
+Can:
+● Create an account
+● Login
+● Generate tests
+● Retake tests using Test ID
+● Take quizzes
+● Take tests
+● Take infinite runs
+● Report questions
+
+--- PAGE 2 ---
+● View scores
+Cannot:
+● Access admin tools
+● Upload questions
+● Review reported questions
+● Manage question content
+2.2 Administrator
+Can:
+● Upload questions individually
+● Bulk upload questions
+● Edit questions
+● Delete questions
+● Review reported questions
+● Manage tags
+● Generate administrator access links
+Access is granted through private administrator links.
+3. Authentication System
+3.1 User Accounts
+Users shall create accounts using:
+● Email address
+● Password
+Future implementation may begin with placeholder authentication but production releases shall
+store account credentials within a secure authentication system.
+
+--- PAGE 3 ---
+4. Question Classification System
+4.1 Global Question Repository
+The system shall maintain a single global question repository.
+Questions shall not belong to separate question banks.
+All tests shall draw from this repository.
+4.2 Tag System
+Questions shall be organized through tags.
+Every question must contain:
+● Exactly one difficulty tag
+● At least one DECA subject tag
+Difficulty Tags
+● Easy
+● Medium
+● Hard
+Default DECA Subject Tags
+● Marketing
+● Entrepreneurship
+● Finance
+● Business Management
+● Hospitality
+Topic Tags
+Questions may contain any number of additional topic tags.
+The Current List of Tags is:
+● Business Law
+● Communications
+
+--- PAGE 4 ---
+● Customer Relations
+● Economics
+● Emotional Intelligence
+● Entrepreneurship
+● Financial Analysis
+● Human Resources Management
+● Information Management
+● Marketing
+● Operations
+● Professional Development
+● Project Management
+● Quality Management
+● Risk Management
+● Strategic Management
+● Knowledge Management
+● Marketing-Information Management
+● Promotion
+● Selling
+● Financial-Information Management
+● Market Planning
+● Product/Service Management
+Administrators may create additional tags.
+5. Test Generation
+5.1 Test IDs
+Every generated test shall receive a unique 12-character alphanumeric Test ID.
+Example:
+AB4F9D72K1PQ
+Requirements:
+● Uppercase letters and numbers
+● Used as a deterministic seed
+● Used to recreate the same question pool
+● Tests themselves are not stored
+
+--- PAGE 5 ---
+5.2 Seed Logic
+The Test ID shall determine:
+● Question selection
+● Original question ordering
+The Test ID shall not determine:
+● Timer settings
+● Test mode
+● Scoreboard settings
+Entering a previous Test ID shall recreate the same question pool and original question order.
+Users may choose to:
+● Retake the original test exactly
+● Generate a shorter test using the same seeded question pool
+● Randomize question order while keeping the same seeded question pool
+Randomizing question order shall not create a new Test ID.
+5.3 Tag Filtering
+Users may select one or more tags when generating a test.
+Tag filtering shall use AND logic.
+Example:
+Selected Tags:
+● Marketing
+● Hard
+Only questions containing BOTH tags shall be eligible.
+If insufficient questions exist to generate the requested test length, the system shall notify the
+user and offer:
+● Generate a shorter test using all matching questions
+
+--- PAGE 6 ---
+● Modify selected tags
+● Return to test creation
+6. Question Management System
+6.1 Manual Question Upload
+Administrators shall have access to a question creation form.
+Question Field
+Large textbox.
+Label:
+Question
+Answer Choices
+Four textboxes:
+● A
+● B
+● C
+● D
+Correct Answer Dropdown
+Options:
+● A
+● B
+● C
+● D
+Selected option corresponds to the correct answer.
+Explanation Field
+Large textbox.
+
+--- PAGE 7 ---
+Label:
+Explanation
+Tag Selection
+Administrators shall assign:
+● One difficulty tag
+● One or more subject tags
+● Zero or more topic tags
+6.2 Bulk Upload System
+Administrators shall be able to upload JSON files.
+Accepted format:
+{
+"partitionKey":"",
+"questionText":"",
+"options":[
+{"id":"A","text":""},
+{"id":"B","text":""},
+{"id":"C","text":""},
+{"id":"D","text":""}
+],
+"correctOptionId":"",
+"explanation":"",
+"difficulty":"",
+"tags":[]
+}
+Requirements:
+● Validate formatting
+● Reject malformed JSON
+● Import multiple questions from one file
+● Display upload results summary
+
+--- PAGE 8 ---
+7. Testing Modes
+7.1 Quiz Mode
+Purpose:
+Practice
+Rules:
+● Untimed
+● Default 20 questions
+● Immediate results after completion
+● Questions may be reviewed after submission
+7.2 Test Mode
+Purpose:
+Simulation of DECA exams
+Rules:
+● Timed
+● User configurable question count
+● Default: 50 questions
+● Maximum: 100 questions
+● Results displayed after completion
+7.3 Infinite Run Mode
+Purpose:
+Endless practice
+Rules:
+● No predefined ending
+● New question generated when advancing
+
+--- PAGE 9 ---
+● Score continuously updated
+Hardcore Option
+If enabled:
+● Any incorrect answer automatically ends the test and goes to the results screen
+8. Timer System
+8.1 Configuration
+Before starting a test users may configure:
+● Hours
+● Minutes
+● Seconds
+8.2 Restrictions
+During a test:
+● Timer cannot be changed
+8.3 Visibility
+Users may:
+● Show timer
+● Hide timer
+Timer location:
+Top-right corner
+
+--- PAGE 10 ---
+9. Navigation System
+Each question shall appear on its own page.
+Navigation controls shall appear in the bottom-right corner.
+Buttons:
+● Previous
+● Next
+Rules:
+Quiz Mode:
+● Previous allowed
+Test Mode:
+● Previous allowed
+Infinite Run:
+● Previous disabled
+● Once the user chooses to move on, a question is locked and the correct answer is
+shown.
+● Users cannot return to previously answered questions
+10. Scoreboard
+Position:
+Corner of screen
+Format:
+[number correct / total answered]
+Example:
+18 / 24
+Requirements:
+
+--- PAGE 11 ---
+● Updates after every answer
+● Toggle visibility on/off
+● See section 19.1
+11. Question Reporting System
+11.1 Report Button
+Location:
+Bottom-left corner
+Button:
+!
+11.2 Report Categories
+Users may report a question as:
+● Too difficult
+● Incorrect answer
+● Strange wording
+● Other
+11.3 Additional Comments
+A textbox shall be provided for additional information.
+Reports shall be submitted to the administrator review queue.
+12. Results System
+
+--- PAGE 12 ---
+Upon completion display:
+● Total score
+● Percentage score
+● Questions correct
+● Questions incorrect
+Optional:
+● Explanations for missed questions
+13. Admin Portal
+13.1 Access Method
+The admin portal shall not be publicly listed.
+The Admin role is attached to the admin accounts, no private link required, but the log in is only
+limited to the people who have the admin role.
+13.2 Admin Features
+Question Management
+● Add questions
+● Edit questions
+● Delete questions
+Tag Management
+● Create tags
+● Edit tags
+● Delete tags
+Bulk Upload
+● Upload JSON files
+● Validate imports
+
+--- PAGE 13 ---
+Report Review
+View:
+● Report reason
+● User comments
+● Associated question
+13.3 Email-Based Admin Links
+Administrators may generate links tied to specific email addresses.
+Example workflow:
+1. Admin enters email
+2. System generates secure token
+3. Tokenized admin link is created
+4. Link grants administrator access to that email owner
+14. Data Storage Rules
+The system shall store:
+● User accounts
+● Question repository
+● Tags
+● Reported questions
+● Test IDs
+The system shall not store:
+● Generated tests
+● Completed test contents
+● Individual test sessions
+Question content may change over time as administrators edit questions.
+Test IDs preserve question selection and ordering but do not preserve historical snapshots of
+question content.
+
+--- PAGE 14 ---
+Recreated tests shall use the current version of questions contained within the seeded question
+pool.
+Tests must be reproducible from:
+● Test ID
+● Current question repository state
+15. UI Requirements
+The design system should integrate with components from 21st.dev.
+Primary goals:
+● Modern
+● Fast
+● Mobile responsive
+● Minimal distractions
+● Dark mode support
+● Keyboard accessibility
+16. Success Criteria
+The project is considered complete when users can:
+1. Create accounts.
+2. Generate seeded exams.
+3. Retake exams using Test IDs.
+4. Take quizzes, tests, and infinite runs.
+5. Report bad questions.
+6. View scores.
+7. Administrators can manage questions and reports.
+8. Administrators can manage tags.
+9. Tests regenerate accurately from the same Test ID.
+10. The system functions on desktop and mobile devices.
+
+--- PAGE 15 ---
+17. Account System
+17.1 Authentication Methods
+Users shall be able to create accounts using:
+● Email address and password
+● Google Sign-In
+17.2 Demo Mode
+The platform shall provide a demo mode that does not require an account.
+Demo mode shall contain five administrator-created tests:
+● Marketing Demo Test
+● Finance Demo Test
+● Management Demo Test
+● Hospitality Demo Test
+● Entrepreneurship Demo Test
+Rules:
+● Each demo test contains 5 questions.
+● Demo tests may be taken an unlimited number of times.
+● Demo tests do not count toward user test limits.
+● Demo users cannot generate tests.
+● Demo users cannot save results.
+● Demo users cannot access analytics.
+Upon completion of a demo test, users shall be prompted to create an account to save and
+review results.
+17.3 Free User Limits
+Free users shall be limited to:
+● 3 generated tests per week
+● 10 total tests per week
+
+--- PAGE 16 ---
+● The generated tests that free users generate can only be up to 40 questions in length
+● The other tests that user takes in the week are cut off after 40 questions (if they reach
+that length)
+Of the 10 total tests:
+● Maximum 3 may be newly generated tests
+● Maximum 7 may be tests accessed through Test IDs
+Free users may use a maximum of 3 topic tags when generating a test.
+Free users can use the Demo tests as much as they want
+17.4 Premium Membership
+Premium members shall receive:
+● Unlimited generated tests
+● Unlimited Test ID usage
+● Unlimited tags
+● Advanced analytics
+● Question explanations
+● Study mode features
+● Early access to future platform features
+Subscription pricing:
+● $9.99 per month
+● $99.99 per year
+18. Enhanced Question Classification
+System
+18.1 Category Tags
+Every question shall contain exactly one category tag.
+Supported category tags:
+
+--- PAGE 17 ---
+● Marketing
+● Finance
+● Management
+● Hospitality
+● Entrepreneurship
+18.2 Difficulty Tags
+Every question shall contain exactly one difficulty tag.
+Supported difficulty values:
+● Easy
+● Medium
+● Hard
+18.3 Topic Tags
+Questions may contain zero or more topic tags.
+Examples:
+● Promotion
+● Sales
+● Pricing
+● Advertising
+● Customer Relations
+● Accounting
+Administrators may create additional topic tags.
+19. Enhanced Test Generation
+19.1 Test Creation Flow
+When generating a test, users shall complete the following steps:
+
+--- PAGE 18 ---
+Step 1
+Select Category
+Options:
+● Marketing
+● Finance
+● Management
+● Hospitality
+● Entrepreneurship
+Step 2
+Select Difficulty
+Options:
+● Easy
+● Medium
+● Hard
+Multiple difficulty selections shall be allowed.
+Only questions matching the selected difficulty values shall be eligible.
+Step 3
+Select Topic Tags
+Users may select topic tags based on available questions.
+Weak topic areas shall be highlighted and displayed first.
+Step 4
+Select Question Count
+After category, difficulty, and topic filters are selected:
+The system shall calculate the number of matching questions.
+Example:
+30 matching questions found.
+Users may only request a number less than or equal to the available question count.
+
+--- PAGE 19 ---
+Step 5
+Select Timer Settings
+Options:
+● Default (60 Minutes)
+● No Timer
+● Custom Timer
+Step 6
+Study Mode (Premium Only)
+Premium users may enable:
+● Show Correct Answers During Test
+● Show Explanations During Test
+19.2 Insufficient Questions
+If insufficient questions exist for the requested filters:
+The platform shall notify the user and offer:
+● Reduce test length
+● Modify selected tags
+● Return to test creation
+19.3 DECA Exam Blueprints
+Purpose
+The platform shall support official DECA exam blueprint presets.
+Blueprint presets allow users to automatically generate tests that mirror the distribution of
+performance indicators used in actual DECA exams.
+Users shall be able to select a blueprint during test creation instead of manually selecting tags.
+
+--- PAGE 20 ---
+When a blueprint is selected:
+● Category tags shall be automatically configured.
+● Topic tag distributions shall be automatically configured.
+● Question counts per topic shall follow the selected blueprint.
+● Users shall not need to manually select tags.
+Blueprint-generated tests shall use the same question repository as all other tests.
+Blueprint Selection
+The test generation page shall provide a Blueprint Preset dropdown.
+Example options:
+Business Administration Core
+● District Test
+● State Test
+● ICDC Test
+Marketing Cluster Exam
+● District Test
+● State Test
+● ICDC Test
+Finance Cluster Exam
+● District Test
+● State Test
+● ICDC Test
+Hospitality and Tourism Cluster Exam
+● District Test
+● State Test
+● ICDC Test
+Entrepreneurship Cluster Exam
+● District Test
+
+--- PAGE 21 ---
+● State Test
+● ICDC Test
+Business Administration Core Blueprint
+District Test
+● Business Law — 5
+● Communications — 7
+● Customer Relations — 2
+● Economics — 6
+● Emotional Intelligence — 9
+● Entrepreneurship — 1
+● Financial Analysis — 7
+● Human Resources Management — 1
+● Information Management — 7
+● Knowledge Management — 6
+● Marketing — 1
+● Operations — 21
+● Professional Development — 6
+● Project Management — 6
+● Quality Management — 3
+● Risk Management — 4
+● Strategic Management — 8
+State Test
+● Business Law — 5
+● Communications — 6
+● Customer Relations — 2
+● Economics — 5
+● Emotional Intelligence — 8
+● Financial Analysis — 6
+● Information Management — 6
+● Knowledge Management — 7
+● Marketing — 1
+● Operations — 24
+● Professional Development — 5
+● Project Management — 7
+● Quality Management — 4
+● Risk Management — 5
+● Strategic Management — 9
+
+--- PAGE 22 ---
+ICDC Test
+● Business Law — 5
+● Communications — 6
+● Customer Relations — 1
+● Economics — 4
+● Emotional Intelligence — 6
+● Financial Analysis — 5
+● Information Management — 6
+● Knowledge Management — 8
+● Marketing — 1
+● Operations — 26
+● Professional Development — 4
+● Project Management — 8
+● Quality Management — 5
+● Risk Management — 5
+● Strategic Management — 10
+Marketing Cluster Blueprint
+District Test
+● Business Law — 2
+● Channel Management — 5
+● Communications — 5
+● Customer Relations — 2
+● Economics — 6
+● Emotional Intelligence — 9
+● Entrepreneurship — 1
+● Financial Analysis — 6
+● Human Resources Management — 1
+● Information Management — 5
+● Market Planning — 4
+● Marketing — 1
+● Marketing-Information Management — 11
+● Operations — 6
+● Pricing — 3
+● Product/Service Management — 11
+● Professional Development — 6
+● Promotion — 9
+● Selling — 6
+● Strategic Management — 1
+
+--- PAGE 23 ---
+State Test
+● Business Law — 2
+● Channel Management — 6
+● Communications — 4
+● Customer Relations — 2
+● Economics — 5
+● Emotional Intelligence — 8
+● Financial Analysis — 5
+● Information Management — 4
+● Market Planning — 4
+● Marketing — 1
+● Marketing-Information Management — 14
+● Operations — 5
+● Pricing — 4
+● Product/Service Management — 13
+● Professional Development — 5
+● Promotion — 11
+● Selling — 7
+ICDC Test
+● Business Law — 1
+● Channel Management — 7
+● Communications — 3
+● Customer Relations — 1
+● Economics — 4
+● Emotional Intelligence — 6
+● Financial Analysis — 4
+● Information Management — 3
+● Market Planning — 5
+● Marketing — 1
+● Marketing-Information Management — 16
+● Operations — 4
+● Pricing — 4
+● Product/Service Management — 15
+● Professional Development — 5
+● Promotion — 13
+● Selling — 8
+Finance Cluster Blueprint
+
+--- PAGE 24 ---
+District Test
+● Business Law — 7
+● Communications — 5
+● Customer Relations — 5
+● Economics — 6
+● Emotional Intelligence — 9
+● Entrepreneurship — 1
+● Financial Analysis — 24
+● Financial-Information Management — 9
+● Human Resources Management — 1
+● Information Management — 6
+● Marketing — 1
+● Operations — 6
+● Professional Development — 13
+● Risk Management — 6
+● Strategic Management — 1
+State Test
+● Business Law — 8
+● Communications — 4
+● Customer Relations — 5
+● Economics — 5
+● Emotional Intelligence — 8
+● Financial Analysis — 28
+● Financial-Information Management — 10
+● Information Management — 5
+● Marketing — 1
+● Operations — 5
+● Professional Development — 14
+● Risk Management — 7
+ICDC Test
+● Business Law — 7
+● Communications — 3
+● Customer Relations — 4
+● Economics — 4
+● Emotional Intelligence — 6
+● Financial Analysis — 30
+● Financial-Information Management — 12
+● Information Management — 5
+● Marketing — 1
+
+--- PAGE 25 ---
+● Operations — 4
+● Professional Development — 15
+● Risk Management — 9
+Hospitality and Tourism Cluster Blueprint
+Districts Test
+● Business Law — 3
+● Communications — 5
+● Customer Relations — 8
+● Economics — 6
+● Emotional Intelligence — 9
+● Entrepreneurship — 1
+● Financial Analysis — 8
+● Human Resources Management — 2
+● Information Management — 14
+● Knowledge Management — 0
+● Market Planning — 1
+● Marketing — 1
+● Operations — 13
+● Pricing — 1
+● Product/Service Management — 6
+● Professional Development — 8
+● Promotion — 2
+● Quality Management — 1
+● Risk Management — 1
+● Selling — 7
+● Strategic Management — 3
+State Test
+● Business Law — 3
+● Communications — 4
+● Customer Relations — 9
+● Economics — 6
+● Emotional Intelligence — 9
+● Entrepreneurship — 0
+● Financial Analysis — 7
+● Human Resources Management — 1
+
+--- PAGE 26 ---
+● Information Management — 15
+● Knowledge Management — 1
+● Market Planning — 1
+● Marketing — 1
+● Operations — 13
+● Pricing — 1
+● Product/Service Management — 7
+● Professional Development — 7
+● Promotion — 3
+● Quality Management — 1
+● Risk Management — 1
+● Selling — 8
+● Strategic Management — 2
+ICDC Test
+● Business Law — 2
+● Communications — 3
+● Customer Relations — 9
+● Economics — 5
+● Emotional Intelligence — 7
+● Entrepreneurship — 0
+● Financial Analysis — 7
+● Human Resources Management — 1
+● Information Management — 15
+● Knowledge Management — 1
+● Market Planning — 2
+● Marketing — 2
+● Operations — 13
+● Pricing — 1
+● Product/Service Management — 9
+● Professional Development — 6
+● Promotion — 3
+● Quality Management — 1
+● Risk Management — 2
+● Selling — 9
+● Strategic Management — 2
+Entrepreneurship Cluster Blueprint
+
+--- PAGE 27 ---
+District Test
+● Business Law — 4
+● Channel Management – 3
+● Communications — 1
+● Customer Relations — 1
+● Economics — 3
+● Emotional Intelligence — 6
+● Entrepreneurship — 14
+● Financial Analysis — 10
+● Human Resources Management — 5
+● Information Management — 4
+● Marketing — 1
+● Marketing-Information Management – 2
+● Market Planning – 5
+● Operations — 13
+● Pricing – 2
+● Product/ Service Management — 4
+● Professional Development — 5
+● Promotion — 6
+● Quality Management — 1
+● Risk Management — 2
+● Selling — 1
+● Strategic Management — 7
+State Test
+● Business Law — 4
+● Channel Management – 3
+● Customer Relations — 1
+● Economics — 3
+● Emotional Intelligence — 6
+● Entrepreneurship — 13
+● Financial Analysis — 9
+● Human Resources Management — 4
+● Information Management — 3
+● Marketing — 1
+● Marketing-Information Management – 3
+● Market Planning – 6
+● Operations — 13
+● Pricing – 3
+● Product/ Service Management — 4
+● Professional Development — 5
+● Promotion — 7
+
+--- PAGE 28 ---
+● Quality Management — 1
+● Risk Management — 3
+● Selling — 1
+● Strategic Management — 7
+ICDC Test
+● Business Law — 3
+● Channel Management – 3
+● Communications — 1
+● Customer Relations — 1
+● Economics — 2
+● Emotional Intelligence — 4
+● Entrepreneurship — 14
+● Financial Analysis — 11
+● Human Resources Management — 4
+● Information Management — 2
+● Marketing — 1
+● Marketing-Information Management – 2
+● Market Planning – 6
+● Operations — 14
+● Pricing – 2
+● Product/ Service Management — 4
+● Professional Development — 4
+● Promotion — 8
+● Quality Management — 1
+● Risk Management — 4
+● Selling — 1
+● Strategic Management — 8
+Blueprint Availability
+Blueprint presets shall be available to all users.
+Blueprint-generated tests shall count toward normal test limits.
+Blueprints shall not bypass free-tier restrictions.
+19.4 Blueprint Validation System
+
+--- PAGE 29 ---
+Purpose
+The platform shall continuously validate all blueprint presets against the current question
+repository.
+The purpose of this system is to ensure that blueprint-generated tests can be created accurately
+using available questions.
+Validation Rules
+For every blueprint, the system shall calculate:
+● Required question count per topic
+● Available question count per topic
+● Repository coverage percentage
+Example:
+Marketing State Blueprint
+Topic Required Available Status
+Promotion 11 27 Valid
+Pricing 4 12 Valid
+Selling 7 5 Insufficient
+Blueprint Status
+Each blueprint shall display one of the following statuses:
+Valid
+All required topic counts can be satisfied.
+
+--- PAGE 30 ---
+Example:
+Marketing State Blueprint
+Status: Valid
+Warning
+The blueprint can be generated, but one or more topics are approaching minimum availability.
+Example:
+Marketing State Blueprint
+Status: Warning
+A warning threshold shall be configurable by administrators.
+Invalid
+One or more required topic counts cannot be satisfied.
+Example:
+Marketing State Blueprint
+Status: Invalid
+Invalid blueprints shall identify the missing topic areas.
+Administrator Dashboard
+Administrators shall have access to a Blueprint Validation page.
+The page shall display:
+
+--- PAGE 31 ---
+● Blueprint Name
+● Status
+● Coverage Percentage
+● Missing Topics
+● Total Available Questions
+● Total Required Questions
+Coverage Percentage
+Coverage shall be calculated as:
+Available Questions
+÷
+Required Questions
+×
+100
+Example:
+Promotion
+Required: 11
+Available: 22
+Coverage: 200%
+Repository Health Overview
+The admin portal shall provide a repository health summary.
+Example:
+
+--- PAGE 32 ---
+Marketing State Blueprint
+97% Coverage
+Missing:
+2 Selling Questions
+Finance ICDC Blueprint
+100% Coverage
+Hospitality District Blueprint
+84% Coverage
+Missing:
+3 Customer Relations Questions
+5 Operations Questions
+Question Recommendations
+The system shall automatically identify the highest-priority question gaps.
+Example:
+Recommended Question Development
+1. Selling (+12 Questions Needed)
+2. Financial Analysis (+8 Questions Needed)
+
+--- PAGE 33 ---
+3. Risk Management (+5 Questions Needed)
+This list shall be generated dynamically based on blueprint requirements and current repository
+availability.
+Blueprint Generation Restrictions
+If a blueprint is marked Invalid:
+The platform shall notify the user before generation.
+Example:
+This blueprint cannot currently be generated accurately because insufficient questions exist in
+one or more required topics.
+Options:
+● Generate Using Available Questions
+● Return to Test Creation
+Administrators may configure whether invalid blueprints are:
+● Allowed with warnings
+● Blocked entirely
+Altering Blueprints
+Administrators can also manually edit the blueprints themselves.
+20. Updated Test ID System
+20.1 Test ID Storage
+The platform shall store:
+● Test ID
+● Category
+
+--- PAGE 34 ---
+● Difficulty Selection
+● Topic Tags
+● Question Count
+● Pool Timestamp
+● Creation Date
+The platform shall not store:
+● Generated test contents
+● Question lists
+● User answer sessions
+20.2 Test ID Lifetime
+Test IDs shall never expire.
+Any user possessing a valid Test ID shall be able to access the associated test.
+20.3 Question Pool Model
+Test IDs shall reference a reproducible question pool.
+The question pool to generate new tests shall be reshuffled periodically.
+A Test ID shall recreate the same question pool associated with the original generation
+timestamp.
+20.4 Test ID Preview Page
+When a user enters a Test ID:
+The platform shall display a preview page containing:
+● Category
+● Difficulty
+● Topic Tags
+● Original Question Count
+● Creation Date
+
+--- PAGE 35 ---
+● Test ID
+20.5 Free User Test ID Access
+Free users may:
+● View the preview page
+● Launch the test using default settings
+Free users may not modify:
+● Question Count
+● Timer Settings
+● Study Mode Settings
+20.6 Premium User Test ID Access
+Premium users may customize:
+● Question Count
+● Timer Settings
+● Study Mode Settings
+Premium users may not modify:
+● Category
+● Difficulty
+● Topic Tags
+These values are defined by the Test ID and determine the associated question pool.
+20.7 Updated Questions
+If a question has been corrected or updated after a Test ID was generated:
+The platform shall display a warning message.
+Example:
+
+--- PAGE 36 ---
+One or more questions in this test have been updated since this test was generated. Continue
+with caution or generate an updated version.
+Available actions:
+● Continue
+● Generate Updated Test
+The original Test ID shall remain valid.
+21. Test Taking Interface
+21.1 Header Layout
+Top-left:
+● Question X/Y
+Top-center:
+● Timer
+● Hide Timer Button
+21.2 Timer Visibility
+Users may hide the timer during a test.
+If hidden:
+● The timer shall remain hidden.
+● The timer shall automatically reappear during the final five minutes.
+21.3 Question Layout
+Questions shall be displayed in the center of the page.
+Answer choices shall be displayed vertically:
+
+--- PAGE 37 ---
+● A
+● B
+● C
+● D
+Additional option:
+● I Don't Know
+The I Don't Know option exists to improve analytics accuracy by distinguishing uncertainty from
+guessing.
+22. Results System
+22.1 Free User Results
+Upon completion, free users shall see:
+● Score
+● Percentage Score
+● Time Spent
+For each question:
+● Submitted Answer
+● Correct Answer
+Free users shall not receive explanations.
+22.2 Premium User Results
+Upon completion, premium users shall see:
+● Score
+● Percentage Score
+● Time Spent
+For each question:
+
+--- PAGE 38 ---
+● Submitted Answer
+● Correct Answer
+● Explanation
+Explanations shall be displayed for both correct and incorrect answers.
+22.3 Tag Analytics
+The platform shall calculate performance by topic tag.
+Example:
+● Promotion: 90%
+● Sales: 45%
+● Customer Relations: 75%
+Users shall be able to review associated questions from each tag.
+Premium users shall receive explanations within tag analytics.
+22.4 Difficulty Analytics
+The platform shall calculate performance by difficulty.
+Example:
+● Easy: 95%
+● Medium: 72%
+● Hard: 41%
+Users shall be able to review associated questions from each difficulty category.
+Premium users shall receive explanations within difficulty analytics.
+23. Analytics System
+23.1 Free Analytics
+
+--- PAGE 39 ---
+Free users shall have access to:
+● Number of Tests Taken
+● Average Score Over the Previous 30 Days
+23.2 Premium Analytics
+Premium users shall have access to:
+● Number of Tests Taken
+● Average Score
+● Highest Score
+● Lowest Score
+● Score History Graph
+● Weak Area Analysis
+● Questions that were answered “I Don’t Know” and what categories those questions were
+Supported timeframes:
+● Past 24 Hours
+● Past Week
+● Past Month
+● Past Year
+● Lifetime
+● Custom Date Range
+23.3 Highest and Lowest Scores
+For highest and lowest scoring tests, the platform shall display:
+● Category
+● Difficulty
+● Topic Tags
+23.4 Weak Area Detection
+The platform shall identify weak-performing topic tags based on the percentage of incorrect
+questions that have the tag, and questions that were answered “I Don’t Know”.
+
+--- PAGE 40 ---
+Weak tags shall:
+● Be highlighted within analytics
+● Be prioritized during test generation
+Example:
+● ⚠ Sales
+● ⚠ Promotion
+● ⚠ Pricing
+These tags shall appear before stronger tags during test creation.
+24. History System
+24.1 History Page
+The platform shall provide a history page containing previously completed tests.
+The page shall use a card-based layout similar to Google Drive.
+Each card shall display:
+● Date
+● Test ID
+● Score
+● Category
+● Difficulty
+● Topic Tags
+24.2 Test Review
+Selecting a history card shall open a full breakdown of the test.
+Contents:
+● Results
+● Submitted Answers
+● Correct Answers
+
+--- PAGE 41 ---
+● Analytics
+Premium users shall additionally receive:
+● Explanations
+25. Dashboard
+25.1 Dashboard Purpose
+The dashboard shall serve as the primary navigation hub after login.
+25.2 Dashboard Actions
+The dashboard shall provide access to:
+● Generate Test
+● Enter Test ID
+● Analytics
+● History
+● Account Settings
+The dashboard shall not display quick statistics by default.
+26. Landing Page
+26.1 Landing Page Content
+The landing page shall display:
+Lift Off Exams
+Learn Smarter, Not Harder
+Primary actions:
+
+--- PAGE 42 ---
+● Take Demo Test
+● Sign Up
+● Log In
+26.2 Design Goal
+The landing page shall remain simple and focused on getting users into the platform quickly.
+The page shall avoid unnecessary complexity and excessive scrolling.
+27. Infinite Run Mode
+27.1 Purpose
+Infinite Run Mode shall provide continuous practice without a predefined ending.
+27.2 Availability
+Free Users:
+● No access to Infinite Run Mode.
+Premium Users:
+● Full access to Infinite Run Mode.
+27.3 Configuration
+Before starting an Infinite Run session, users may select:
+● Category
+● Difficulty
+● Topic Tags
+Infinite Run Mode shall not support blueprint selection.
+
+--- PAGE 43 ---
+Reason:
+● DECA blueprints are designed around fixed exam distributions.
+● Infinite Run Mode has no predefined ending and therefore cannot accurately follow
+blueprint structures.
+27.4 Rules
+● Questions shall be generated continuously.
+● Difficult and Topic Tags should be seen as recommendations, not as set in stone
+features due to the infinite run generating continuously
+● No fixed question count shall exist.
+● Previous questions cannot be revisited.
+● Answered questions become locked.
+● The score shall update after every answer.
+27.5 Hardcore Mode
+If Hardcore Mode is enabled:
+● Any incorrect answer resets the current streak to zero.
+● Any time a user selects “I Don’t Know” the current steak resets to zero.
+27.6 Statistics
+The platform shall track:
+● Current Streak
+● Best Streak
+● Total Questions Answered
+● Correct Percentage
+● Incorrect Percentage
+● I Don’t Know Percentage
+27.7 Test IDs
+
+--- PAGE 44 ---
+Infinite Run sessions shall receive unique Test IDs.
+History entries shall identify the activity type as:
+● Infinite Run
+28. Activity Types
+28.1 Available Modes
+The platform shall provide four activity types:
+● Test
+● Quiz
+● Infinite Run
+● Demo Test
+28.2 Test IDs
+All generated activities shall receive unique Test IDs.
+This includes:
+● Tests
+● Quizzes
+● Infinite Runs
+28.3 History Identification
+The History page shall clearly display the activity type associated with each Test ID.
+Examples:
+● Test
+● Quiz
+● Infinite Run
+
+--- PAGE 45 ---
+29. Account Management
+29.1 Account Settings
+Users shall be able to:
+● Change Email
+● Change Password
+● Connect Google Account
+● Disconnect Google Account
+29.2 Subscription Settings
+Users shall be able to:
+● Upgrade Membership
+● Cancel Membership
+● Manage Auto-Renewal
+● View Billing History
+29.3 Notification Settings
+Users shall be able to enable or disable:
+● Test Completion Notifications
+● Weekly Progress Reports
+● Billing Notifications
+● Account Notifications
+29.4 Account Deletion
+Users shall be able to permanently delete their account through Account Settings.
+
+--- PAGE 46 ---
+Users shall not be required to submit a deletion request.
+29.5 Deletion Confirmation
+Before account deletion is finalized:
+● Users shall receive multiple confirmation warnings.
+● Users shall be notified through all enabled communication channels.
+Examples:
+● Email
+● SMS/Text Message
+29.6 Deletion Effects
+Upon confirmation:
+● User account shall be permanently deleted.
+● Saved results shall be deleted.
+● Saved analytics shall be deleted.
+● Active subscriptions shall be canceled.
+● Access to premium features shall be removed.
+30. Platform Analytics
+30.1 User Statistics
+Administrators and Owners shall be able to view:
+● Total Users
+● Active Users
+● New Users
+● Premium Users
+● Free Users
+
+--- PAGE 47 ---
+30.2 Demo Conversion Analytics
+Administrators and Owners shall be able to view:
+● Total Demo Users
+● Demo Completion Rate
+● Demo-to-Account Conversion Rate
+● Percentage of Demo Users Who Did Not Create Accounts
+Example:
+● Demo Users: 10,000
+● Accounts Created: 2,700
+● Conversion Rate: 27%
+● Non-Conversion Rate: 73%
+30.3 Test Statistics
+Administrators and Owners shall be able to view:
+● Tests Generated
+● Tests Completed
+● Average Score
+● Most Used Categories
+● Most Used Tags
+30.4 Question Statistics
+Administrators and Owners shall be able to view:
+● Most Answered Questions
+● Most Missed Questions
+● Most Reported Questions
+● Highest I Don’t Know Usage
+
+--- PAGE 48 ---
+30.5 Revenue Statistics
+Owners shall be able to view:
+● Monthly Revenue
+● Annual Revenue
+● Active Subscriptions
+● Renewal Rate
+● Churn Rate
+31. Question Report Review Workflow
+31.1 Report Queue
+Reported questions shall enter an administrator review queue.
+Each report shall contain:
+● Report Reason
+● User Comments
+● Associated Question
+● Submission Date
+31.2 Administrator Actions
+Administrators may:
+● Dismiss Report
+● Edit Question
+● Retire Question
+● Mark Report Resolved
+Questions shall never be permanently deleted.
+31.3 Resolution Tracking
+
+--- PAGE 49 ---
+The system shall record:
+● Reviewing Administrator
+● Action Taken
+● Resolution Date
+31.4 Priority Review System
+Questions receiving repeated reports shall be automatically flagged.
+Example:
+● High Priority Review
+Flagging thresholds shall be configurable by Administrators and Owners.
+31.5 Report History
+The platform shall maintain a history of all reports and resolutions for auditing and moderation
+purposes.
+32. Question Lifecycle System
+32.1 Question States
+Questions shall exist in one of the following states:
+● Active
+● Retired
+Questions shall never be permanently deleted.
+32.2 Active Questions
+Active questions may:
+● Appear in generated tests
+● Appear in blueprint tests
+
+--- PAGE 50 ---
+● Appear in Quiz Mode
+● Appear in Infinite Run Mode
+● Appear in Test ID question pools
+32.3 Retired Questions
+Retired questions:
+● Shall not appear in newly generated content
+● Shall remain available for historical Test IDs
+● Shall remain visible in completed tests
+● Shall remain visible in historical analytics
+32.4 Modified Questions
+Administrators may edit existing questions.
+If a question associated with an existing Test ID is modified:
+● The updated version shall become the active version.
+● Users shall receive a warning before opening the associated Test ID.
+● Users may continue or generate a new test.
+33. Weekly Usage Tracking
+33.1 Reset Schedule
+Free-tier limits shall reset every Monday at 12:00 AM in the user’s local timezone.
+33.2 Reset Counters
+The following counters shall reset weekly:
+● Generated Tests Used
+● Test ID Tests Used
+● Total Tests Used
+
+--- PAGE 51 ---
+33.3 Dashboard Visibility
+Free users shall see weekly usage statistics prominently displayed on the dashboard.
+Displayed values shall include:
+● Generated Tests Used
+● Test ID Tests Used
+● Total Tests Used
+● Time Remaining Until Reset
+Premium users shall not see usage limits.
+34. Subscription and Billing System
+34.1 Subscription Plans
+Premium subscriptions shall be offered at:
+● $9.99 per month
+● $99.99 per year
+34.2 Auto-Renewal
+Subscriptions shall automatically renew by default.
+Users may disable auto-renewal through Account Settings.
+34.3 Cancellation
+When a subscription is cancelled:
+● Premium access shall remain active until the current billing period ends.
+● The user shall receive cancellation notifications.
+● The account shall automatically downgrade to the Free tier at the end of the billing
+period.
+
+--- PAGE 52 ---
+34.4 Failed Payments
+If payment fails:
+● The user shall be notified.
+● Automatic payment retries shall occur.
+● A grace period shall be provided.
+● The account shall downgrade to the Free tier if payment is not successfully collected.
+34.5 Payment Processing
+The preferred payment processor shall be Stripe.
+34.6 Suspension Billing Rules
+If a Premium user is suspended:
+● Subscription billing shall be paused for the duration of the suspension.
+● Premium benefits shall be disabled while suspended.
+● Billing shall automatically resume when the suspension ends.
+● The user shall be notified when billing is paused and resumed.
+This ensures suspended users are not charged while unable to access platform features.
+35. Notification System
+35.1 Default Enrollment
+Users shall be automatically enrolled in platform notifications.
+Users may opt out through Account Settings.
+
+--- PAGE 53 ---
+35.2 Notification Channels
+Notifications may be sent through:
+● Email
+● SMS/Text Message
+Notifications shall be sent to all enabled channels.
+35.3 Test Completion Notifications
+Users shall receive notifications after completing tests.
+Notifications may include:
+● Score
+● Strongest Topics
+● Weakest Topics
+● Time Spent
+35.4 Weekly Progress Reports
+Weekly progress reports shall be enabled by default.
+Reports may include:
+● Tests Taken
+● Average Score
+● Strongest Topics
+● Weakest Topics
+Users may opt out.
+36. Question Quality Metrics
+36.1 Tracked Metrics
+The platform shall track:
+● Times Answered
+● Correct Percentage
+
+--- PAGE 54 ---
+● Incorrect Percentage
+● I Don’t Know Percentage
+● Report Count
+36.2 Administrator Access
+Administrators and Owners may view aggregate question statistics across all users.
+36.3 Premium User Access
+Premium users may view their own performance statistics by:
+● Category
+● Topic Tag
+● Difficulty
+36.4 Automatic Review Flags
+The platform shall automatically flag questions that may require review.
+Examples include:
+● Extremely low correct rates
+● Extremely high correct rates
+● High report volume
+● High I Don’t Know usage
+36.5 Strength and Weakness Calculations
+Areas of strength and weakness shall be determined using:
+● Percentage Correct
+● Total Questions Answered
+The system shall not determine strengths or weaknesses using percentage alone.
+36.6 Minimum Sample Size Requirement
+
+--- PAGE 55 ---
+A tag must meet a minimum sample size before being eligible for strength or weakness
+calculations.
+The minimum sample size shall be determined proportionally based on expected blueprint
+exposure.
+Example:
+Marketing Test
+100 Questions
+Promotion Questions Per Test:2
+User Takes 5 Tests
+Expected Promotion Exposure
+2x5=10 Questions
+The user must answer at least 10 Promotion questions before Promotion may be classified as a
+strength or weakness.
+36.7 Insufficient Data Handling
+Tags that have not reached the required sample size shall be marked as:
+● Insufficient Data
+Such tags shall not appear in:
+● Strength Rankings
+● Weakness Rankings
+● Recommendation Systems
+until the sample requirement has been met.
+36.8 "I Don't Know" Scoring Rules
+Selecting I Don't Know shall:
+● Count as an incorrect answer
+● Reduce final score percentage
+● Be included in strength calculations
+● Be included in weakness calculations
+
+--- PAGE 56 ---
+The platform shall treat I Don't Know as equivalent to an incorrect response for scoring
+purposes.
+36.9 "I Don't Know" Analytics
+The platform shall separately track:
+● Total I Don't Know Responses
+● I Don't Know Percentage
+● I Don't Know Responses by Category
+● I Don't Know Responses by Tag
+● I Don't Know Responses by Difficulty
+36.10 Confidence Analysis
+Analytics shall include a dedicated section showing areas where users most frequently selected
+I Don't Know.
+This section shall be separate from traditional strength and weakness rankings and shall be
+used to identify:
+● Knowledge Gaps
+● Low-Confidence Topics
+● Topics Requiring Additional Study
+This allows the platform to distinguish between:
+● Topics answered incorrectly
+● Topics the user explicitly admitted not knowing.
+37. Duplicate Question Detection
+37.1 Duplicate Review
+When creating or uploading questions, the system shall compare new questions against existing
+questions.
+
+--- PAGE 57 ---
+37.2 Similarity Warnings
+Potential duplicates shall generate administrator warnings.
+Administrators may:
+● Upload Anyway
+● Edit Question
+● Cancel Upload
+37.3 Duplicate Dashboard
+Administrators shall have access to a duplicate review dashboard displaying:
+● Similarity Score
+● Existing Question
+● Potential Duplicate
+● Creation Dates
+38. Search and Filtering System
+38.1 Administrator Search
+Administrators may search questions using:
+● Keyword
+● Category
+● Topic Tag
+● Difficulty
+● Report Status
+● Question Status
+38.2 Bulk Actions
+Administrators may:
+● Retire Questions
+● Restore Questions
+
+--- PAGE 58 ---
+● Add Tags
+● Remove Tags
+38.3 Premium User Search
+Premium users may search questions using:
+● Keyword
+● Category
+● Topic Tag
+● Difficulty
+Premium users shall not have access to:
+● Report Status
+● Question Status
+38.4 User Question Search
+Users shall be able to search all questions within the platform.
+Search results may be filtered by:
+● Category
+● Topic Tag
+● Difficulty
+● Seen Questions
+● Unseen Questions
+● Correctly Answered Questions
+● Incorrectly Answered Questions
+38.5 Question Search Metadata
+When viewing search results, users shall be shown:
+● Whether the question has previously been seen
+● Number of times the question has been seen
+● Whether the user previously answered correctly
+● Whether the user previously answered incorrectly
+This information shall be displayed alongside each question result.
+
+--- PAGE 59 ---
+39. Abuse Prevention and Moderation
+39.1 Account Protection
+The platform shall support:
+● Email Verification
+● Google Authentication
+● Rate Limiting
+39.2 Account Suspension
+Administrators and Owners may:
+● Suspend Accounts
+● Restore Accounts
+● View Suspension History
+39.3 Suspension Configuration
+When suspending an account, administrators shall specify:
+● Duration
+● Reason
+Examples:
+● 24 Hours
+● 7 Days
+● 30 Days
+● Permanent
+39.4 Suspension Notifications
+Suspended users shall receive notifications, in all channels opted into, containing:
+● Suspension Reason
+
+--- PAGE 60 ---
+● Suspension Duration
+● Suspension Expiration Date (if applicable)
+39.5 Suspension Appeals
+Suspended users shall have the ability to appeal a suspension.
+The suspension notification email shall contain a link to a dedicated appeal page.
+39.6 Appeal Submission
+Users may submit:
+● Written Appeal
+● Supporting Information
+Appeals shall be placed into an administrator review queue.
+39.7 Appeal Review
+Administrators and Owners may:
+● Approve Appeals
+● Deny Appeals
+● Modify Existing Suspensions
+All appeal decisions shall be recorded in the audit log.
+39.8 Active Suspension Management
+Administrators and Owners may modify active suspensions, including:
+● Duration
+● Expiration Date
+● Suspension Reason
+Changes shall be communicated to the affected user.
+
+--- PAGE 61 ---
+40. Export System
+40.1 Free Users
+Free users shall not have export functionality.
+40.2 Premium Users
+Premium users may export:
+● Test Results
+● Analytics Reports
+● Performance History
+Supported formats:
+● PDF
+● CSV
+41. Blueprint Validation and Modification
+41.1 Blueprint Shortfalls
+If insufficient questions exist for a blueprint requirement:
+● Available matching questions shall be used first.
+● Remaining slots shall be filled using the closest related category questions.
+● Users shall be notified.
+41.2 Blueprint Editing
+Administrators and Owners may:
+● Create Blueprints
+● Edit Blueprints
+● Retire Blueprints
+● Restore Blueprints
+
+--- PAGE 62 ---
+41.3 Historical Blueprint Preservation
+Blueprint modifications shall only affect future test generation.
+Previously generated tests shall remain unchanged.
+41.4 Blueprint Change Warnings
+If a user opens a Test ID associated with an outdated blueprint version:
+● A warning shall be displayed.
+● Users may continue with the original version.
+● Users may generate a new version using the updated blueprint.
+42. Future Enhancements
+42.1 Future Features
+The following features are planned for future releases and are not required for Version
+1:
+● Leaderboards
+● Study Streaks
+● Achievement System
+● Multiplayer Study Rooms
+● Official DECA Roleplay Simulator
+● Public User Profiles
+● Team/Classroom Functionality
+● Advanced Recommendation Systems
+43. Success Criteria
+43.1 User Functionality
+The project shall be considered successful when users can:
+● Create accounts
+
+--- PAGE 63 ---
+● Log into accounts
+● Generate Tests
+● Generate Quizzes
+● Generate Infinite Runs
+● Enable Hardcore Mode
+● Generate Blueprint-Based Exams
+● Retake activities using Test IDs
+● Review previous results
+● Access analytics and performance tracking
+● Report problematic questions
+43.2 Free Tier Functionality
+The project shall be considered successful when free users can:
+● Access Demo Mode
+● Generate up to 3 tests per week
+● Complete up to 10 total tests per week
+● Access Test IDs within weekly limits
+● View results and historical test data
+43.3 Premium Functionality
+The project shall be considered successful when premium users can:
+● Access unlimited tests
+● Access Infinite Run Mode
+● Customize Test ID-generated exams
+● View advanced analytics
+● Export data
+● Access explanations
+● Access premium search tools
+43.4 Administrative Functionality
+The project shall be considered successful when administrators can:
+● Upload questions
+● Bulk upload questions
+
+--- PAGE 64 ---
+● Edit questions
+● Retire questions
+● Manage reports
+● Manage tags
+● Manage blueprints
+● Suspend accounts
+● View platform analytics
+44. Performance Requirements
+44.1 Application Performance
+The platform shall target:
+● Dashboard loading under 2 seconds
+● Test generation under 3 seconds
+● Test ID recreation under 3 seconds
+● Analytics page loading under 5 seconds
+44.2 Authentication Performance
+The platform shall allow users to:
+● Create accounts
+● Log in successfully
+● Maintain active sessions
+● Recover account access
+44.3 Scalability Requirements
+The platform shall support:
+● At least 700 concurrent users
+● Simultaneous test generation requests
+● Simultaneous analytics access
+● Simultaneous account authentication requests
+
+--- PAGE 65 ---
+45. Security Requirements
+45.1 Authentication Security
+The platform shall:
+● Store passwords using secure hashing
+● Require secure authentication
+● Require email verification
+● Support Google authentication
+45.2 Administrative Security
+The platform shall:
+● Restrict admin tools to authorized accounts
+● Protect administrative routes
+● Log administrative actions
+● Prevent unauthorized access to moderation tools
+45.3 Platform Security
+The platform shall implement:
+● Rate limiting
+● Session protection
+● Protection against automated abuse
+● Secure data transmission
+45.4 Payment Security
+The platform shall:
+● Utilize Stripe for payment processing
+● Avoid storing raw payment information
+● Utilize Stripe-managed subscription handling
+46. Audit and Change Tracking
+
+--- PAGE 66 ---
+46.1 Question Tracking
+The platform shall log:
+● Question Creation
+● Question Modification
+● Question Retirement
+● Question Restoration
+46.2 Blueprint Tracking
+The platform shall log:
+● Blueprint Creation
+● Blueprint Modification
+● Blueprint Retirement
+● Blueprint Restoration
+● Blueprint Version Changes
+● Blueprint Rollbacks
+46.3 Account Moderation Tracking
+The platform shall log:
+● Account Suspensions
+● Account Restorations
+● Suspension Duration Changes
+● Suspension Reasons
+46.4 Subscription Tracking
+The platform shall log:
+● Subscription Purchases
+● Subscription Renewals
+● Subscription Cancellations
+● Subscription Downgrades
+● Failed Payments
+
+--- PAGE 67 ---
+46.5 Administrative Action Tracking
+The platform shall log all significant administrator actions, including:
+● Question Uploads
+● Question Edits
+● Question Retirements
+● Question Restorations
+● Report Resolutions
+● Tag Modifications
+● Blueprint Modifications
+● Blueprint Version Updates
+● User Suspensions
+● User Restorations
+● Admin Access Changes
+46.6 Audit Log Entries
+Audit entries shall include:
+● Date and Time
+● Administrator Account
+● Action Performed
+● Affected Resource
+● Reason (if applicable)
+46.7 Blueprint Version Retention
+Blueprint versions shall be retained until superseded by an official DECA blueprint
+update.
+Administrators and Owners may:
+● View previous versions
+● Restore previous versions
+● Compare version changes
+Blueprint versioning shall be maintained independently for each blueprint category.
+
+--- PAGE 68 ---
+46.8 Blueprint Update Rules
+Blueprint edits shall be grouped into a single version update.
+A version update may contain multiple blueprint changes.
+Example:
+● Promotion updated
+● Selling updated
+Both changes shall be recorded under the same version change event.
+46.9 Test Generation Audit Records
+The platform shall retain sufficient metadata to determine:
+● Blueprint Version Used
+● Test ID Used
+● Category Selected
+● Tags Selected
+● Difficulty Selected
+● Generation Timestamp
+for historical review and troubleshooting purposes.
+47. Infinite Run Mode
+47.1 Question Selection Priority
+Infinite Run Mode shall prioritize questions in the following order:
+1. Unseen Questions
+2. Weak Area Questions
+3. Previously Seen Questions
+The system shall attempt to maximize exposure to new content before introducing
+repeated questions.
+
+--- PAGE 69 ---
+47.2 Early Learning Phase
+For a user's first 10,000 questions answered across the platform, Infinite Run Mode shall
+strongly prioritize unseen questions.
+The system shall attempt to avoid presenting duplicate questions whenever sufficient unseen
+questions are available.
+Question history shall include:
+● Tests
+● Quizzes
+● Infinite Runs
+● Blueprint Exams
+47.3 Weak Area Identification Requirements
+A topic shall not be classified as a strength or weakness until it satisfies the minimum
+sample-size requirements defined in the analytics system.
+Before these requirements are met, Infinite Run Mode shall primarily prioritize unseen
+questions.
+47.4 Weak Area Focus Mode
+Once sufficient performance data exists, users may enable Weak Area Focus Mode.
+When enabled, the system shall prioritize:
+● Weak Areas
+● Unseen Questions within Weak Areas
+Example:
+
+--- PAGE 70 ---
+Weak Area:
+Promotion
+Promotion Questions Available:
+50
+Promotion Questions Seen:
+30
+The system shall prioritize the 30 unseen Promotion questions before selecting
+previously seen Promotion questions.
+47.5 Repeat Question Eligibility
+After a user has answered approximately 10,000 questions across the platform:
+● Previously seen questions may re-enter the generation pool.
+● Repetition avoidance shall remain active.
+● Unseen questions shall continue to receive higher priority when available.
+● A user shall only see a repeat question if they have seen all other applicable
+questions to the selected tags have been answered.
+47.6 Repetition Avoidance
+Infinite Run Mode shall utilize the same repetition-avoidance system used by standard
+test generation.
+Questions appearing in recent user activity shall be deprioritized whenever sufficient
+alternative questions exist.
+47.7 Infinite Run Generation Flow
+Question selection shall follow:
+
+--- PAGE 71 ---
+Unseen Questions
+-Weak Area Prioritization (if enabled)
+-Repetition Avoidance
+-Question Selection
+For users without sufficient analytics data:
+Unseen Questions
+-Repetition Avoidance
+-Question Selection
+This creates a natural progression where Infinite Run starts as broad exposure to new
+content and gradually evolves into a personalized remediation tool.
+48. Owner and Admin Governance
+48.1 Owner Accounts
+Owner accounts shall possess all permissions available to Administrators.
+Additionally, Owner accounts shall have authority over governance actions involving
+Administrators and other Owners.
+There shall be no Super Owner account.
+All Owners shall possess equal authority.
+48.2 Owner Creation
+
+--- PAGE 72 ---
+New Owner accounts may only be created through unanimous approval of all active
+Owner accounts.
+Example:
+If 4 Owner accounts exist:
+● 4/4 votes are required to approve a new Owner.
+48.3 Owner Removal
+Owner accounts may be removed through majority approval of active Owner accounts.
+Example:
+If 4 Owner accounts exist:
+● 3 votes are required to remove an Owner.
+48.4 Administrator Creation
+Administrators may not create additional Administrator accounts.
+Creation of an Administrator account shall require approval from at least two Owner
+accounts.
+48.5 Administrator Suspension
+
+--- PAGE 73 ---
+Suspension of an Administrator account shall require approval from at least two Owner
+accounts.
+This rule applies to Version 1 and may be revised in future versions.
+48.6 Owner Override Authority
+Owner accounts may override Administrator actions.
+A single Owner approval shall be sufficient to override an Administrator action or
+modification.
+Owners and Administrators shall otherwise have access to the same platform features
+and analytics.
+48.7 Governance Voting Workflow
+Governance actions requiring votes shall automatically notify all Owner accounts.
+Voting shall remain open until either:
+● The required approval threshold is reached; or
+● The required rejection threshold is reached.
+Upon reaching either threshold, the action shall automatically execute or be rejected.
+
+--- PAGE 74 ---
+49. Question and Blueprint Version
+Management
+49.1 Edit Reasons
+All modifications to questions and exam blueprints shall require a reason before
+changes may be saved.
+49.2 Question Version Retention
+When a question is edited, the immediately previous version shall be retained for three
+days.
+After three days, the previous version shall be permanently removed.
+49.3 Question Reversion
+Administrators and Owners may revert questions to previously stored versions during
+the retention period.
+49.4 Blueprint Version Control
+Blueprint versions shall be retained until an official replacement blueprint is released.
+
+--- PAGE 75 ---
+Blueprint versions shall be independently tracked for each exam blueprint.
+Examples:
+● Marketing
+● Finance
+● Hospitality
+● Entrepreneurship
+● Business Management and Administration
+49.5 Blueprint Version Updates
+Administrators and Owners may create new blueprint versions.
+Updating a blueprint version shall update all blueprint categories contained within that
+version simultaneously.
+Example:
+Version 1.1 updates:
+● Promotion
+● Selling
+● Pricing
+● All other blueprint categories associated with that version
+49.6 Blueprint Reversion
+Administrators may revert blueprint changes made within the previous three days.
+
+--- PAGE 76 ---
+Reverting blueprint versions older than three days shall require Owner approval.
+49.7 Blueprint Retirement
+Previous blueprint versions shall be disabled when replaced by a newer official version.
+50. Account Recovery and Deletion
+50.1 Password Recovery
+Password recovery shall utilize the same authentication provider used for account
+authentication.
+Password reset links shall remain valid for twenty minutes.
+50.2 Contact Information Changes
+Users may maintain both an email address and phone number on their account.
+If either contact method is modified:
+● The previous contact method shall receive a notification.
+● The new contact method shall receive a confirmation notification.
+
+--- PAGE 77 ---
+50.3 Account Deletion Recovery Window
+Deleted accounts shall remain recoverable for three months following deletion.
+50.4 Final Deletion Warning
+One week before permanent deletion, the user shall receive a final notification.
+50.5 Permanent Deletion
+Upon permanent deletion:
+● User account data shall be deleted.
+● Test history shall be deleted.
+● Analytics history shall be deleted.
+Aggregate platform analytics derived from user activity may remain anonymized and
+retained.
+Examples:
+● Incorrect tag counts
+● “I Don’t Know” statistics
+● Aggregate performance metrics
+51. Recommendation System
+
+--- PAGE 78 ---
+51.1 Recommendation Window
+Recommendations shall be generated using recent performance data from
+approximately the previous thirty days.
+51.2 Weak Area Ranking
+Weak areas shall be ranked from lowest-performing category to highest-performing
+category.
+51.3 Recommendation Priority
+The three weakest qualifying areas shall receive recommendation priority.
+These areas shall be highlighted during test creation.
+51.4 Premium Analytics Visibility
+Premium users shall be able to view all tracked categories and performance metrics
+within their analytics dashboard.
+52. Notification System
+
+--- PAGE 79 ---
+52.1 User Notification Controls
+Users may:
+● Opt out of all notifications.
+● Opt out of individual notification categories.
+52.2 Multi-Channel Notifications
+Notifications shall be sent to all communication channels enabled by the user.
+Examples:
+● Email
+● SMS
+52.3 Administrative Broadcast Messaging
+Administrators and Owners may send notifications to user groups.
+Supported audiences include:
+● Entire user base
+● Premium users
+● Free users
+● Demo users
+● Administrators
+● Owners
+
+--- PAGE 80 ---
+52.4 Notification Categories
+Notification categories shall be configurable by Administrators and Owners through the
+administration dashboard.
+Users may opt out of supported notification categories.
+52.5 Performance Report Messaging
+Administrators and Owners may distribute user performance summaries, analytics
+reports, and test-result communications to eligible users.
+53. Question Search System
+53.1 Search Access
+Users shall be permitted to search questions regardless of whether they have
+previously encountered the question.
+53.2 Unseen Question Warning
+Before opening an unseen question, users shall receive a warning indicating that
+viewing the question may impact future practice value.
+
+--- PAGE 81 ---
+53.3 Question Review Options
+When viewing a question, users may choose to:
+● Attempt the question.
+● View the question directly.
+Direct viewing shall display:
+● Tags
+● Correct answer
+● Explanation
+54. Question Reporting Workflow
+54.1 Report Prioritization
+Reported questions shall be prioritized according to report volume.
+Questions with higher report counts shall appear before questions with lower report
+counts.
+54.2 Report Statuses
+Administrators and Owners may assign the following statuses:
+
+--- PAGE 82 ---
+● Valid
+● Invalid
+● Spam
+● Fixed
+● Work In Progress
+54.3 Valid Reports
+Valid reports shall place the question into a correction queue.
+The reporting user shall receive notification that the issue is under review.
+54.4 Invalid Reports
+Invalid reports shall close the report without further action.
+54.5 Spam Reports
+Spam reports may trigger notification to the reporting user regarding misuse of the
+reporting system.
+54.6 Fixed Reports
+
+--- PAGE 83 ---
+When a reported issue is corrected, the reporting user shall receive a thank-you
+notification.
+55. Hardcore Mode
+55.1. Difficulty Restrictions
+Hardcore Mode shall only use:
+● Medium questions
+● Hard questions
+Easy questions shall be excluded.
+55.2 Strike System
+Before beginning Hardcore Mode, users may choose:
+● One-Strike Mode
+● Two-Strike Mode
+● Three-Strike Mode
+55.3 One-Strike Mode
+In One-Strike Mode:
+● Any incorrect answer ends the run.
+
+--- PAGE 84 ---
+● Selecting “I Don’t Know” ends the run.
+55.4 Two-Strike Mode
+In Two-Strike Mode:
+● Incorrect answers generate strikes.
+● “I Don’t Know” generates strikes
+● The run ends after two strikes
+55.5 Three-Strike Mode
+In Three-Strike Mode:
+● Incorrect answers generate strikes.
+● “I Don’t Know” generates strikes.
+● The run ends after three strikes.
+55.6 I Don’t Know Option
+The “I Don’t Know” option shall be independently configurable before starting Hardcore
+Mode.
+Users may enable or disable the option.
+55.7 Manuel Pause
+
+--- PAGE 85 ---
+Hardcore Mode sessions may be paused while a user is in a session
+55.8 Test Recovery
+If a user closes the website or leaves the session:
+● Progress shall be saved.
+● The user shall be offered the option to resume upon return.
+55.9 Hardcore Analytics
+Hardcore statistics shall be tracked independently from normal platform analytics.
+55.10 Streak Tracking
+Hardcore performance shall be measured through streaks.
+A streak shall continue until the user reaches the configured strike limit.
+55.11 Separate Mode Tracking
+Different Hardcore configurations shall maintain independent streak records.
+Example:
+● One-Strike Streak
+
+--- PAGE 86 ---
+● Two-Strike Streak
+● Three-Strike Streak
+These records shall not affect one another.
+56. Blueprint Generation Rules
+56.1 Annual Updates
+Blueprints shall be updated according to official DECA blueprint releases.
+Updates shall generally occur annually.
+56.2 Administrative Control
+Blueprint updates may be performed by Administrators and Owners.
+56.3 Difficulty Handling
+Blueprint-generated exams shall not attempt to balance or moderate question difficulty.
+Question selection shall prioritize blueprint compliance.
+56.4 Blueprint-Based Distribution
+
+--- PAGE 87 ---
+Generated exams shall attempt to proportionally match blueprint category distributions.
+56.5 Repetition Avoidance
+Questions appearing in a user’s previous two tests shall be deprioritized during
+generation whenever sufficient alternatives exist.
+57. Platform Analytics
+57.1 Administrative Analytics Access
+Administrators and Owners shall have access to platform-wide analytics.
+57.2 Platform Performance Metrics
+Administrative analytics may include:
+● Concurrent users
+● Total users
+● Premium users
+● Free users
+● Demo users
+● Subscription conversion rates
+● Churn rate
+
+--- PAGE 88 ---
+● Average revenue per user
+57.3 Platform-Wide Performance Analytics
+Administrators and Owners shall be able to view aggregate versions of user
+performance metrics available within Premium analytics.
+58. Demo User Data Rules
+58.1 Anonymous Demo Usage
+Anonymous demo users shall not have individual performance data permanently stored.
+58.2 Account Conversion
+If a demo user creates an account, demo activity shall thereafter be treated as standard
+account activity.
+59. Authentication and Infrastructure
+59.1 Authentication Provider
+
+--- PAGE 89 ---
+Version 1 shall utilize Supabase Authentication.
+59.2 Database Provider
+Version 1 shall utilize Supabase as the primary database platform.
+59.3 Hosting Provider
+Version 1 shall utilize Microsoft Azure for hosting.
+59.4 Email Provider
+Version 1 shall utilize Resend for email delivery.
+59.5 Payment Processor
+Version 1 shall utilize Stripe for subscription billing and payment processing.
+60. Test Session Rules
+60.1 Session Recovery
+
+--- PAGE 90 ---
+If a user exits during a test, the platform shall prompt the user to resume the active
+session upon returning.
+60.2 Manual Pause
+Users may pause active tests and resume them later. Exiting the test without finishing or
+quitting the test functions the same as a manual pause.
+60.3 Maximum Test Size
+Generated tests shall support a maximum of 250 questions.
+60.4 Category Selection
+Users may select exactly one category when generating a test.
+Examples:
+● Marketing
+● Finance
+● Entrepreneurship
+● Hospitality
+● Business Management and Administration
+
+--- PAGE 91 ---
+60.5 Difficulty Selection
+Users may select one, multiple, or all available difficulty levels.
+60.6 Tag Selection
+Users may select any tags associated with the chosen category.
+61. Username and Display Name
+Moderation
+61.1 Banned Word List
+The administration dashboard shall contain a configurable banned-word list.
+Administrators and Owners may add or remove banned terms.
+61.2 Account Creation With Banned Words
+If a username or display name contains a banned term:
+● The user will not be able to proceed with the user name
+● The user will be notified that the name contains an inappropriate word or phrase
+● The user will be forced to create a new name
+
+--- PAGE 92 ---
+61.3 Name Review System
+If a username or display name contains a banned term:
+● The account shall be flagged for review.
+● The review shall appear within the administration dashboard.
+61.4 Administrative Review
+Administrators and Owners shall be able to review, approve, or modify flagged naming
+violations.

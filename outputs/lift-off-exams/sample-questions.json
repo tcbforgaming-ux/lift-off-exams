@@ -1,0 +1,19 @@
+[
+  {
+    "partition_key": "Marketing",
+    "performance_indicator": "Customer Relations",
+    "question_type": "Multiple Choice",
+    "question_text": "Which action best supports long-term customer retention after a promotional campaign?",
+    "options": [
+      { "id": "A", "text": "Reduce all follow-up contact" },
+      { "id": "B", "text": "Collect feedback and personalize next offers" },
+      { "id": "C", "text": "Change the brand position weekly" },
+      { "id": "D", "text": "Limit service access after purchase" }
+    ],
+    "correct_option_id": "B",
+    "explanation": "Retention improves when the business uses feedback and relevant follow-up to keep value clear after the first interaction.",
+    "difficulty": "Medium",
+    "tags": ["Marketing", "Customer Relations", "Medium"],
+    "question_hash": "mkt-customer-retention-001"
+  }
+]
