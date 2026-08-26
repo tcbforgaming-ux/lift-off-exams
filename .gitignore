@@ -3,6 +3,10 @@
 !.env.example
 
 node_modules/
+.pnpm-store/
+.supabase/
+supabase/.branches/
+supabase/.temp/
 dist/
 build/
 .cache/

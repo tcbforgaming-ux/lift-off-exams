@@ -1,0 +1,10 @@
+dist
+build
+coverage
+node_modules
+outputs
+work
+supabase/.branches
+supabase/.temp
+supabase/functions
+src/lib/supabase/database.types.ts
