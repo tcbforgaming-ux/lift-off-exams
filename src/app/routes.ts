@@ -58,6 +58,16 @@ const DashboardPage = lazy(() =>
     default: module.DashboardPage,
   })),
 );
+const PracticeSetupPage = lazy(() =>
+  import("../pages/app/PracticeSetupPage").then((module) => ({
+    default: module.PracticeSetupPage,
+  })),
+);
+const TestIdPage = lazy(() =>
+  import("../pages/public/TestIdPage").then((module) => ({
+    default: module.TestIdPage,
+  })),
+);
 const QuestionRepositoryPage = lazy(() =>
   import("../pages/admin/QuestionRepositoryPage").then((module) => ({
     default: module.QuestionRepositoryPage,
@@ -134,16 +144,16 @@ export const routes = [
   {
     path: paths.practiceSetup,
     label: "Practice Setup",
-    element: PlaceholderPage,
+    element: PracticeSetupPage,
     navigation: "app",
     auth: "protected",
   },
   {
     path: paths.testId,
     label: "Test ID",
-    element: PlaceholderPage,
-    navigation: "app",
-    auth: "protected",
+    element: TestIdPage,
+    navigation: "public",
+    auth: "public",
   },
   {
     path: paths.teams,

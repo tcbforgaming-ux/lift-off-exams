@@ -622,6 +622,54 @@ export type Database = {
         }
         Relationships: []
       }
+      legacy_test_id_resolutions: {
+        Row: {
+          created_at: string
+          legacy_test_id: string
+          reason: string
+          replacement_test_id: string | null
+          resolution_status: string
+          resolved_at: string
+          resolved_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          legacy_test_id: string
+          reason: string
+          replacement_test_id?: string | null
+          resolution_status: string
+          resolved_at?: string
+          resolved_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          legacy_test_id?: string
+          reason?: string
+          replacement_test_id?: string | null
+          resolution_status?: string
+          resolved_at?: string
+          resolved_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legacy_test_id_resolutions_legacy_test_id_fkey"
+            columns: ["legacy_test_id"]
+            isOneToOne: true
+            referencedRelation: "test_ids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legacy_test_id_resolutions_replacement_test_id_fkey"
+            columns: ["replacement_test_id"]
+            isOneToOne: false
+            referencedRelation: "test_ids"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       name_reviews: {
         Row: {
           created_at: string
@@ -1399,47 +1447,134 @@ export type Database = {
         }
         Relationships: []
       }
+      test_definition_questions: {
+        Row: {
+          content_hash: string
+          created_at: string
+          position: number
+          question_id: string
+          question_updated_at: string
+          stratum_id: string
+          test_definition_id: string
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string
+          position: number
+          question_id: string
+          question_updated_at: string
+          stratum_id: string
+          test_definition_id: string
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string
+          position?: number
+          question_id?: string
+          question_updated_at?: string
+          stratum_id?: string
+          test_definition_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_definition_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_definition_questions_test_definition_id_fkey"
+            columns: ["test_definition_id"]
+            isOneToOne: false
+            referencedRelation: "test_ids"
+            referencedColumns: ["definition_id"]
+          },
+        ]
+      }
       test_ids: {
         Row: {
+          algorithm_version: string | null
           blueprint_snapshot: Json | null
           blueprint_version_id: string | null
+          canonical_seed: string | null
           category: string
+          completed_at: string | null
+          content_policy: string
           created_at: string
           created_by: string | null
+          definition_id: string
           difficulties: string[]
+          eligibility_rule_version: string | null
+          eligibility_snapshot: Json
+          failure_metadata: Json
           generation_metadata: Json
+          generation_status: string | null
           id: string
+          idempotency_key: string | null
           mode: string
           pool_timestamp: string
           question_count: number
+          request_hash: string | null
+          resolved_distribution: Json
+          retired_at: string | null
+          selected_question_count: number
           topic_tags: string[]
         }
         Insert: {
+          algorithm_version?: string | null
           blueprint_snapshot?: Json | null
           blueprint_version_id?: string | null
+          canonical_seed?: string | null
           category: string
+          completed_at?: string | null
+          content_policy?: string
           created_at?: string
           created_by?: string | null
+          definition_id?: string
           difficulties?: string[]
+          eligibility_rule_version?: string | null
+          eligibility_snapshot?: Json
+          failure_metadata?: Json
           generation_metadata?: Json
+          generation_status?: string | null
           id: string
+          idempotency_key?: string | null
           mode?: string
           pool_timestamp: string
           question_count: number
+          request_hash?: string | null
+          resolved_distribution?: Json
+          retired_at?: string | null
+          selected_question_count?: number
           topic_tags?: string[]
         }
         Update: {
+          algorithm_version?: string | null
           blueprint_snapshot?: Json | null
           blueprint_version_id?: string | null
+          canonical_seed?: string | null
           category?: string
+          completed_at?: string | null
+          content_policy?: string
           created_at?: string
           created_by?: string | null
+          definition_id?: string
           difficulties?: string[]
+          eligibility_rule_version?: string | null
+          eligibility_snapshot?: Json
+          failure_metadata?: Json
           generation_metadata?: Json
+          generation_status?: string | null
           id?: string
+          idempotency_key?: string | null
           mode?: string
           pool_timestamp?: string
           question_count?: number
+          request_hash?: string | null
+          resolved_distribution?: Json
+          retired_at?: string | null
+          selected_question_count?: number
           topic_tags?: string[]
         }
         Relationships: [
@@ -1687,6 +1822,14 @@ export type Database = {
           team_id: string
         }[]
       }
+      backfill_legacy_test_membership: {
+        Args: {
+          p_legacy_test_id: string
+          p_ordered_question_ids: string[]
+          p_reason: string
+        }
+        Returns: number
+      }
       bootstrap_initial_owner: {
         Args: { p_reason: string; p_target_user_id: string }
         Returns: undefined
@@ -1701,6 +1844,10 @@ export type Database = {
       }
       can_admin_team: { Args: { p_team_id: string }; Returns: boolean }
       can_manage_team: { Args: { p_team_id: string }; Returns: boolean }
+      canonicalize_test_blueprint: {
+        Args: { p_blueprint_id: string; p_expected_version?: string }
+        Returns: Json
+      }
       cast_owner_removal_vote: {
         Args: { p_decision?: string; p_vote_id: string }
         Returns: string
@@ -1709,10 +1856,84 @@ export type Database = {
       current_user_role: { Args: never; Returns: string }
       escape_repository_like: { Args: { p_value: string }; Returns: string }
       expire_owner_removal_votes: { Args: never; Returns: number }
+      generate_test_from_blueprint: {
+        Args: {
+          p_blueprint_id: string
+          p_expected_blueprint_version: string
+          p_idempotency_key?: string
+          p_requested_count: number
+          p_seed?: string
+        }
+        Returns: {
+          algorithm_version: string
+          blueprint_summary: Json
+          canonical_seed: string
+          generation_status: string
+          requested_count: number
+          selected_count: number
+          shortage: Json
+          success: boolean
+          test_definition_id: string
+          test_id: string
+        }[]
+      }
+      generate_test_share_code: { Args: never; Returns: string }
+      generated_difficulty_label: { Args: { p_value: string }; Returns: string }
+      generated_question_type_label: {
+        Args: { p_value: string }
+        Returns: string
+      }
       get_active_owner_count: { Args: never; Returns: number }
+      get_generated_test_manifest: {
+        Args: { p_test_id: string }
+        Returns: {
+          difficulty: string
+          options: Json
+          performance_indicator: string
+          question_id: string
+          question_position: number
+          question_text: string
+          question_type: string
+          tags: string[]
+          test_definition_id: string
+          test_id: string
+          updated_since_generation: boolean
+        }[]
+      }
       get_owner_removal_required_approvals: {
         Args: { p_target_user_id: string }
         Returns: number
+      }
+      get_test_id_preview: {
+        Args: { p_test_id: string }
+        Returns: {
+          authentication_required_to_launch: boolean
+          blueprint_name: string
+          blueprint_version: string
+          category: string
+          content_policy: string
+          creation_date: string
+          difficulties: string[]
+          generation_status: string
+          launch_available: boolean
+          legacy_resolution_status: string
+          original_question_count: number
+          replacement_test_id: string
+          test_id: string
+          topic_tags: string[]
+          updated_question_count: number
+        }[]
+      }
+      get_test_question_explanation: {
+        Args: { p_question_id: string; p_test_id: string }
+        Returns: {
+          explanation: string
+          question_id: string
+        }[]
+      }
+      has_premium_explanation_access: {
+        Args: { p_user_id?: string }
+        Returns: boolean
       }
       initiate_owner_removal_vote: {
         Args: {
@@ -1722,18 +1943,23 @@ export type Database = {
         }
         Returns: string
       }
-      insert_generated_questions: {
-        Args: {
-          p_import_identity?: string
-          p_queue_id: string
-          p_questions: Json
-        }
-        Returns: {
-          failed_count: number
-          imported_count: number
-          skipped_count: number
-        }[]
-      }
+      insert_generated_questions:
+        | {
+            Args: { p_indicator: string; p_questions: Json }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_import_identity?: string
+              p_questions: Json
+              p_queue_id: string
+            }
+            Returns: {
+              failed_count: number
+              imported_count: number
+              skipped_count: number
+            }[]
+          }
       is_admin: { Args: never; Returns: boolean }
       is_eligible_owner: { Args: { p_user_id: string }; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
@@ -1750,6 +1976,15 @@ export type Database = {
         Args: { p_value: string }
         Returns: string
       }
+      normalize_test_difficulties: {
+        Args: { p_values: string[] }
+        Returns: string[]
+      }
+      normalize_test_question_types: {
+        Args: { p_values: string[] }
+        Returns: string[]
+      }
+      normalize_test_seed: { Args: { p_seed: string }; Returns: string }
       publish_generated_question: {
         Args: { p_candidate_id: string }
         Returns: string
@@ -1758,12 +1993,21 @@ export type Database = {
         Args: { p_target_per_type?: number }
         Returns: number
       }
+      resolve_legacy_test_id: {
+        Args: {
+          p_legacy_test_id: string
+          p_reason?: string
+          p_replacement_test_id?: string
+          p_resolution_status: string
+        }
+        Returns: undefined
+      }
       search_generation_pipeline: {
         Args: {
           p_batch_job_id?: string
           p_category?: string
-          p_cursor_updated_at?: string
           p_cursor_id?: string
+          p_cursor_updated_at?: string
           p_has_errors?: boolean
           p_page_size?: number
           p_search?: string
@@ -1771,30 +2015,30 @@ export type Database = {
         }
         Returns: {
           all_except_needed: number
-          batch_error: string | null
-          batch_status: string | null
+          batch_error: string
+          batch_status: string
           category: string
           definition_needed: number
-          failed_count: number | null
+          failed_count: number
           fill_needed: number
           has_next_page: boolean
-          import_offset: number | null
-          imported_count: number | null
+          import_offset: number
+          imported_count: number
           indicator_code: string
-          input_file_id: string | null
-          locked_by_batch_id: string | null
-          openai_batch_id: string | null
-          output_file_id: string | null
+          input_file_id: string
+          locked_by_batch_id: string
+          openai_batch_id: string
+          output_file_id: string
           partition_key: string
           partition_keys: Json
-          performance_indicator: string | null
+          performance_indicator: string
           priority: number
           queue_created_at: string
           queue_id: string
-          queue_last_error: string | null
+          queue_last_error: string
           queue_status: string
           queue_updated_at: string
-          row_count: number | null
+          row_count: number
           scenario_needed: number
         }[]
       }
@@ -1848,6 +2092,10 @@ export type Database = {
           p_target_user_id: string
         }
         Returns: undefined
+      }
+      test_blueprint_text_array: {
+        Args: { p_field_name: string; p_value: Json }
+        Returns: string[]
       }
       withdraw_owner_removal_vote: {
         Args: { p_vote_id: string }

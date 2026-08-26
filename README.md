@@ -105,3 +105,9 @@ performance-review guidance are documented in `docs/questions/milestone-4.md`.
 Milestone 5 generation/import contracts, Edge Function secrets, Make Scheduler
 calls, and admin pipeline monitoring are documented in
 `docs/generation/milestone-5.md`.
+
+## Deterministic Test IDs
+
+Milestone 6 Test ID identity, canonical blueprints, deterministic selection,
+authorization, compatibility, performance checks, and deployment order are
+documented in `docs/tests/milestone-6.md`.

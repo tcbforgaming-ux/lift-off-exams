@@ -38,6 +38,7 @@ export function AppShell({ children }: AppShellProps) {
               {profile?.display_name?.trim() || displayRole(role)}
             </NavLink>
           )}
+          <NavLink to={paths.testId}>Test ID</NavLink>
           {!authenticated && <NavLink to={paths.home}>Home</NavLink>}
         </nav>
         <div className="topbar-actions">

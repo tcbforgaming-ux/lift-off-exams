@@ -258,10 +258,10 @@ reset role;
 select tests.authenticate_anon();
 
 select ok(
-  tests.expect_lives($sql$
+  tests.expect_denied($sql$
     select count(*) from public.questions
   $sql$),
-  'anonymous users can read public questions'
+  'anonymous users cannot read protected question rows directly'
 );
 
 select ok(
