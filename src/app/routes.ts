@@ -68,6 +68,21 @@ const TestIdPage = lazy(() =>
     default: module.TestIdPage,
   })),
 );
+const TestSessionPage = lazy(() =>
+  import("../pages/app/TestSessionPage").then((module) => ({
+    default: module.TestSessionPage,
+  })),
+);
+const TestResultPage = lazy(() =>
+  import("../pages/app/TestResultPage").then((module) => ({
+    default: module.TestResultPage,
+  })),
+);
+const TestHistoryPage = lazy(() =>
+  import("../pages/app/TestHistoryPage").then((module) => ({
+    default: module.TestHistoryPage,
+  })),
+);
 const QuestionRepositoryPage = lazy(() =>
   import("../pages/admin/QuestionRepositoryPage").then((module) => ({
     default: module.QuestionRepositoryPage,
@@ -146,6 +161,27 @@ export const routes = [
     label: "Practice Setup",
     element: PracticeSetupPage,
     navigation: "app",
+    auth: "protected",
+  },
+  {
+    path: paths.history,
+    label: "History",
+    element: TestHistoryPage,
+    navigation: "app",
+    auth: "protected",
+  },
+  {
+    path: paths.testSession,
+    label: "Test Session",
+    element: TestSessionPage,
+    navigation: "hidden",
+    auth: "protected",
+  },
+  {
+    path: paths.testResult,
+    label: "Test Result",
+    element: TestResultPage,
+    navigation: "hidden",
     auth: "protected",
   },
   {

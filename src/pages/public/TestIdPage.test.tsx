@@ -25,7 +25,7 @@ const preview: TestIdPreview = {
 const mocks = vi.hoisted(() => ({
   authStatus: "unauthenticated",
   fetchTestIdPreview: vi.fn(),
-  fetchGeneratedTestManifest: vi.fn(),
+  startTestSession: vi.fn(),
 }));
 
 vi.mock("../../lib/auth/useAuth", () => ({
@@ -34,7 +34,10 @@ vi.mock("../../lib/auth/useAuth", () => ({
 
 vi.mock("../../lib/tests/generation", () => ({
   fetchTestIdPreview: mocks.fetchTestIdPreview,
-  fetchGeneratedTestManifest: mocks.fetchGeneratedTestManifest,
+}));
+
+vi.mock("../../lib/sessions/session", () => ({
+  startTestSession: mocks.startTestSession,
 }));
 
 import { TestIdPage } from "./TestIdPage";
@@ -43,11 +46,12 @@ describe("TestIdPage", () => {
   beforeEach(() => {
     mocks.authStatus = "unauthenticated";
     mocks.fetchTestIdPreview.mockReset();
-    mocks.fetchGeneratedTestManifest.mockReset();
+    mocks.startTestSession.mockReset();
     mocks.fetchTestIdPreview.mockResolvedValue(preview);
-    mocks.fetchGeneratedTestManifest.mockResolvedValue(
-      Array.from({ length: 250 }, (_, index) => ({ question_position: index + 1 })),
-    );
+    mocks.startTestSession.mockResolvedValue({
+      session_id: "00000000-0000-4000-8000-000000000001",
+      status: "in_progress",
+    });
   });
 
   it("offers a safe public preview and requires login to launch", async () => {
@@ -65,7 +69,7 @@ describe("TestIdPage", () => {
     expect(await screen.findByText("State Marketing Exam")).toBeInTheDocument();
     expect(screen.getByText("250")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Log In to Launch" })).toBeInTheDocument();
-    expect(mocks.fetchGeneratedTestManifest).not.toHaveBeenCalled();
+    expect(mocks.startTestSession).not.toHaveBeenCalled();
   });
 
   it("shows content-update warnings in the preview", async () => {
@@ -85,7 +89,7 @@ describe("TestIdPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("lets an authenticated holder verify the persisted manifest", async () => {
+  it("lets an authenticated holder start a recoverable session", async () => {
     mocks.authStatus = "authenticated";
     render(
       <MemoryRouter initialEntries={["/test-id?code=AB4F9D72K1PQ"]}>
@@ -93,13 +97,13 @@ describe("TestIdPage", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Verify Launch" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start Test" }));
     await waitFor(() => {
-      expect(mocks.fetchGeneratedTestManifest).toHaveBeenCalledWith("AB4F9D72K1PQ");
+      expect(mocks.startTestSession).toHaveBeenCalledWith(
+        "AB4F9D72K1PQ",
+        expect.any(String),
+      );
     });
-    expect(
-      await screen.findByText("250 persisted questions verified."),
-    ).toBeInTheDocument();
   });
 
   it("keeps unresolved legacy IDs previewable without offering launch", async () => {
@@ -121,9 +125,9 @@ describe("TestIdPage", () => {
       await screen.findByText(/does not have a verified ordered/),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Verify Launch" }),
+      screen.queryByRole("button", { name: "Start Test" }),
     ).not.toBeInTheDocument();
-    expect(mocks.fetchGeneratedTestManifest).not.toHaveBeenCalled();
+    expect(mocks.startTestSession).not.toHaveBeenCalled();
   });
 
   it("links retired legacy IDs to their audited replacement", async () => {

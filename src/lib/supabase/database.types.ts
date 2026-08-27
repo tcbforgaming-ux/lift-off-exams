@@ -1587,6 +1587,306 @@ export type Database = {
           },
         ]
       }
+      test_result_items: {
+        Row: {
+          content_hash_at_submission: string | null
+          correct_option_id: string
+          created_at: string
+          difficulty: string
+          explanation_snapshot: string | null
+          is_correct: boolean
+          options: Json
+          position: number
+          question_id: string
+          question_text: string
+          question_type: string
+          selected_option_id: string | null
+          session_id: string
+          tags: string[]
+        }
+        Insert: {
+          content_hash_at_submission?: string | null
+          correct_option_id: string
+          created_at?: string
+          difficulty: string
+          explanation_snapshot?: string | null
+          is_correct: boolean
+          options: Json
+          position: number
+          question_id: string
+          question_text: string
+          question_type: string
+          selected_option_id?: string | null
+          session_id: string
+          tags?: string[]
+        }
+        Update: {
+          content_hash_at_submission?: string | null
+          correct_option_id?: string
+          created_at?: string
+          difficulty?: string
+          explanation_snapshot?: string | null
+          is_correct?: boolean
+          options?: Json
+          position?: number
+          question_id?: string
+          question_text?: string
+          question_type?: string
+          selected_option_id?: string | null
+          session_id?: string
+          tags?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_result_items_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_result_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "test_results"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      test_results: {
+        Row: {
+          active_duration_seconds: number
+          answered_questions: number
+          blueprint_version: string | null
+          correct_answers: number
+          created_at: string
+          explanation_policy_version: string
+          incorrect_answers: number
+          percentage: number
+          raw_score: number
+          scoring_rule_version: string
+          session_id: string
+          submitted_at: string
+          test_definition_id: string
+          total_questions: number
+          unanswered_questions: number
+          user_id: string
+        }
+        Insert: {
+          active_duration_seconds: number
+          answered_questions: number
+          blueprint_version?: string | null
+          correct_answers: number
+          created_at?: string
+          explanation_policy_version: string
+          incorrect_answers: number
+          percentage: number
+          raw_score: number
+          scoring_rule_version: string
+          session_id: string
+          submitted_at: string
+          test_definition_id: string
+          total_questions: number
+          unanswered_questions: number
+          user_id: string
+        }
+        Update: {
+          active_duration_seconds?: number
+          answered_questions?: number
+          blueprint_version?: string | null
+          correct_answers?: number
+          created_at?: string
+          explanation_policy_version?: string
+          incorrect_answers?: number
+          percentage?: number
+          raw_score?: number
+          scoring_rule_version?: string
+          session_id?: string
+          submitted_at?: string
+          test_definition_id?: string
+          total_questions?: number
+          unanswered_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_session_id_user_id_test_definition_id_fkey"
+            columns: ["session_id", "user_id", "test_definition_id"]
+            isOneToOne: false
+            referencedRelation: "test_sessions"
+            referencedColumns: ["id", "user_id", "test_definition_id"]
+          },
+        ]
+      }
+      test_session_answers: {
+        Row: {
+          answer_version: number
+          created_at: string
+          question_id: string
+          selected_option_id: string
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer_version?: number
+          created_at?: string
+          question_id: string
+          selected_option_id: string
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer_version?: number
+          created_at?: string
+          question_id?: string
+          selected_option_id?: string
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_session_answers_session_id_question_id_fkey"
+            columns: ["session_id", "question_id"]
+            isOneToOne: true
+            referencedRelation: "test_session_questions"
+            referencedColumns: ["session_id", "question_id"]
+          },
+        ]
+      }
+      test_session_questions: {
+        Row: {
+          content_hash_at_start: string
+          created_at: string
+          difficulty: string
+          options: Json
+          position: number
+          question_id: string
+          question_text: string
+          question_type: string
+          question_updated_at_at_start: string
+          session_id: string
+          tags: string[]
+        }
+        Insert: {
+          content_hash_at_start: string
+          created_at?: string
+          difficulty: string
+          options: Json
+          position: number
+          question_id: string
+          question_text: string
+          question_type: string
+          question_updated_at_at_start: string
+          session_id: string
+          tags?: string[]
+        }
+        Update: {
+          content_hash_at_start?: string
+          created_at?: string
+          difficulty?: string
+          options?: Json
+          position?: number
+          question_id?: string
+          question_text?: string
+          question_type?: string
+          question_updated_at_at_start?: string
+          session_id?: string
+          tags?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_session_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_session_questions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "test_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_sessions: {
+        Row: {
+          accumulated_active_seconds: number
+          active_period_started_at: string | null
+          created_at: string
+          current_position: number
+          explanation_policy_version: string
+          id: string
+          idempotency_key: string
+          last_activity_at: string
+          mode: string
+          paused_at: string | null
+          question_count: number
+          resumed_at: string | null
+          scoring_rule_version: string
+          started_at: string
+          status: string
+          submitted_at: string | null
+          test_definition_id: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          accumulated_active_seconds?: number
+          active_period_started_at?: string | null
+          created_at?: string
+          current_position?: number
+          explanation_policy_version?: string
+          id?: string
+          idempotency_key: string
+          last_activity_at?: string
+          mode: string
+          paused_at?: string | null
+          question_count: number
+          resumed_at?: string | null
+          scoring_rule_version?: string
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          test_definition_id: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          accumulated_active_seconds?: number
+          active_period_started_at?: string | null
+          created_at?: string
+          current_position?: number
+          explanation_policy_version?: string
+          id?: string
+          idempotency_key?: string
+          last_activity_at?: string
+          mode?: string
+          paused_at?: string | null
+          question_count?: number
+          resumed_at?: string | null
+          scoring_rule_version?: string
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          test_definition_id?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_sessions_test_definition_id_fkey"
+            columns: ["test_definition_id"]
+            isOneToOne: false
+            referencedRelation: "test_ids"
+            referencedColumns: ["definition_id"]
+          },
+        ]
+      }
       user_active_sessions: {
         Row: {
           current_index: number
@@ -1904,6 +2204,29 @@ export type Database = {
         Args: { p_target_user_id: string }
         Returns: number
       }
+      get_test_history: {
+        Args: {
+          p_cursor_activity_at?: string
+          p_cursor_session_id?: string
+          p_page_size?: number
+          p_status?: string
+        }
+        Returns: {
+          answered_questions: number
+          category: string
+          has_next_page: boolean
+          last_activity_at: string
+          mode: string
+          percentage: number
+          question_count: number
+          session_id: string
+          session_status: string
+          started_at: string
+          submitted_at: string
+          test_id: string
+          topic_tags: string[]
+        }[]
+      }
       get_test_id_preview: {
         Args: { p_test_id: string }
         Returns: {
@@ -1929,6 +2252,63 @@ export type Database = {
         Returns: {
           explanation: string
           question_id: string
+        }[]
+      }
+      get_test_result: {
+        Args: { p_session_id: string }
+        Returns: {
+          active_duration_seconds: number
+          answered_questions: number
+          can_view_explanations: boolean
+          correct_answers: number
+          correct_option_id: string
+          difficulty: string
+          incorrect_answers: number
+          is_correct: boolean
+          options: Json
+          percentage: number
+          question_id: string
+          question_position: number
+          question_text: string
+          question_type: string
+          selected_option_id: string
+          session_id: string
+          submitted_at: string
+          tags: string[]
+          test_id: string
+          total_questions: number
+          unanswered_questions: number
+        }[]
+      }
+      get_test_result_explanations: {
+        Args: { p_session_id: string }
+        Returns: {
+          explanation: string
+          question_id: string
+        }[]
+      }
+      get_test_session: {
+        Args: { p_session_id: string }
+        Returns: {
+          active_duration_seconds: number
+          answer_version: number
+          answered_questions: number
+          current_position: number
+          difficulty: string
+          last_activity_at: string
+          options: Json
+          question_id: string
+          question_position: number
+          question_text: string
+          question_type: string
+          selected_option_id: string
+          session_id: string
+          session_status: string
+          session_version: number
+          started_at: string
+          tags: string[]
+          test_id: string
+          total_questions: number
         }[]
       }
       has_premium_explanation_access: {
@@ -1985,6 +2365,10 @@ export type Database = {
         Returns: string[]
       }
       normalize_test_seed: { Args: { p_seed: string }; Returns: string }
+      pause_test_session: {
+        Args: { p_expected_session_version: number; p_session_id: string }
+        Returns: number
+      }
       publish_generated_question: {
         Args: { p_candidate_id: string }
         Returns: string
@@ -2001,6 +2385,24 @@ export type Database = {
           p_resolution_status: string
         }
         Returns: undefined
+      }
+      resume_test_session: {
+        Args: { p_expected_session_version: number; p_session_id: string }
+        Returns: number
+      }
+      save_test_session_answer: {
+        Args: {
+          p_expected_session_version: number
+          p_question_id: string
+          p_selected_option_id: string
+          p_session_id: string
+        }
+        Returns: {
+          answer_version: number
+          answered_questions: number
+          session_version: number
+          total_questions: number
+        }[]
       }
       search_generation_pipeline: {
         Args: {
@@ -2084,6 +2486,14 @@ export type Database = {
           updated_at: string
         }[]
       }
+      set_test_session_position: {
+        Args: {
+          p_expected_session_version: number
+          p_position: number
+          p_session_id: string
+        }
+        Returns: number
+      }
       set_user_platform_role: {
         Args: {
           p_governance_vote_id?: string
@@ -2092,6 +2502,34 @@ export type Database = {
           p_target_user_id: string
         }
         Returns: undefined
+      }
+      start_test_session: {
+        Args: { p_idempotency_key: string; p_test_id: string }
+        Returns: {
+          current_position: number
+          question_count: number
+          session_id: string
+          session_version: number
+          started_at: string
+          status: string
+          test_id: string
+        }[]
+      }
+      submit_test_session: {
+        Args: { p_expected_session_version: number; p_session_id: string }
+        Returns: {
+          active_duration_seconds: number
+          answered_questions: number
+          can_view_explanations: boolean
+          correct_answers: number
+          incorrect_answers: number
+          percentage: number
+          session_id: string
+          submitted_at: string
+          test_id: string
+          total_questions: number
+          unanswered_questions: number
+        }[]
       }
       test_blueprint_text_array: {
         Args: { p_field_name: string; p_value: Json }
@@ -2110,6 +2548,17 @@ export type Database = {
           resource_type_name: string
         }
         Returns: string
+      }
+      write_test_session_audit: {
+        Args: {
+          p_action: string
+          p_metadata?: Json
+          p_new_state: string
+          p_previous_state: string
+          p_session_id: string
+          p_test_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

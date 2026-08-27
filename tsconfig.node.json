@@ -14,5 +14,12 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["eslint.config.js", "vite.config.ts", "vitest.setup.ts"]
+  "include": [
+    "eslint.config.js",
+    "vite.config.ts",
+    "vitest.setup.ts",
+    "playwright.config.ts",
+    "tests/e2e",
+    "src/lib/supabase/database.types.ts"
+  ]
 }

@@ -59,6 +59,7 @@ pnpm typecheck
 pnpm lint
 pnpm format
 pnpm test
+pnpm test:e2e
 pnpm build
 ```
 
@@ -111,3 +112,9 @@ calls, and admin pipeline monitoring are documented in
 Milestone 6 Test ID identity, canonical blueprints, deterministic selection,
 authorization, compatibility, performance checks, and deployment order are
 documented in `docs/tests/milestone-6.md`.
+
+## Test Sessions And Results
+
+Milestone 7 session identity, recovery, state transitions, server scoring, history,
+free-user explanation enforcement, concurrency, and local Playwright setup are
+documented in `docs/tests/milestone-7.md`.

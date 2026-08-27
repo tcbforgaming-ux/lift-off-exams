@@ -1,25 +1,23 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
 import { ButtonLink } from "../../components/ui/ButtonLink";
 import { Card } from "../../components/ui/Card";
 import { paths } from "../../app/urlPaths";
 import { useAuth } from "../../lib/auth/useAuth";
-import {
-  fetchGeneratedTestManifest,
-  fetchTestIdPreview,
-  type TestIdPreview,
-} from "../../lib/tests/generation";
+import { fetchTestIdPreview, type TestIdPreview } from "../../lib/tests/generation";
+import { startTestSession } from "../../lib/sessions/session";
 
 export function TestIdPage() {
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
+  const launchKey = useRef(crypto.randomUUID());
   const { status } = useAuth();
   const [code, setCode] = useState(params.get("code")?.toUpperCase() ?? "");
   const [preview, setPreview] = useState<TestIdPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [launchCount, setLaunchCount] = useState<number | null>(null);
 
   const loadPreview = async (nextCode: string) => {
     const normalized = nextCode.trim().toUpperCase();
@@ -31,7 +29,6 @@ export function TestIdPage() {
 
     setLoading(true);
     setMessage(null);
-    setLaunchCount(null);
     try {
       const nextPreview = await fetchTestIdPreview(normalized);
       setPreview(nextPreview);
@@ -57,9 +54,12 @@ export function TestIdPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const manifest = await fetchGeneratedTestManifest(preview.test_id);
-      setLaunchCount(manifest.length);
-      setMessage("The persisted test manifest is ready for the test-taking milestone.");
+      const session = await startTestSession(preview.test_id, launchKey.current);
+      void navigate(
+        session.status === "submitted"
+          ? `/results/${session.session_id}`
+          : `/sessions/${session.session_id}`,
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Test launch failed.");
     } finally {
@@ -175,16 +175,12 @@ export function TestIdPage() {
             )}
             {preview.launch_available && status === "authenticated" ? (
               <Button type="button" disabled={loading} onClick={() => void launch()}>
-                Verify Launch
+                Start Test
               </Button>
             ) : preview.launch_available ? (
               <ButtonLink to={paths.login}>Log In to Launch</ButtonLink>
             ) : null}
           </div>
-
-          {launchCount !== null && (
-            <p className="muted">{launchCount} persisted questions verified.</p>
-          )}
         </Card>
       )}
     </div>

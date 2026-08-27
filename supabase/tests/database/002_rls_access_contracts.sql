@@ -193,11 +193,11 @@ select ok(
 );
 
 select ok(
-  tests.expect_lives($sql$
+  tests.expect_denied($sql$
     insert into public.user_active_sessions(user_id, session_type, session_state)
     values ('00000000-0000-0000-0000-000000000101', 'paused_test', '{}')
   $sql$),
-  'student can save own paused session'
+  'legacy paused-session storage is no longer client writable'
 );
 
 select ok(
