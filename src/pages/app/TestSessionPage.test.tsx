@@ -107,4 +107,17 @@ describe("TestSessionPage", () => {
     expect(await screen.findByText("Result route")).toBeInTheDocument();
     expect(mocks.submitSession).toHaveBeenCalledWith(question.session_id, 3);
   });
+
+  it("opens a categorized question report form without exposing answer keys", async () => {
+    renderPage();
+    await screen.findByText("Which response is best?");
+
+    fireEvent.click(screen.getByRole("button", { name: "Report Question" }));
+
+    expect(screen.getByRole("dialog", { name: "Report question" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Incorrect answer" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/correct option/i)).not.toBeInTheDocument();
+  });
 });

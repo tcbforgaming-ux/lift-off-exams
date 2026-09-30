@@ -231,7 +231,7 @@ select ok(
 );
 
 select ok(
-  tests.expect_lives($sql$
+  tests.expect_denied($sql$
     insert into public.question_reports(question_id, reporter_id, reason)
     values (
       '10000000-0000-0000-0000-000000000001',
@@ -239,7 +239,7 @@ select ok(
       'Typo'
     )
   $sql$),
-  'student can report a question as self'
+  'student cannot bypass the trusted report RPC'
 );
 
 select ok(

@@ -118,3 +118,9 @@ documented in `docs/tests/milestone-6.md`.
 Milestone 7 session identity, recovery, state transitions, server scoring, history,
 free-user explanation enforcement, concurrency, and local Playwright setup are
 documented in `docs/tests/milestone-7.md`.
+
+## Reports And Administrative Review
+
+Milestone 8 private question reporting, staff review states, correction and lifecycle
+transactions, immutable auditing, historical scoring safeguards, and local acceptance
+testing are documented in `docs/reports/milestone-8.md`.

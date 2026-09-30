@@ -83,6 +83,11 @@ const TestHistoryPage = lazy(() =>
     default: module.TestHistoryPage,
   })),
 );
+const MyReportsPage = lazy(() =>
+  import("../pages/app/MyReportsPage").then((module) => ({
+    default: module.MyReportsPage,
+  })),
+);
 const QuestionRepositoryPage = lazy(() =>
   import("../pages/admin/QuestionRepositoryPage").then((module) => ({
     default: module.QuestionRepositoryPage,
@@ -91,6 +96,21 @@ const QuestionRepositoryPage = lazy(() =>
 const GenerationPipelinePage = lazy(() =>
   import("../pages/admin/GenerationPipelinePage").then((module) => ({
     default: module.GenerationPipelinePage,
+  })),
+);
+const ReportQueuePage = lazy(() =>
+  import("../pages/admin/ReportQueuePage").then((module) => ({
+    default: module.ReportQueuePage,
+  })),
+);
+const ReportDetailPage = lazy(() =>
+  import("../pages/admin/ReportDetailPage").then((module) => ({
+    default: module.ReportDetailPage,
+  })),
+);
+const AuditLogPage = lazy(() =>
+  import("../pages/admin/AuditLogPage").then((module) => ({
+    default: module.AuditLogPage,
   })),
 );
 const PlaceholderPage = lazy(() =>
@@ -171,6 +191,13 @@ export const routes = [
     auth: "protected",
   },
   {
+    path: paths.reports,
+    label: "My Reports",
+    element: MyReportsPage,
+    navigation: "app",
+    auth: "protected",
+  },
+  {
     path: paths.testSession,
     label: "Test Session",
     element: TestSessionPage,
@@ -210,6 +237,30 @@ export const routes = [
     path: paths.adminGeneration,
     label: "Generation Pipeline",
     element: GenerationPipelinePage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: paths.adminReports,
+    label: "Report Queue",
+    element: ReportQueuePage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: paths.adminReportDetail,
+    label: "Report Review",
+    element: ReportDetailPage,
+    navigation: "hidden",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: paths.adminAudit,
+    label: "Audit Log",
+    element: AuditLogPage,
     navigation: "admin",
     auth: "protected",
     requiredRole: "admin",

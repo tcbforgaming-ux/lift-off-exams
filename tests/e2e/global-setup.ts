@@ -5,6 +5,7 @@ import type { Database } from "../../src/lib/supabase/database.types";
 export const fixture = {
   email: `milestone7-free-${process.env.E2E_RUN_ID ?? "manual"}@example.test`,
   otherEmail: `milestone7-other-${process.env.E2E_RUN_ID ?? "manual"}@example.test`,
+  adminEmail: `milestone8-admin-${process.env.E2E_RUN_ID ?? "manual"}@example.test`,
   password: "LocalOnly-M7-Password!",
   testId: "E2EFLOW00001",
   definitionId: "e7200000-0000-4000-8000-000000000001",
@@ -54,6 +55,12 @@ async function globalSetup() {
   };
   const freeUser = await createOrRefreshUser(fixture.email);
   await createOrRefreshUser(fixture.otherEmail);
+  const adminUser = await createOrRefreshUser(fixture.adminEmail);
+  const { error: adminProfileError } = await supabase
+    .from("profiles")
+    .update({ role: "admin" })
+    .eq("user_id", adminUser.id);
+  if (adminProfileError) throw adminProfileError;
 
   const { data: existingDefinition, error: definitionLookupError } = await supabase
     .from("test_ids")

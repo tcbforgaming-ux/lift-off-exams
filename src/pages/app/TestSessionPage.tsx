@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { ReportQuestionDialog } from "../../components/reports/ReportQuestionDialog";
 import {
   fetchTestSession,
   formatDuration,
@@ -27,6 +28,7 @@ export function TestSessionPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [reporting, setReporting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -258,6 +260,9 @@ export function TestSessionPage() {
             >
               Next
             </Button>
+            <Button type="button" variant="ghost" onClick={() => setReporting(true)}>
+              Report Question
+            </Button>
           </div>
         </main>
 
@@ -330,6 +335,14 @@ export function TestSessionPage() {
             </div>
           </Card>
         </div>
+      )}
+      {reporting && (
+        <ReportQuestionDialog
+          sessionId={sessionId}
+          questionId={current.question_id}
+          questionLabel={`Question ${current.question_position}: ${current.question_text}`}
+          onClose={() => setReporting(false)}
+        />
       )}
     </div>
   );

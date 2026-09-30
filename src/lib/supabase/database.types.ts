@@ -88,37 +88,60 @@ export type Database = {
         Row: {
           action: string
           actor_email: string | null
+          actor_role: string | null
           actor_user_id: string | null
+          correlation_id: string | null
           created_at: string
           id: string
           metadata: Json
+          new_values: Json | null
+          previous_values: Json | null
           reason: string | null
+          report_id: string | null
           resource_id: string | null
           resource_type: string
         }
         Insert: {
           action: string
           actor_email?: string | null
+          actor_role?: string | null
           actor_user_id?: string | null
+          correlation_id?: string | null
           created_at?: string
           id?: string
           metadata?: Json
+          new_values?: Json | null
+          previous_values?: Json | null
           reason?: string | null
+          report_id?: string | null
           resource_id?: string | null
           resource_type: string
         }
         Update: {
           action?: string
           actor_email?: string | null
+          actor_role?: string | null
           actor_user_id?: string | null
+          correlation_id?: string | null
           created_at?: string
           id?: string
           metadata?: Json
+          new_values?: Json | null
+          previous_values?: Json | null
           reason?: string | null
+          report_id?: string | null
           resource_id?: string | null
           resource_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "question_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       banned_terms: {
         Row: {
@@ -837,52 +860,122 @@ export type Database = {
       question_reports: {
         Row: {
           admin_note: string | null
+          category: string
+          correction_version_id: string | null
           created_at: string
+          description: string
+          duplicate_of: string | null
+          encountered_snapshot: Json
+          entity_type: string
           id: string
+          idempotency_key: string | null
+          lifecycle_event_id: string | null
           question_id: string | null
           reason: string
           report_snapshot: Json
           reporter_id: string | null
+          resolution_category: string | null
+          resolution_idempotency_key: string | null
+          resolution_message: string | null
+          resolved_at: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          session_id: string | null
           status: string
           test_id: string | null
           updated_at: string
+          version: number
         }
         Insert: {
           admin_note?: string | null
+          category?: string
+          correction_version_id?: string | null
           created_at?: string
+          description: string
+          duplicate_of?: string | null
+          encountered_snapshot?: Json
+          entity_type?: string
           id?: string
+          idempotency_key?: string | null
+          lifecycle_event_id?: string | null
           question_id?: string | null
           reason?: string
           report_snapshot?: Json
           reporter_id?: string | null
+          resolution_category?: string | null
+          resolution_idempotency_key?: string | null
+          resolution_message?: string | null
+          resolved_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          session_id?: string | null
           status?: string
           test_id?: string | null
           updated_at?: string
+          version?: number
         }
         Update: {
           admin_note?: string | null
+          category?: string
+          correction_version_id?: string | null
           created_at?: string
+          description?: string
+          duplicate_of?: string | null
+          encountered_snapshot?: Json
+          entity_type?: string
           id?: string
+          idempotency_key?: string | null
+          lifecycle_event_id?: string | null
           question_id?: string | null
           reason?: string
           report_snapshot?: Json
           reporter_id?: string | null
+          resolution_category?: string | null
+          resolution_idempotency_key?: string | null
+          resolution_message?: string | null
+          resolved_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          session_id?: string | null
           status?: string
           test_id?: string | null
           updated_at?: string
+          version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "question_reports_correction_version_id_fkey"
+            columns: ["correction_version_id"]
+            isOneToOne: false
+            referencedRelation: "question_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_reports_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "question_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_reports_lifecycle_event_id_fkey"
+            columns: ["lifecycle_event_id"]
+            isOneToOne: false
+            referencedRelation: "question_lifecycle_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "question_reports_question_id_fkey"
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_reports_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "test_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -901,7 +994,9 @@ export type Database = {
           created_by: string | null
           expires_at: string | null
           id: string
+          previous_snapshot: Json | null
           question_id: string
+          report_id: string | null
           snapshot: Json
           version_number: number
         }
@@ -911,7 +1006,9 @@ export type Database = {
           created_by?: string | null
           expires_at?: string | null
           id?: string
+          previous_snapshot?: Json | null
           question_id: string
+          report_id?: string | null
           snapshot: Json
           version_number: number
         }
@@ -921,7 +1018,9 @@ export type Database = {
           created_by?: string | null
           expires_at?: string | null
           id?: string
+          previous_snapshot?: Json | null
           question_id?: string
+          report_id?: string | null
           snapshot?: Json
           version_number?: number
         }
@@ -931,6 +1030,13 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_versions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "question_reports"
             referencedColumns: ["id"]
           },
         ]
@@ -1756,8 +1862,10 @@ export type Database = {
       test_session_questions: {
         Row: {
           content_hash_at_start: string
+          correct_option_id_at_start: string
           created_at: string
           difficulty: string
+          explanation_at_start: string | null
           options: Json
           position: number
           question_id: string
@@ -1769,8 +1877,10 @@ export type Database = {
         }
         Insert: {
           content_hash_at_start: string
+          correct_option_id_at_start: string
           created_at?: string
           difficulty: string
+          explanation_at_start?: string | null
           options: Json
           position: number
           question_id: string
@@ -1782,8 +1892,10 @@ export type Database = {
         }
         Update: {
           content_hash_at_start?: string
+          correct_option_id_at_start?: string
           created_at?: string
           difficulty?: string
+          explanation_at_start?: string | null
           options?: Json
           position?: number
           question_id?: string
@@ -2152,6 +2264,33 @@ export type Database = {
         Args: { p_decision?: string; p_vote_id: string }
         Returns: string
       }
+      correct_reported_question: {
+        Args: {
+          p_correct_option_id: string
+          p_difficulty: string
+          p_expected_question_updated_at: string
+          p_expected_report_version: number
+          p_explanation: string
+          p_idempotency_key: string
+          p_options: Json
+          p_partition_key: string
+          p_performance_indicator: string
+          p_question_text: string
+          p_question_type: string
+          p_reason: string
+          p_report_id: string
+          p_resolution_message: string
+          p_tags: string[]
+        }
+        Returns: {
+          correction_version_id: string
+          question_id: string
+          question_updated_at: string
+          report_id: string
+          report_status: string
+          report_version: number
+        }[]
+      }
       current_team_role: { Args: { p_team_id: string }; Returns: string }
       current_user_role: { Args: never; Returns: string }
       escape_repository_like: { Args: { p_value: string }; Returns: string }
@@ -2200,9 +2339,60 @@ export type Database = {
           updated_since_generation: boolean
         }[]
       }
+      get_own_question_reports: {
+        Args: {
+          p_cursor_created_at?: string
+          p_cursor_id?: string
+          p_page_size?: number
+        }
+        Returns: {
+          category: string
+          created_at: string
+          has_next_page: boolean
+          question_id: string
+          report_id: string
+          report_status: string
+          resolution_category: string
+          resolution_message: string
+          test_id: string
+          updated_at: string
+        }[]
+      }
       get_owner_removal_required_approvals: {
         Args: { p_target_user_id: string }
         Returns: number
+      }
+      get_question_report_detail: {
+        Args: { p_report_id: string }
+        Returns: {
+          category: string
+          correct_option_id: string
+          correction_version_id: string
+          created_at: string
+          description: string
+          difficulty: string
+          duplicate_of: string
+          encountered_snapshot: Json
+          explanation: string
+          lifecycle_event_id: string
+          lifecycle_state: string
+          options: Json
+          partition_key: string
+          performance_indicator: string
+          question_id: string
+          question_text: string
+          question_type: string
+          question_updated_at: string
+          report_id: string
+          report_status: string
+          report_version: number
+          reporter_email: string
+          resolution_category: string
+          resolution_message: string
+          tags: string[]
+          test_id: string
+          updated_at: string
+        }[]
       }
       get_test_history: {
         Args: {
@@ -2386,6 +2576,26 @@ export type Database = {
         }
         Returns: undefined
       }
+      resolve_report_with_question_lifecycle: {
+        Args: {
+          p_expected_question_updated_at: string
+          p_expected_report_version: number
+          p_idempotency_key: string
+          p_new_lifecycle_state: string
+          p_reason: string
+          p_report_id: string
+          p_resolution_message: string
+        }
+        Returns: {
+          lifecycle_event_id: string
+          lifecycle_state: string
+          question_id: string
+          question_updated_at: string
+          report_id: string
+          report_status: string
+          report_version: number
+        }[]
+      }
       resume_test_session: {
         Args: { p_expected_session_version: number; p_session_id: string }
         Returns: number
@@ -2402,6 +2612,36 @@ export type Database = {
           answered_questions: number
           session_version: number
           total_questions: number
+        }[]
+      }
+      search_admin_audit_logs: {
+        Args: {
+          p_action?: string
+          p_actor_user_id?: string
+          p_created_from?: string
+          p_created_to?: string
+          p_cursor_created_at?: string
+          p_cursor_id?: string
+          p_page_size?: number
+          p_report_id?: string
+          p_resource_id?: string
+          p_resource_type?: string
+        }
+        Returns: {
+          action: string
+          actor_email: string
+          actor_role: string
+          actor_user_id: string
+          audit_id: string
+          created_at: string
+          has_next_page: boolean
+          metadata: Json
+          new_values: Json
+          previous_values: Json
+          reason: string
+          report_id: string
+          resource_id: string
+          resource_type: string
         }[]
       }
       search_generation_pipeline: {
@@ -2442,6 +2682,37 @@ export type Database = {
           queue_updated_at: string
           row_count: number
           scenario_needed: number
+        }[]
+      }
+      search_question_report_queue: {
+        Args: {
+          p_category?: string
+          p_created_from?: string
+          p_created_to?: string
+          p_cursor_id?: string
+          p_cursor_updated_at?: string
+          p_difficulty?: string
+          p_lifecycle_state?: string
+          p_page_size?: number
+          p_performance_indicator?: string
+          p_question_type?: string
+          p_status?: string
+        }
+        Returns: {
+          category: string
+          created_at: string
+          difficulty: string
+          has_next_page: boolean
+          lifecycle_state: string
+          performance_indicator: string
+          question_id: string
+          question_type: string
+          report_id: string
+          report_status: string
+          report_version: number
+          reporter_email: string
+          test_id: string
+          updated_at: string
         }[]
       }
       search_question_repository: {
@@ -2515,6 +2786,20 @@ export type Database = {
           test_id: string
         }[]
       }
+      submit_question_report: {
+        Args: {
+          p_category: string
+          p_description: string
+          p_idempotency_key: string
+          p_question_id: string
+          p_session_id: string
+        }
+        Returns: {
+          created_at: string
+          report_id: string
+          report_status: string
+        }[]
+      }
       submit_test_session: {
         Args: { p_expected_session_version: number; p_session_id: string }
         Returns: {
@@ -2534,6 +2819,24 @@ export type Database = {
       test_blueprint_text_array: {
         Args: { p_field_name: string; p_value: Json }
         Returns: string[]
+      }
+      transition_question_report: {
+        Args: {
+          p_duplicate_of: string
+          p_expected_version: number
+          p_idempotency_key: string
+          p_new_status: string
+          p_reason: string
+          p_report_id: string
+          p_resolution_category: string
+          p_resolution_message: string
+        }
+        Returns: {
+          report_id: string
+          report_status: string
+          report_version: number
+          updated_at: string
+        }[]
       }
       withdraw_owner_removal_vote: {
         Args: { p_vote_id: string }

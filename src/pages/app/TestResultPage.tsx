@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { ButtonLink } from "../../components/ui/ButtonLink";
+import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { ReportQuestionDialog } from "../../components/reports/ReportQuestionDialog";
 import {
   fetchTestResult,
   formatDuration,
@@ -15,6 +17,7 @@ export function TestResultPage() {
   const [items, setItems] = useState<SessionResultItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [reporting, setReporting] = useState<SessionResultItem | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -135,6 +138,15 @@ export function TestResultPage() {
                   <p>{item.explanation || "No explanation is available."}</p>
                 </div>
               )}
+              <div className="button-row">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setReporting(item)}
+                >
+                  Report Question
+                </Button>
+              </div>
             </Card>
           );
         })}
@@ -146,6 +158,14 @@ export function TestResultPage() {
           Retake Test ID
         </ButtonLink>
       </div>
+      {reporting && (
+        <ReportQuestionDialog
+          sessionId={sessionId}
+          questionId={reporting.question_id}
+          questionLabel={`Question ${reporting.question_position}: ${reporting.question_text}`}
+          onClose={() => setReporting(null)}
+        />
+      )}
     </div>
   );
 }
