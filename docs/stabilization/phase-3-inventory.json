@@ -159,10 +159,22 @@
       "sha256": "1f6c0521588eaaecce289434bab0cc09217c8cdfdb564b712f498bcae78460d2"
     },
     {
+      "path": "docs/stabilization/phase-3-migrations.json",
+      "group": "phase-3",
+      "included": true,
+      "sha256": "f77a22e1178853b7129c5cc074d84528b7da840b6cd11415980da6c1c5bba38a"
+    },
+    {
+      "path": "docs/stabilization/phase-3-verification.md",
+      "group": "phase-3",
+      "included": true,
+      "sha256": "842df9fce253c8a2082fe032cccdf6d59f03b2ec19b22b072d83bbf8a1a3a450"
+    },
+    {
       "path": "docs/stabilization/phase-3.md",
       "group": "phase-3",
       "included": true,
-      "sha256": "ce9e23044b49d71233d88eb54b5221158ba3784a6d6837c7e7b6a3750e9afb2c"
+      "sha256": "a08c45b6b6102731c6127e5003363f9fec0875dc1f80c7bcd72f3ba58ce19924"
     },
     {
       "path": "docs/tests/custom-practice-deployment.md",

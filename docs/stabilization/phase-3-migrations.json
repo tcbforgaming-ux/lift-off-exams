@@ -1,0 +1,105 @@
+{
+  "scope": "complete ordered candidate history; hosted pending set UNVERIFIED",
+  "migrations": [
+    {
+      "file": "20260728000100_extensions_and_auth_helpers.sql",
+      "sha256": "594b9cf09a643eac5c1a95ab18ebbd8d394f2c0fedeffeccf2dc8448d8d2c1ea"
+    },
+    {
+      "file": "20260728000200_core_question_test_schema.sql",
+      "sha256": "cba4840530184fdc9320348cbbba1955de022d96d5d61b3e00d9103b46ebd812"
+    },
+    {
+      "file": "20260728000300_user_activity_billing_notifications.sql",
+      "sha256": "bedce373ce66881e4e7282a93345f13c18a67b99d5ced2c9b291b12730b2b868"
+    },
+    {
+      "file": "20260728000400_admin_governance_and_teams.sql",
+      "sha256": "3ae45e1a46271997dfb25cda7d6f76b358c1154cd4b228ae1356a6d2fd60e3b9"
+    },
+    {
+      "file": "20260728000500_question_generation_contracts.sql",
+      "sha256": "205eca44b7036d6160ccc0d4bb4d8c0ebecfd13624eb0fc70fd8ba40e5397491"
+    },
+    {
+      "file": "20260728000600_trusted_functions_rls_and_grants.sql",
+      "sha256": "95a9d47954cdf384734d50a62ef6a93d7331959d239af9e5f3ad5e3a85c4cfed"
+    },
+    {
+      "file": "20260729000100_auth_role_management.sql",
+      "sha256": "2e8510af44372c54b7b6ab4dee8c7924974f4f9f78e052847a89613d52821b00"
+    },
+    {
+      "file": "20260731000100_owner_removal_governance.sql",
+      "sha256": "411b0a1cf4f422d6bd1a88bb87382f1d2a97170fa46c604bc36dc98ecf1d4d0c"
+    },
+    {
+      "file": "20260731000200_question_repository.sql",
+      "sha256": "42d0ecdc8c36bf2b3d89eace959ef52202ed4167370e03fb5114605d3120816c"
+    },
+    {
+      "file": "20260731000300_question_repository_staff_select.sql",
+      "sha256": "5c2e49a97246de05475a5f19eb3e8c9f96ffb6b361b6fad93d293d58d33b8b6a"
+    },
+    {
+      "file": "20260731000400_generation_pipeline_import.sql",
+      "sha256": "f69b22ea6f13f930c6ff4f466df030bc35c53c5bb4165aa4dd7aa5289179e08e"
+    },
+    {
+      "file": "20260731000500_generation_queue_v3_remote_compat.sql",
+      "sha256": "37d89fa13b474bc042c537b8360e36b4cf93945005b2f4e0996f9f9065706a4c"
+    },
+    {
+      "file": "20260826000100_deterministic_test_generation.sql",
+      "sha256": "e136616ad873705bcfeeaf4e1b60f6273f7154fdba3ebb2b25118c5e24701e2f"
+    },
+    {
+      "file": "20260826000200_test_id_safety_hardening.sql",
+      "sha256": "07d40871610c2982a70dc6cbb0e8533fc0a56315157efb83343f99df8ab9633a"
+    },
+    {
+      "file": "20260826000300_test_sessions_and_results.sql",
+      "sha256": "bacd2d13b64ba74ddd5fc5e14f662e7240c96f86f7672319d425690c8964eaad"
+    },
+    {
+      "file": "20260826000400_test_definition_service_access.sql",
+      "sha256": "aaf8430f25d10128afd91d0df419fdb0dff3d297a87a464345c2e4ad93f83773"
+    },
+    {
+      "file": "20260826000500_reports_administrative_review.sql",
+      "sha256": "e2bb5ba15ec00728a58c75f31745ed63204989261deb0444e8bb6444f9d4167f"
+    },
+    {
+      "file": "20260930000100_custom_practice_configuration.sql",
+      "sha256": "a07267e12ea007757efeb3da0d70e38f6f5ff2baeb99cc60da9ed9c0fa1b4ad5"
+    },
+    {
+      "file": "20260930000200_practice_function_privileges.sql",
+      "sha256": "88a81eb5f8000859ad943acd9f5831fe7ee97290dbc8680f3f04bd13aba68a92"
+    },
+    {
+      "file": "20261018000100_stabilize_permission_boundaries.sql",
+      "sha256": "bfc81182c75b36b366c19566cdf7fb99fb30e5df4c325a8f20d6b4e17870078e"
+    },
+    {
+      "file": "20261018000200_governance_write_boundary.sql",
+      "sha256": "50857b2a48091f7b4e4d4d1b7e3c52d3fbec6c82b6446c627ed1566a8a45bdd6"
+    },
+    {
+      "file": "20261021000100_generation_output_reliability.sql",
+      "sha256": "355dddd5c6d1381ad325a71e385e659015ea9d1b1385e42650097f8311ba8be1"
+    },
+    {
+      "file": "20261021000200_output_sources_and_conflict_responses.sql",
+      "sha256": "57b79761ff8029ba014bc4643f5aaba4034e3a91fe100365f8dcec7abff5f1a7"
+    },
+    {
+      "file": "20261021000300_validate_output_manifest_totals.sql",
+      "sha256": "90a4c706ee8225a70f8826efe9834d9c86d93c803761d13b164dca18fa9a0b23"
+    },
+    {
+      "file": "20261021000400_preserve_import_response_deltas.sql",
+      "sha256": "52b3599a069b19ae92a2be5d61bebd2cbdc4193dae22b6291a6d08794f982210"
+    }
+  ]
+}

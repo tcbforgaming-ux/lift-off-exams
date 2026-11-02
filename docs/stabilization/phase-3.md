@@ -49,8 +49,9 @@ credential files entirely. Historical audit attachments and the normal local
 their safe catalog inventory are included as historical evidence, not current
 hosted-state assertions.
 
-Two coherent commits separate existing approved practice/dashboard prerequisites
-from stabilization. These prerequisites are explicit: the current RouteGate and
+Separate commits distinguish existing approved practice/dashboard prerequisites,
+stabilization, the structured drift-check correction and verification evidence.
+These prerequisites are explicit: the current RouteGate and
 browser tests use the separate admin overview and Generate routes; session tests
 and generated types depend on the September custom-practice SQL. Omitting those
 dependencies would verify a different application. Their source, SQL, RLS and tests
@@ -115,6 +116,8 @@ Phase 3 because pushing remains blocked by the user-confirmed integrations.
 
 ## Hosted Compatibility Gate
 
+`phase-3-migrations.json` records all 25 migration files and their checksums in
+application order; it is not a claim about the remotely pending set.
 `phase-3-metadata-checks.sql` is a prepared read-only catalog inspection, not run
 against a hosted project. Have the operator establish an explicit approved
 read-only connection and target ref first; do not print its DSN or access browser
