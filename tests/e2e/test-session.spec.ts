@@ -44,7 +44,7 @@ test("free user can recover, submit, and reopen a secure test session", async ({
 
   await page.goto("/history");
   await expect(page.getByText(fixture.testId)).toBeVisible();
-  await page.getByRole("link", { name: "Resume Session" }).click();
+  await page.locator(`a[href="${new URL(sessionUrl).pathname}"]`).click();
   await expect(page).toHaveURL(sessionUrl);
   await page.getByRole("button", { name: "Resume Session" }).click();
   await expect(page.getByRole("radio", { name: /B Distractor B/ })).toBeEnabled();
@@ -70,7 +70,7 @@ test("free user can recover, submit, and reopen a secure test session", async ({
   await expect(page).toHaveURL(resultUrl);
   await expect(page.getByRole("heading", { name: "25.00%" })).toBeVisible();
   await page.getByRole("link", { name: "Back to History" }).click();
-  await page.getByRole("link", { name: "View Result" }).click();
+  await page.locator(`a[href="${new URL(resultUrl).pathname}"]`).click();
   await expect(page).toHaveURL(resultUrl);
 
   const deliveredPayloads = responseBodies.join("\n");

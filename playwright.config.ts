@@ -11,6 +11,12 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:4175",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    serviceWorkers: "block",
+    launchOptions: {
+      args: [
+        "--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1, EXCLUDE localhost",
+      ],
+    },
   },
   projects: [
     {

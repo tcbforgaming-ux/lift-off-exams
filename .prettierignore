@@ -8,3 +8,4 @@ supabase/.branches
 supabase/.temp
 supabase/functions
 src/lib/supabase/database.types.ts
+.tmp

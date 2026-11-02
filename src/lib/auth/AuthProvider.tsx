@@ -1,5 +1,12 @@
 import type { Session } from "@supabase/supabase-js";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { getSupabaseBrowserClient } from "../supabase/browserClient";
 import type { Profile } from "../supabase/types";
@@ -29,8 +36,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const revision = useRef(0);
 
   const applySession = useCallback(async (nextSession: Session | null) => {
+    const requestRevision = ++revision.current;
     setSession(nextSession);
     setError(null);
 
@@ -40,14 +49,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
+    setStatus("loading");
+    setProfile(null);
+
     try {
       const nextProfile = await loadProfile(nextSession.user.id);
+      if (revision.current !== requestRevision) return;
       setProfile(nextProfile);
       setStatus(nextProfile ? "authenticated" : "error");
       setError(
         nextProfile ? null : "Your profile is still being prepared. Try refreshing.",
       );
     } catch {
+      if (revision.current !== requestRevision) return;
       setProfile(null);
       setStatus("error");
       setError("We could not load your account profile.");
@@ -57,15 +71,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     let mounted = true;
+    const requestEpoch = revision;
+    const initialRevision = requestEpoch.current;
 
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        if (!mounted) return;
+        if (!mounted || revision.current !== initialRevision) return;
         void applySession(data.session);
       })
       .catch(() => {
-        if (!mounted) return;
+        if (!mounted || revision.current !== initialRevision) return;
         setStatus("error");
         setError("We could not read your session.");
       });
@@ -79,13 +95,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     return () => {
       mounted = false;
+      ++requestEpoch.current;
       subscription.unsubscribe();
     };
   }, [applySession]);
 
   const refreshProfile = useCallback(async () => {
     if (!session?.user) return;
+    const requestRevision = revision.current;
     const nextProfile = await loadProfile(session.user.id);
+    if (!nextProfile || revision.current !== requestRevision)
+      throw new Error("Your profile could not be refreshed.");
     setProfile(nextProfile);
   }, [session?.user]);
 
@@ -93,6 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const supabase = getSupabaseBrowserClient();
     const result = await supabase.auth.signOut();
     if (!result.error) {
+      ++revision.current;
       setSession(null);
       setProfile(null);
       setStatus("unauthenticated");

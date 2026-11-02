@@ -16,9 +16,12 @@
   },
   "include": [
     "eslint.config.js",
+    "scripts/pipeline-runtime.d.ts",
     "vite.config.ts",
     "vitest.setup.ts",
     "playwright.config.ts",
+    "playwright.ui.config.ts",
+    "tests/ui",
     "tests/e2e",
     "src/lib/supabase/database.types.ts"
   ]

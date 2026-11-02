@@ -4,6 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { LoadingBoundary } from "./boundaries/LoadingBoundary";
 import { canAccessRole } from "../lib/auth/roles";
 import { useAuth } from "../lib/auth/useAuth";
+import { sanitizeRedirectPath } from "../lib/auth/redirects";
 import type { AppRole } from "../lib/supabase/types";
 
 type RouteGateProps = {
@@ -27,7 +28,8 @@ export function RouteGate({
   }
 
   if (status === "authenticated" && auth === "guest") {
-    return <Navigate to="/dashboard" replace />;
+    const from = (location.state as { from?: unknown } | null)?.from;
+    return <Navigate to={sanitizeRedirectPath(from)} replace />;
   }
 
   if (auth === "guest") {
@@ -35,7 +37,17 @@ export function RouteGate({
   }
 
   if (status !== "authenticated") {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{
+          from: sanitizeRedirectPath(
+            `${location.pathname}${location.search}${location.hash}`,
+          ),
+        }}
+      />
+    );
   }
 
   if (!canAccessRole(role, requiredRole)) {

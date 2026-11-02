@@ -1,0 +1,618 @@
+{
+  "base": "21ac4aa26882d691659cc04afde45139ad68f97b",
+  "date": "2026-11-02",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "af4fee62a961f68cceb7c1fb43e8717699330587594e1fae083c34e8eba1e415"
+    },
+    {
+      "path": ".prettierignore",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "a42d5d915ce8441a658296dccd0dce1c4fa745ea4fbf632d355b61ee1cde2e06"
+    },
+    {
+      "path": "docs/audits/2026-10-18/README.md",
+      "group": "excluded",
+      "included": false,
+      "sha256": "0277bb3d8a704583a97c2ff18224e32a8f54d4a1cc84c5be140dbea367716f42"
+    },
+    {
+      "path": "docs/audits/2026-10-18/anonymous-read-checks.json",
+      "group": "excluded",
+      "included": false,
+      "sha256": "80e3f1e514a281c13f144378b02c295c875d19ffc8efbc3f2e8d520baa938f1f"
+    },
+    {
+      "path": "docs/audits/2026-10-18/browser-audit.mjs.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "87936021a2104f0df3c32e8298583dbdcf507983a34ccdee6f3d11ee05b3633a"
+    },
+    {
+      "path": "docs/audits/2026-10-18/browser-results.json",
+      "group": "excluded",
+      "included": false,
+      "sha256": "f04b7097867b1b8882c5731bf74e9e62913b547966e282ac5a60d1688a561720"
+    },
+    {
+      "path": "docs/audits/2026-10-18/build-matrix.mjs.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "94f38b69006e15ceb76cb93117d6da017ed1556ae27495daf950c2b026eabef8"
+    },
+    {
+      "path": "docs/audits/2026-10-18/command-results.md",
+      "group": "excluded",
+      "included": false,
+      "sha256": "819784ca10ccbf48f0e6fe71d39a153413c1d37838acaa70944a99ef185f7be3"
+    },
+    {
+      "path": "docs/audits/2026-10-18/critical-function-grants.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "654499f68cc067f8f86cbd8821bbb576c8da6963fd59f6c6822a8c0880b6a6a9"
+    },
+    {
+      "path": "docs/audits/2026-10-18/findings.md",
+      "group": "excluded",
+      "included": false,
+      "sha256": "b7dc3662976f2f7d8f490c548ae3c2d9786d616d7fb5d0618d7d7b36c2fec720"
+    },
+    {
+      "path": "docs/audits/2026-10-18/matrix-summary.json",
+      "group": "excluded",
+      "included": false,
+      "sha256": "ceb36dd0417c9708e7cbc40569da5a024b90811ae9d64fc57334dd609917bf9c"
+    },
+    {
+      "path": "docs/audits/2026-10-18/pipeline-audit.mjs.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "72e69efa5e38d899977b74800c66df7a6584e174b0eeb327473142fa18ca9742"
+    },
+    {
+      "path": "docs/audits/2026-10-18/pipeline-results.json",
+      "group": "excluded",
+      "included": false,
+      "sha256": "9d3a187fef83fe61ac1fc920de8bfc4bd5ab9d90fe76ce2a536e7380a9d1f3fd"
+    },
+    {
+      "path": "docs/audits/2026-10-18/profile-security-metadata.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "42d85a749de1db0f19e9a25c83792314945fa27bea8a298c068434fc07d99cea"
+    },
+    {
+      "path": "docs/audits/2026-10-18/remote-function-privileges.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "da307ee29dcd6b67362aa17551b3c54ec8c455c0f177d07aa895e4007e6ee849"
+    },
+    {
+      "path": "docs/audits/2026-10-18/remote-rls-and-migrations.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "65f2bedeeed37e0a24036eb6d9165396c3117bfb1ed9d3b6e3edf74f4e5839a3"
+    },
+    {
+      "path": "docs/audits/2026-10-18/remote-schema-inventory.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "62eaa9feada37ebd9a2e1b76d4190536117fac89643785687bc1b4137afed88c"
+    },
+    {
+      "path": "docs/audits/2026-10-18/remote-security-catalog.txt",
+      "group": "excluded",
+      "included": false,
+      "sha256": "4d9898ce5c040a36e454359f9356378c3b3350845c308d49badba388329446d8"
+    },
+    {
+      "path": "docs/audits/2026-10-18/requirements-matrix.csv",
+      "group": "excluded",
+      "included": false,
+      "sha256": "517e4d659b920effdc206619d28d0f96e37d9dc1e4e5248a6babc1d11e514575"
+    },
+    {
+      "path": "docs/audits/2026-10-18/schema-summary.json",
+      "group": "excluded",
+      "included": false,
+      "sha256": "85d98d52ee32a0ffe0b2729fb40d3f192c0e1815589d04e8e46586f420d1f71c"
+    },
+    {
+      "path": "docs/audits/2026-10-18/synthetic-admin-mobile.png",
+      "group": "excluded",
+      "included": false,
+      "sha256": "4aacdc51b59b007c20554d13ca24b4cfc602b35ccd89e844269063b06cb3b5f1"
+    },
+    {
+      "path": "docs/stabilization/local-permission-inventory.json",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "794e4ebce584b9526334ee1982fa85e2bede13d56417086abf51ed592b29395a"
+    },
+    {
+      "path": "docs/stabilization/phase-1.md",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "5268c4e13c78f2a9d97a13981b31eb24d5f7b0adc4443ab3c9ccd6b8bef3916e"
+    },
+    {
+      "path": "docs/stabilization/phase-2.md",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "58eec4843d70c156b993f580590bfc585379de600a41f7c32df86768ae6f375e"
+    },
+    {
+      "path": "docs/stabilization/phase-3-history-checks.sql",
+      "group": "phase-3",
+      "included": true,
+      "sha256": "77fcbc1719c27a3c87ff53c71441d06b614483d6c20e2ac6f761eed7c8088207"
+    },
+    {
+      "path": "docs/stabilization/phase-3-metadata-checks.sql",
+      "group": "phase-3",
+      "included": true,
+      "sha256": "1f6c0521588eaaecce289434bab0cc09217c8cdfdb564b712f498bcae78460d2"
+    },
+    {
+      "path": "docs/stabilization/phase-3.md",
+      "group": "phase-3",
+      "included": true,
+      "sha256": "fb9ea46ec4caf15f6741d38ba137764c0c5377d9cf8f9690f746d21aa30fce6b"
+    },
+    {
+      "path": "docs/tests/custom-practice-deployment.md",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "f59eb2fe1ca3002b2084c4011d7708e78f3ec9814487df7125500741e03cf5b1"
+    },
+    {
+      "path": "docs/tests/dashboard-layouts.md",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "c1694c593d53b3dc033720aad61fdac9a6dcbfeb03286c15d3821428235145b3"
+    },
+    {
+      "path": "docs/tests/milestone-7.md",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "2a22095467071c0d714db986c2bfd659219de3ec9fc30f5fc3b6f743159e5cf4"
+    },
+    {
+      "path": "eslint.config.js",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "d6961ec59482c106a1bce361cce5f098dc46b280ccf7732ed371f5c3d2ebd6f9"
+    },
+    {
+      "path": "package.json",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "88a34363de3b808537a7af67297d2138641e5fdf82c4a6a81f1193200acb53ae"
+    },
+    {
+      "path": "playwright.config.ts",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "670c8cf350fb3a66be34aab8a03ea5a00ada6755e21965925f11ec85f7b4b5bc"
+    },
+    {
+      "path": "playwright.ui.config.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "5a285dafbdd4b94ee41f687aae2adb331d65d79c5f8c0ff3612e1d36eda6e8dc"
+    },
+    {
+      "path": "scripts/check-pipeline-types.mjs",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "ad10d7d2c171ac539f7bb8acf77262c1db10c4180b72f9766fcaefc4c50d2668"
+    },
+    {
+      "path": "scripts/permission-inventory.sql",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "0d7bffc4a00c695c22cbf2f292b89428f2fbd96f982a039115ddcd5459a550ff"
+    },
+    {
+      "path": "scripts/pipeline-db-cleanup.sql",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "a0bbe3438ebf97e34bde30cb430f6e60cbdd55a84e1c341a971b4843bac4e6f2"
+    },
+    {
+      "path": "scripts/pipeline-db-fixtures.sql",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "3d88971ab761050eedde401eefaf525795789fffd28fa4d6387aaabf92ffd17f"
+    },
+    {
+      "path": "scripts/pipeline-runtime.d.ts",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "4309ce6fb6462e407d66e355b17f342a09596c52a4833017ff1e057bf370e294"
+    },
+    {
+      "path": "scripts/pipeline-test-runtime.mjs",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "6412a2d8055afc0645e1576ad4362aac1d14dbec200bb9bcbf22be0ff036ef3e"
+    },
+    {
+      "path": "scripts/run-playwright-local.ps1",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "14e61ecf91cd36590ab3bd65970f47f43defde406617b42e9b65a77fcf16f854"
+    },
+    {
+      "path": "scripts/test-pipeline-db.mjs",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "605949463793550bc05282fe05da17a414400df623de087c18ba252d4886c6a9"
+    },
+    {
+      "path": "scripts/test-pipeline.mjs",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "16c0ba4443d5d13e45e387d8a9f9d5d2aeed4131dd7d12df296134af2c602aef"
+    },
+    {
+      "path": "scripts/verification-contracts.mjs",
+      "group": "phase-3",
+      "included": true,
+      "sha256": "9fef0d46ac2c916dc59cbdd1c1571771ef32a22b93bf61d761c06422ccdcb883"
+    },
+    {
+      "path": "scripts/verification-contracts.test.mjs",
+      "group": "phase-3",
+      "included": true,
+      "sha256": "4eb8d25bc9760c644e80e95baf44e094d4d66a930091dc9125578a461e4b585a"
+    },
+    {
+      "path": "scripts/verify-backend.mjs",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "c27f7a467f095292a85b150bb843f46e8660e1e6f42c2961969058a303d3c676"
+    },
+    {
+      "path": "src/app/RouteGate.test.tsx",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "b4f856fbf4447df7921116b03f7e077d51554e0888fe651227e08bfd37961fa1"
+    },
+    {
+      "path": "src/app/RouteGate.tsx",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "9c2d67cb9a9d5b9c8f0c980fdf36d41de515ed0b7d64725166635e41f158efd5"
+    },
+    {
+      "path": "src/app/routes.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "de4a78d2f5f65645c2d24d215ebe73e69e1dcab00333c6d4c84e06a71433eb07"
+    },
+    {
+      "path": "src/app/urlPaths.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "b755920eaaae925c036f56493b49c2cc525e7e21a58a89b15c062497cc8cc124"
+    },
+    {
+      "path": "src/components/layout/AppShell.test.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "e8652edcbbbd1cac8614bd6cc615f72092e053cc35c70c0064b944e759c353d0"
+    },
+    {
+      "path": "src/components/layout/AppShell.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "6607150216ae1c9c6bf42b7759199c05a0442ed9f1181ceda42bbe57e0a577f2"
+    },
+    {
+      "path": "src/components/ui/ThemeToggle.test.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "603283da3f89127b944863a0d25ca47f80de01c8db4da77d781109393eda5580"
+    },
+    {
+      "path": "src/components/ui/ThemeToggle.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "d092d6277c056a6c41bb4497b2e7a9deca28c60e8272b9b4be4049e1ccaccdc0"
+    },
+    {
+      "path": "src/lib/auth/AuthProvider.test.tsx",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "62bb8fd05e79d630bf832ff0fd0e946d632ee53478c9ffe5e46760d9e980e628"
+    },
+    {
+      "path": "src/lib/auth/AuthProvider.tsx",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "68943031f7dabde870b2eefc267b93b9557393bd51897750d851b03943810f30"
+    },
+    {
+      "path": "src/lib/auth/authActions.test.ts",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "c1451a0b57c34a26a5ed34b081a1fe0a75e47f261a367c98d89c1530a8522388"
+    },
+    {
+      "path": "src/lib/auth/authActions.ts",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "276e95039fac556cfe6fc6f3f04acaf53bdace3ce9a5e25e1f5fb8bf5bd0108a"
+    },
+    {
+      "path": "src/lib/auth/redirects.test.ts",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "39de9e5cb0a7e3a8a5d735b3bb649539f049f0aa7645fe7b56aeb2c905324d85"
+    },
+    {
+      "path": "src/lib/auth/redirects.ts",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "44bc658be1dd75a0aa2aed86b30f0808825b394d740a9e2cd2f4522e6070aad1"
+    },
+    {
+      "path": "src/lib/sessions/session.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "c4ec80871dc6f9cc7a96e8c31aba34c4e7209bdf14205d2d192c5546446d31fe"
+    },
+    {
+      "path": "src/lib/supabase/database.types.ts",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "70f176d81946eb83ac0a28c388c4d402e0701788c135d8da30107244e297e0ce"
+    },
+    {
+      "path": "src/lib/tests/generation.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "71dc0dcba7a46df6d32715407f735ae7f3cefc945cbf9a3dcf7062446757e1b8"
+    },
+    {
+      "path": "src/lib/theme.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "3b512447ddce929ced05b12db5d922e3ad4d75f645b0f3d31f4124a20d01fa8f"
+    },
+    {
+      "path": "src/main.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "a0dac7a7db05eabd3466f4992de46baa8247cfc8ced6241e40418549163312ca"
+    },
+    {
+      "path": "src/pages/admin/AdminDashboardPage.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "e6feee46bfc0a7d5c04b89cfaed66117a733e0df76a7c316ed3686b2d873e5ab"
+    },
+    {
+      "path": "src/pages/app/DashboardPage.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "44ae6eabfcbe0ba8d1401a8aa6789fca9f33f7203ded6c53bf83f19aa6ef66a2"
+    },
+    {
+      "path": "src/pages/app/PracticeSetupPage.test.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "8da790e950d86c4ef678288edef3980d21b08846fcd733f913f1aa4c9d3df3eb"
+    },
+    {
+      "path": "src/pages/app/PracticeSetupPage.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "5cc27403b5982448cdcf799c72214a183119055734819b5ae655c0241c90c5a3"
+    },
+    {
+      "path": "src/pages/app/ProfilePage.test.tsx",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "14c34b87fd2203da43ae05787174c7f9bf108a0fca0ff6a0052522b7f358cfb5"
+    },
+    {
+      "path": "src/pages/app/ProfilePage.tsx",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "f0d2b0fa7177d003f94d956535077e3a4de2a40ce5300c5812a70ebb145ad841"
+    },
+    {
+      "path": "src/pages/app/TestSessionPage.test.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "3a6c9522141239cb4fcd14e1c8aa76c5e2013e770e5572e12f57c263bbe91330"
+    },
+    {
+      "path": "src/pages/app/TestSessionPage.tsx",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "da38352941071813c28ecd74a1193d49a9945ba5ee26b88b653d1647f73e552a"
+    },
+    {
+      "path": "src/pages/auth/AuthCallbackPage.test.tsx",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "2a23789b30aeffc2f644708020dc09f1e5d3c0565fc04373c9845f024400ca28"
+    },
+    {
+      "path": "src/pages/auth/AuthCallbackPage.tsx",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "570d2ff063c0bacbb630bf8ac5dd7fd0e775b4598361d17d14f9d8ba9bd11508"
+    },
+    {
+      "path": "src/pages/auth/LoginPage.tsx",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "9c7a1a8617ebad0ed6cf6812550fff49bd5efe8a44e78b0f4cb5c9d93a3c7b53"
+    },
+    {
+      "path": "src/styles/global.css",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "ad985761e98bedde6ee8b7d922e7dfd82564cf18e51eb548de425e9f70e0204c"
+    },
+    {
+      "path": "supabase/config.toml",
+      "group": "excluded",
+      "included": false,
+      "sha256": "cf8e6e1a1b8ee2221a32cf48d69d26c337c20b77ef5981516e342da72594b529"
+    },
+    {
+      "path": "supabase/functions/_shared/deca-pipeline.ts",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "15456a92f7c7878bdc3b86e771ba4c9a9e531d3219d66e3e70713dd515d8efb8"
+    },
+    {
+      "path": "supabase/functions/import-deca-batch/index.ts",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "733c248eda2405cd691ed739bb829408e8c4824e74daea32afa3591dfba76135"
+    },
+    {
+      "path": "supabase/migrations/20260930000100_custom_practice_configuration.sql",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "a07267e12ea007757efeb3da0d70e38f6f5ff2baeb99cc60da9ed9c0fa1b4ad5"
+    },
+    {
+      "path": "supabase/migrations/20260930000200_practice_function_privileges.sql",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "88a81eb5f8000859ad943acd9f5831fe7ee97290dbc8680f3f04bd13aba68a92"
+    },
+    {
+      "path": "supabase/migrations/20261018000100_stabilize_permission_boundaries.sql",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "bfc81182c75b36b366c19566cdf7fb99fb30e5df4c325a8f20d6b4e17870078e"
+    },
+    {
+      "path": "supabase/migrations/20261018000200_governance_write_boundary.sql",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "50857b2a48091f7b4e4d4d1b7e3c52d3fbec6c82b6446c627ed1566a8a45bdd6"
+    },
+    {
+      "path": "supabase/migrations/20261021000100_generation_output_reliability.sql",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "355dddd5c6d1381ad325a71e385e659015ea9d1b1385e42650097f8311ba8be1"
+    },
+    {
+      "path": "supabase/migrations/20261021000200_output_sources_and_conflict_responses.sql",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "57b79761ff8029ba014bc4643f5aaba4034e3a91fe100365f8dcec7abff5f1a7"
+    },
+    {
+      "path": "supabase/migrations/20261021000300_validate_output_manifest_totals.sql",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "90a4c706ee8225a70f8826efe9834d9c86d93c803761d13b164dca18fa9a0b23"
+    },
+    {
+      "path": "supabase/migrations/20261021000400_preserve_import_response_deltas.sql",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "52b3599a069b19ae92a2be5d61bebd2cbdc4193dae22b6291a6d08794f982210"
+    },
+    {
+      "path": "supabase/tests/database/012_custom_practice_contracts.sql",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "3dc301031da7854837aa63b5444006565f008d2daa1dcb567656bd2b1cf49ab1"
+    },
+    {
+      "path": "supabase/tests/database/013_stabilization_permissions.sql",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "5f2d2fede0a2c620169a72a968a2506f7f480a8fb3910479c7cf7bb6d6c24e08"
+    },
+    {
+      "path": "supabase/tests/database/014_generation_output_reliability.sql",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "f1318c2d879ba71fd52afaefcdf184c13e6ac37e80a800578caedeaa49388501"
+    },
+    {
+      "path": "supabase/tests/hosted/baseline.sql",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "82a193edd670df35876833107d2a07cfb0cf3f8b54ddd094e0d478d138a78c5b"
+    },
+    {
+      "path": "supabase/tests/hosted/contracts.sql",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "1442cccdeffaac40ac14288c578c6056ce915cdf5bcd515183f960736d1494fd"
+    },
+    {
+      "path": "tests/e2e/auth-redirects.spec.ts",
+      "group": "phase-2",
+      "included": true,
+      "sha256": "01ad8d23c369e92e05bfc77ae94dd5068c13e8f6e861c2a88710b5d31e048d90"
+    },
+    {
+      "path": "tests/e2e/dashboard-shells.spec.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "c9251a173994c922b2a518c07a15c2ea6ee56d055d713457adf036a318a6ba6f"
+    },
+    {
+      "path": "tests/e2e/generate.spec.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "7ccef1ac586e533311c467f6ea720f9120a6cf9f40068171f5f793a7a82389c4"
+    },
+    {
+      "path": "tests/e2e/global-setup.ts",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "b3533da3c962f637cacb1ad8a7ce2d586db78e829c3897cf317f48bb943af8bf"
+    },
+    {
+      "path": "tests/e2e/permissions.spec.ts",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "020beb05e4679d01b595e2c50d5151ae01bb03afc1290d4b02ed1e7b3853a2ee"
+    },
+    {
+      "path": "tests/e2e/reports.spec.ts",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "bb6cc25236d383d69adc0f0e71286d1d082982576d92c9de1fb11e047266c134"
+    },
+    {
+      "path": "tests/e2e/test-session.spec.ts",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "1c904a3ceabbfb5150eac78b5303b22ce7e3ea308f80f4da2a0becb8446fcf25"
+    },
+    {
+      "path": "tests/ui/dashboard-layout.spec.ts",
+      "group": "prerequisite",
+      "included": true,
+      "sha256": "fa4871f4de63c1054f118cd99dbfc4b849fe12582e5bee2b8025e15e40ac578e"
+    },
+    {
+      "path": "tsconfig.node.json",
+      "group": "phase-1-and-verification",
+      "included": true,
+      "sha256": "ae63bdd1955f99cfb6da857910d30542bc1a50968a9ef22e0e45b9734402f5fd"
+    }
+  ]
+}

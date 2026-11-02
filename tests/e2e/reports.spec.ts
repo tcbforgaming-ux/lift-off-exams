@@ -59,8 +59,12 @@ test("a private user report can be reviewed, corrected, and audited by an admini
   await expect(page.getByText("resolved", { exact: true })).toBeVisible();
 
   await page.goto("/admin/audit");
-  await expect(page.getByText("question.corrected")).toBeVisible();
-  await expect(
-    page.getByText("Clarified wording after a verified user report"),
-  ).toBeVisible();
+  const correctionAudit = page
+    .locator(".report-card")
+    .filter({ hasText: fixture.adminEmail })
+    .filter({ hasText: "question.corrected" });
+  await expect(correctionAudit).toHaveCount(1);
+  await expect(correctionAudit).toContainText(
+    "Clarified wording after a verified user report",
+  );
 });

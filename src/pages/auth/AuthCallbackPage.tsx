@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { paths } from "../../app/urlPaths";
 import { Card } from "../../components/ui/Card";
 import { sanitizeRedirectPath } from "../../lib/auth/redirects";
+import { useAuth } from "../../lib/auth/useAuth";
 import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 
 export function AuthCallbackPage() {
@@ -11,6 +12,8 @@ export function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const [message, setMessage] = useState("Completing sign-in.");
   const [failed, setFailed] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const { status } = useAuth();
 
   useEffect(() => {
     const error = searchParams.get("error") || searchParams.get("error_code");
@@ -21,7 +24,6 @@ export function AuthCallbackPage() {
     }
 
     const code = searchParams.get("code");
-    const next = sanitizeRedirectPath(searchParams.get("next"));
     const supabase = getSupabaseBrowserClient();
 
     async function completeCallback() {
@@ -42,11 +44,21 @@ export function AuthCallbackPage() {
         }
       }
 
-      void navigate(next, { replace: true });
+      setCompleted(true);
     }
 
     void completeCallback();
   }, [navigate, searchParams]);
+
+  useEffect(() => {
+    if (!completed) return;
+    if (status === "authenticated") {
+      void navigate(sanitizeRedirectPath(searchParams.get("next")), { replace: true });
+    } else if (status === "error") {
+      setFailed(true);
+      setMessage("We could not resolve your account profile. Return to log in.");
+    }
+  }, [completed, navigate, searchParams, status]);
 
   return (
     <section className="centered-page">

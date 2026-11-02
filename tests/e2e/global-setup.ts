@@ -6,6 +6,7 @@ export const fixture = {
   email: `milestone7-free-${process.env.E2E_RUN_ID ?? "manual"}@example.test`,
   otherEmail: `milestone7-other-${process.env.E2E_RUN_ID ?? "manual"}@example.test`,
   adminEmail: `milestone8-admin-${process.env.E2E_RUN_ID ?? "manual"}@example.test`,
+  ownerEmail: `phase1-owner-${process.env.E2E_RUN_ID ?? "manual"}@example.test`,
   password: "LocalOnly-M7-Password!",
   testId: "E2EFLOW00001",
   definitionId: "e7200000-0000-4000-8000-000000000001",
@@ -20,8 +21,14 @@ export const fixture = {
 async function globalSetup() {
   const url = process.env.VITE_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (process.env.E2E_LOCAL_ONLY !== "true" || !url?.startsWith("http://127.0.0.1:")) {
-    throw new Error("Playwright fixtures may run only against local Supabase.");
+  if (
+    process.env.E2E_LOCAL_ONLY !== "true" ||
+    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-stabilization-disposable" ||
+    url !== "http://127.0.0.1:58421"
+  ) {
+    throw new Error(
+      "Playwright fixtures require the marked disposable Supabase stack.",
+    );
   }
   if (!serviceRoleKey) throw new Error("Missing local SUPABASE_SERVICE_ROLE_KEY.");
 
@@ -61,6 +68,28 @@ async function globalSetup() {
     .update({ role: "admin" })
     .eq("user_id", adminUser.id);
   if (adminProfileError) throw adminProfileError;
+  const ownerUser = await createOrRefreshUser(fixture.ownerEmail);
+  const { error: ownerProfileError } = await supabase
+    .from("profiles")
+    .update({ role: "owner", owner_state: "active" })
+    .eq("user_id", ownerUser.id);
+  if (ownerProfileError) throw ownerProfileError;
+
+  const { error: blueprintError } = await supabase.from("blueprint_versions").upsert({
+    id: "e7300000-0000-4000-8000-000000000001",
+    blueprint_name: "Browser Practice Blueprint",
+    cluster: "Finance",
+    level: "State",
+    category: "Finance",
+    version: "1.0.0",
+    total_questions: 4,
+    distribution: {
+      schema_version: 1,
+      strata: [{ id: "finance", count: 4, tags: ["Milestone 7"] }],
+    },
+    change_reason: "Local browser acceptance fixture",
+  });
+  if (blueprintError) throw blueprintError;
 
   const { data: existingDefinition, error: definitionLookupError } = await supabase
     .from("test_ids")

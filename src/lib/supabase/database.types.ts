@@ -202,6 +202,9 @@ export type Database = {
           distribution: Json
           id: string
           level: string
+          practice_owner_id: string | null
+          practice_parent_id: string | null
+          practice_request_hash: string | null
           status: string
           total_questions: number
           version: string
@@ -216,6 +219,9 @@ export type Database = {
           distribution?: Json
           id?: string
           level: string
+          practice_owner_id?: string | null
+          practice_parent_id?: string | null
+          practice_request_hash?: string | null
           status?: string
           total_questions?: number
           version: string
@@ -230,11 +236,22 @@ export type Database = {
           distribution?: Json
           id?: string
           level?: string
+          practice_owner_id?: string | null
+          practice_parent_id?: string | null
+          practice_request_hash?: string | null
           status?: string
           total_questions?: number
           version?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blueprint_versions_practice_parent_id_fkey"
+            columns: ["practice_parent_id"]
+            isOneToOne: false
+            referencedRelation: "blueprint_versions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deca_batch_jobs: {
         Row: {
@@ -486,6 +503,69 @@ export type Database = {
             columns: ["queue_id"]
             isOneToOne: false
             referencedRelation: "generation_queue_v3"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generation_output_lines: {
+        Row: {
+          batch_job_id: string
+          content_hash: string
+          created_at: string
+          failed_count: number
+          failure_code: string | null
+          imported_count: number
+          outcome: string
+          output_file_id: string
+          position: number
+          receipt_id: string | null
+          skipped_count: number
+          source_custom_id: string | null
+          source_line: number
+        }
+        Insert: {
+          batch_job_id: string
+          content_hash: string
+          created_at?: string
+          failed_count?: number
+          failure_code?: string | null
+          imported_count?: number
+          outcome: string
+          output_file_id: string
+          position: number
+          receipt_id?: string | null
+          skipped_count?: number
+          source_custom_id?: string | null
+          source_line: number
+        }
+        Update: {
+          batch_job_id?: string
+          content_hash?: string
+          created_at?: string
+          failed_count?: number
+          failure_code?: string | null
+          imported_count?: number
+          outcome?: string
+          output_file_id?: string
+          position?: number
+          receipt_id?: string | null
+          skipped_count?: number
+          source_custom_id?: string | null
+          source_line?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_output_lines_batch_job_id_fkey"
+            columns: ["batch_job_id"]
+            isOneToOne: false
+            referencedRelation: "deca_batch_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generation_output_lines_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "generation_import_receipts"
             referencedColumns: ["id"]
           },
         ]
@@ -1620,6 +1700,7 @@ export type Database = {
           idempotency_key: string | null
           mode: string
           pool_timestamp: string
+          practice_settings: Json
           question_count: number
           request_hash: string | null
           resolved_distribution: Json
@@ -1648,6 +1729,7 @@ export type Database = {
           idempotency_key?: string | null
           mode?: string
           pool_timestamp: string
+          practice_settings?: Json
           question_count: number
           request_hash?: string | null
           resolved_distribution?: Json
@@ -1676,6 +1758,7 @@ export type Database = {
           idempotency_key?: string | null
           mode?: string
           pool_timestamp?: string
+          practice_settings?: Json
           question_count?: number
           request_hash?: string | null
           resolved_distribution?: Json
@@ -1937,10 +2020,13 @@ export type Database = {
           question_count: number
           resumed_at: string | null
           scoring_rule_version: string
+          show_answers: boolean
+          show_explanations: boolean
           started_at: string
           status: string
           submitted_at: string | null
           test_definition_id: string
+          timer_seconds: number | null
           updated_at: string
           user_id: string
           version: number
@@ -1959,10 +2045,13 @@ export type Database = {
           question_count: number
           resumed_at?: string | null
           scoring_rule_version?: string
+          show_answers?: boolean
+          show_explanations?: boolean
           started_at?: string
           status?: string
           submitted_at?: string | null
           test_definition_id: string
+          timer_seconds?: number | null
           updated_at?: string
           user_id: string
           version?: number
@@ -1981,10 +2070,13 @@ export type Database = {
           question_count?: number
           resumed_at?: string | null
           scoring_rule_version?: string
+          show_answers?: boolean
+          show_explanations?: boolean
           started_at?: string
           status?: string
           submitted_at?: string | null
           test_definition_id?: string
+          timer_seconds?: number | null
           updated_at?: string
           user_id?: string
           version?: number
@@ -2264,6 +2356,19 @@ export type Database = {
         Args: { p_decision?: string; p_vote_id: string }
         Returns: string
       }
+      commit_generation_output_line: {
+        Args: {
+          p_batch_job_id: string
+          p_content_hash: string
+          p_custom_id?: string
+          p_failure_code?: string
+          p_output_file_id: string
+          p_position: number
+          p_questions?: Json
+          p_source_line: number
+        }
+        Returns: Json
+      }
       correct_reported_question: {
         Args: {
           p_correct_option_id: string
@@ -2295,6 +2400,21 @@ export type Database = {
       current_user_role: { Args: never; Returns: string }
       escape_repository_like: { Args: { p_value: string }; Returns: string }
       expire_owner_removal_votes: { Args: never; Returns: number }
+      generate_custom_practice: {
+        Args: {
+          p_blueprint_id: string
+          p_difficulties: string[]
+          p_expected_version: string
+          p_idempotency_key: string
+          p_question_count: number
+          p_seed: string
+          p_show_answers: boolean
+          p_show_explanations: boolean
+          p_timer_minutes: number
+          p_topic_tags: string[]
+        }
+        Returns: Json
+      }
       generate_test_from_blueprint: {
         Args: {
           p_blueprint_id: string
@@ -2361,6 +2481,14 @@ export type Database = {
       get_owner_removal_required_approvals: {
         Args: { p_target_user_id: string }
         Returns: number
+      }
+      get_practice_feedback: {
+        Args: { p_question_id: string; p_session_id: string }
+        Returns: Json
+      }
+      get_practice_session_settings: {
+        Args: { p_session_id: string }
+        Returns: Json
       }
       get_question_report_detail: {
         Args: { p_report_id: string }
@@ -2566,6 +2694,18 @@ export type Database = {
       recalculate_generation_queue_needed: {
         Args: { p_target_per_type?: number }
         Returns: number
+      }
+      reconcile_generation_output: {
+        Args: {
+          p_batch_job_id: string
+          p_output_file_id: string
+          p_record_count: number
+        }
+        Returns: Json
+      }
+      register_generation_output_sources: {
+        Args: { p_batch_job_id: string; p_sources: Json }
+        Returns: undefined
       }
       resolve_legacy_test_id: {
         Args: {

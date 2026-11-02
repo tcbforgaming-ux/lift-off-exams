@@ -17,21 +17,24 @@ export function ProfilePage() {
     if (!user) return;
 
     setStatus("saving");
-    const { error } = await getSupabaseBrowserClient()
-      .from("profiles")
-      .update({
-        display_name: displayName.trim() || null,
-        phone: phone.trim() || null,
-      })
-      .eq("user_id", user.id);
-
-    if (error) {
+    try {
+      const { data, error } = await getSupabaseBrowserClient()
+        .from("profiles")
+        .update({
+          display_name: displayName.trim() || null,
+          phone: phone.trim() || null,
+        })
+        .eq("user_id", user.id)
+        .select("user_id, display_name, phone")
+        .maybeSingle();
+      if (error || data?.user_id !== user.id) {
+        throw error ?? new Error("The profile update did not return your row.");
+      }
+      await refreshProfile();
+      setStatus("saved");
+    } catch {
       setStatus("error");
-      return;
     }
-
-    await refreshProfile();
-    setStatus("saved");
   }
 
   return (
