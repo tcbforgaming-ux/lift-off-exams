@@ -16,6 +16,7 @@ export const paths = {
   testId: "/test-id",
   teams: "/teams",
   admin: "/admin",
+  adminQuestions: "/admin/questions",
   adminGeneration: "/admin/generation",
   adminReports: "/admin/reports",
   adminReportDetail: "/admin/reports/:reportId",

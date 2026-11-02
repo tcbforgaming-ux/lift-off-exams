@@ -34,7 +34,7 @@ const successResult: TestGenerationResult = {
 
 const mocks = vi.hoisted(() => ({
   fetchActiveBlueprints: vi.fn(),
-  generateTestFromBlueprint: vi.fn(),
+  generateCustomPractice: vi.fn(),
 }));
 
 vi.mock("../../lib/tests/generation", async () => {
@@ -44,7 +44,7 @@ vi.mock("../../lib/tests/generation", async () => {
   return {
     ...actual,
     fetchActiveBlueprints: mocks.fetchActiveBlueprints,
-    generateTestFromBlueprint: mocks.generateTestFromBlueprint,
+    generateCustomPractice: mocks.generateCustomPractice,
   };
 });
 
@@ -53,9 +53,9 @@ import { PracticeSetupPage } from "./PracticeSetupPage";
 describe("PracticeSetupPage", () => {
   beforeEach(() => {
     mocks.fetchActiveBlueprints.mockReset();
-    mocks.generateTestFromBlueprint.mockReset();
+    mocks.generateCustomPractice.mockReset();
     mocks.fetchActiveBlueprints.mockResolvedValue([blueprint]);
-    mocks.generateTestFromBlueprint.mockResolvedValue(successResult);
+    mocks.generateCustomPractice.mockResolvedValue(successResult);
   });
 
   it("loads approved blueprints and allows a 250-question request", async () => {
@@ -72,7 +72,7 @@ describe("PracticeSetupPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Generate Test" }));
 
     await waitFor(() => {
-      expect(mocks.generateTestFromBlueprint).toHaveBeenCalledWith(
+      expect(mocks.generateCustomPractice).toHaveBeenCalledWith(
         expect.objectContaining({
           blueprintId: blueprint.id,
           expectedVersion: "1.0.0",
@@ -98,12 +98,12 @@ describe("PracticeSetupPage", () => {
     expect(
       await screen.findByText("Question count must be between 1 and 250."),
     ).toBeInTheDocument();
-    expect(mocks.generateTestFromBlueprint).not.toHaveBeenCalled();
+    expect(mocks.generateCustomPractice).not.toHaveBeenCalled();
   });
 
   it("disables duplicate submissions while generation is pending", async () => {
     let resolveGeneration: (value: TestGenerationResult) => void = () => undefined;
-    mocks.generateTestFromBlueprint.mockReturnValue(
+    mocks.generateCustomPractice.mockReturnValue(
       new Promise<TestGenerationResult>((resolve) => {
         resolveGeneration = resolve;
       }),
@@ -120,14 +120,14 @@ describe("PracticeSetupPage", () => {
     fireEvent.click(submit);
     expect(await screen.findByRole("button", { name: "Generating…" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Generating…" }));
-    expect(mocks.generateTestFromBlueprint).toHaveBeenCalledTimes(1);
+    expect(mocks.generateCustomPractice).toHaveBeenCalledTimes(1);
 
     resolveGeneration(successResult);
     expect(await screen.findByText("AB4F9D72K1PQ")).toBeInTheDocument();
   });
 
   it("renders structured strict-shortage details", async () => {
-    mocks.generateTestFromBlueprint.mockResolvedValue({
+    mocks.generateCustomPractice.mockResolvedValue({
       ...successResult,
       success: false,
       test_definition_id: null,
@@ -158,5 +158,61 @@ describe("PracticeSetupPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Generate Test" }));
     expect(await screen.findByText("Question pool shortage")).toBeInTheDocument();
     expect(screen.getByText("249 of 250 available")).toBeInTheDocument();
+  });
+
+  it("sends customized count, difficulty, and timer settings with a fresh retry key", async () => {
+    render(
+      <MemoryRouter>
+        <PracticeSetupPage />
+      </MemoryRouter>,
+    );
+    await screen.findByDisplayValue("250");
+    fireEvent.click(screen.getByRole("button", { name: "Generate Test" }));
+    await screen.findByText(successResult.test_id!);
+    const firstRequest = mocks.generateCustomPractice.mock.calls[0][0] as Parameters<
+      typeof GenerationModule.generateCustomPractice
+    >[0];
+    const firstKey = firstRequest.idempotencyKey;
+    fireEvent.change(screen.getByLabelText("Questions"), { target: { value: "25" } });
+    fireEvent.click(screen.getByLabelText("Hard"));
+    fireEvent.change(screen.getByLabelText("Timer"), { target: { value: "custom" } });
+    fireEvent.change(screen.getByLabelText("Minutes"), { target: { value: "999" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generate Test" }));
+    await waitFor(() => expect(mocks.generateCustomPractice).toHaveBeenCalledTimes(2));
+    expect(mocks.generateCustomPractice.mock.calls[1][0]).toEqual(
+      expect.objectContaining({
+        requestedCount: 25,
+        difficulties: ["Easy", "Medium"],
+        timerMinutes: 999,
+      }),
+    );
+    const nextRequest = mocks.generateCustomPractice.mock.calls[1][0] as Parameters<
+      typeof GenerationModule.generateCustomPractice
+    >[0];
+    expect(nextRequest.idempotencyKey).not.toBe(firstKey);
+  });
+
+  it("switches categories without carrying over unrelated topics", async () => {
+    mocks.fetchActiveBlueprints.mockResolvedValue([
+      { ...blueprint, distribution: { strata: [{ tags: ["Channel Management"] }] } },
+      {
+        ...blueprint,
+        id: "finance",
+        category: "Finance",
+        blueprint_name: "Finance Exam",
+        distribution: { strata: [{ tags: ["Financial Analysis"] }] },
+      },
+    ]);
+    render(
+      <MemoryRouter>
+        <PracticeSetupPage />
+      </MemoryRouter>,
+    );
+    await screen.findByLabelText("Channel Management");
+    fireEvent.change(screen.getByLabelText("Category"), {
+      target: { value: "Finance" },
+    });
+    expect(screen.queryByLabelText("Channel Management")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Financial Analysis")).toBeChecked();
   });
 });

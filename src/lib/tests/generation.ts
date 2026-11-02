@@ -116,10 +116,57 @@ export async function fetchActiveBlueprints() {
       "id,blueprint_name,category,cluster,level,version,total_questions,distribution",
     )
     .eq("status", "Active")
+    .is("practice_parent_id", null)
     .order("blueprint_name", { ascending: true });
 
   if (error) throw new Error(error.message);
   return (data ?? []) as TestBlueprintSummary[];
+}
+
+export function blueprintTopics(blueprint: TestBlueprintSummary | null) {
+  if (!blueprint?.distribution || typeof blueprint.distribution !== "object") return [];
+  const strata = (blueprint.distribution as { strata?: unknown }).strata;
+  if (!Array.isArray(strata)) return [];
+  return [
+    ...new Set(
+      strata.flatMap((item: unknown) => {
+        if (!item || typeof item !== "object") return [];
+        const tags = (item as { tags?: unknown }).tags;
+        return Array.isArray(tags)
+          ? tags.filter((tag): tag is string => typeof tag === "string")
+          : [];
+      }),
+    ),
+  ].sort();
+}
+
+export async function generateCustomPractice(input: {
+  blueprintId: string;
+  expectedVersion: string;
+  requestedCount: number;
+  difficulties: string[];
+  topicTags: string[];
+  timerMinutes: number | null;
+  showAnswers: boolean;
+  showExplanations: boolean;
+  seed: string;
+  idempotencyKey: string;
+}) {
+  const { data, error } = await rpcClient().rpc("generate_custom_practice", {
+    p_blueprint_id: input.blueprintId,
+    p_expected_version: input.expectedVersion,
+    p_question_count: input.requestedCount,
+    p_difficulties: input.difficulties,
+    p_topic_tags: input.topicTags,
+    p_timer_minutes: input.timerMinutes,
+    p_show_answers: input.showAnswers,
+    p_show_explanations: input.showExplanations,
+    p_seed: input.seed || null,
+    p_idempotency_key: input.idempotencyKey,
+  });
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("The generation service returned no result.");
+  return data as TestGenerationResult;
 }
 
 export async function generateTestFromBlueprint(input: {

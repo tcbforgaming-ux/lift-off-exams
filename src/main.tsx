@@ -5,6 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import { App } from "./app/App";
 import { AppErrorBoundary } from "./app/boundaries/AppErrorBoundary";
 import "./styles/global.css";
+import { applyTheme, getPreferredTheme } from "./lib/theme";
+
+applyTheme(getPreferredTheme());
 
 const rootElement = document.getElementById("root");
 

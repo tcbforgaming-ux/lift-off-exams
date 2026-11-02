@@ -93,6 +93,11 @@ const QuestionRepositoryPage = lazy(() =>
     default: module.QuestionRepositoryPage,
   })),
 );
+const AdminDashboardPage = lazy(() =>
+  import("../pages/admin/AdminDashboardPage").then((module) => ({
+    default: module.AdminDashboardPage,
+  })),
+);
 const GenerationPipelinePage = lazy(() =>
   import("../pages/admin/GenerationPipelinePage").then((module) => ({
     default: module.GenerationPipelinePage,
@@ -177,10 +182,17 @@ export const routes = [
     auth: "protected",
   },
   {
+    path: paths.generate,
+    label: "Generate",
+    element: PracticeSetupPage,
+    navigation: "app",
+    auth: "protected",
+  },
+  {
     path: paths.practiceSetup,
     label: "Practice Setup",
     element: PracticeSetupPage,
-    navigation: "app",
+    navigation: "hidden",
     auth: "protected",
   },
   {
@@ -227,6 +239,14 @@ export const routes = [
   },
   {
     path: paths.admin,
+    label: "Overview",
+    element: AdminDashboardPage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: paths.adminQuestions,
     label: "Questions",
     element: QuestionRepositoryPage,
     navigation: "admin",

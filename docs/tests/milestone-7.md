@@ -1,5 +1,9 @@
 # Milestone 7: Test Sessions and Results
 
+Backend verification now uses the isolated workflow in
+[Stabilization Phase 1](../stabilization/phase-1.md). `pnpm test:e2e` targets only
+that marked disposable stack, not the normal local development database.
+
 ## Contracts
 
 A **test definition** is the immutable Milestone 6 Test ID and its ordered question

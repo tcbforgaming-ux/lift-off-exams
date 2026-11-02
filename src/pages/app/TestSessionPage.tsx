@@ -6,6 +6,9 @@ import { Card } from "../../components/ui/Card";
 import { ReportQuestionDialog } from "../../components/reports/ReportQuestionDialog";
 import {
   fetchTestSession,
+  fetchPracticeSessionSettings,
+  fetchPracticeFeedback,
+  type PracticeSessionSettings,
   formatDuration,
   parseAnswerOptions,
   pauseSession,
@@ -29,6 +32,40 @@ export function TestSessionPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [settings, setSettings] = useState<PracticeSessionSettings | null>(null);
+  const [clock, setClock] = useState({ seconds: 0, syncedAt: Date.now() });
+  const [now, setNow] = useState(Date.now());
+  const [feedback, setFeedback] = useState<{
+    correct_option_id: string | null;
+    explanation: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const synchronize = async () => {
+      try {
+        const next = await fetchPracticeSessionSettings(sessionId);
+        if (!active) return;
+        setSettings(next);
+        setClock({ seconds: next.active_duration_seconds, syncedAt: Date.now() });
+        if (next.status === "submitted")
+          void navigate(`/results/${sessionId}`, { replace: true });
+      } catch (error) {
+        if (active)
+          setMessage(
+            error instanceof Error ? error.message : "Timer could not synchronize.",
+          );
+      }
+    };
+    void synchronize();
+    const polling = setInterval(() => void synchronize(), 10000);
+    const ticking = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      active = false;
+      clearInterval(polling);
+      clearInterval(ticking);
+    };
+  }, [sessionId, status, navigate]);
 
   const load = async () => {
     setLoading(true);
@@ -57,6 +94,42 @@ export function TestSessionPage() {
     [position, questions],
   );
   const answered = questions.filter((question) => question.selected_option_id).length;
+  const elapsed = settings
+    ? clock.seconds +
+      (status === "in_progress"
+        ? Math.max(0, Math.floor((now - clock.syncedAt) / 1000))
+        : 0)
+    : (current?.active_duration_seconds ?? 0);
+  const expired = settings?.timer_seconds != null && elapsed >= settings.timer_seconds;
+
+  useEffect(() => {
+    let active = true;
+    setFeedback(null);
+    if (
+      current?.selected_option_id &&
+      (settings?.show_answers || settings?.show_explanations)
+    ) {
+      void fetchPracticeFeedback(sessionId, current.question_id)
+        .then((value) => {
+          if (active) setFeedback(value);
+        })
+        .catch((error: unknown) => {
+          if (active)
+            setMessage(
+              error instanceof Error ? error.message : "Feedback could not load.",
+            );
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [
+    sessionId,
+    current?.question_id,
+    current?.selected_option_id,
+    settings?.show_answers,
+    settings?.show_explanations,
+  ]);
 
   const goTo = async (nextPosition: number) => {
     if (nextPosition === position || saving) return;
@@ -177,8 +250,16 @@ export function TestSessionPage() {
             </dd>
           </div>
           <div>
-            <dt>Active time</dt>
-            <dd>{formatDuration(current.active_duration_seconds)}</dd>
+            <dt>
+              {settings?.timer_seconds != null ? "Time remaining" : "Active time"}
+            </dt>
+            <dd>
+              {formatDuration(
+                settings?.timer_seconds != null
+                  ? settings.timer_seconds - elapsed
+                  : elapsed,
+              )}
+            </dd>
           </div>
           <div>
             <dt>Status</dt>
@@ -218,7 +299,7 @@ export function TestSessionPage() {
           <h2 id="question-heading">{current.question_text}</h2>
           <fieldset
             className="answer-list"
-            disabled={status !== "in_progress" || saving}
+            disabled={status !== "in_progress" || saving || expired}
           >
             <legend>Select one answer</legend>
             {options.map((option) => (
@@ -242,6 +323,16 @@ export function TestSessionPage() {
               </label>
             ))}
           </fieldset>
+          {feedback && (
+            <section className="practice-feedback" aria-label="Study feedback">
+              {feedback.correct_option_id && (
+                <p>
+                  <strong>Correct answer: {feedback.correct_option_id}</strong>
+                </p>
+              )}
+              {feedback.explanation && <p>{feedback.explanation}</p>}
+            </section>
+          )}
 
           <div className="session-navigation">
             <Button

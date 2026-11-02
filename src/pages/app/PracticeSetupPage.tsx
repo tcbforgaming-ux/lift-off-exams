@@ -5,7 +5,8 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import {
   fetchActiveBlueprints,
-  generateTestFromBlueprint,
+  generateCustomPractice,
+  blueprintTopics,
   parseRequestedQuestionCount,
   validateSeed,
   type TestBlueprintSummary,
@@ -21,6 +22,13 @@ export function PracticeSetupPage() {
   const [blueprintId, setBlueprintId] = useState("");
   const [questionCount, setQuestionCount] = useState("");
   const [seed, setSeed] = useState("");
+  const [category, setCategory] = useState("");
+  const [difficulties, setDifficulties] = useState(["Easy", "Medium", "Hard"]);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [timer, setTimer] = useState("60");
+  const [customMinutes, setCustomMinutes] = useState("60");
+  const [showAnswers, setShowAnswers] = useState(false);
+  const [showExplanations, setShowExplanations] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -31,6 +39,13 @@ export function PracticeSetupPage() {
     () => blueprints.find((blueprint) => blueprint.id === blueprintId) ?? null,
     [blueprintId, blueprints],
   );
+  const availableTopics = useMemo(
+    () => blueprintTopics(selectedBlueprint),
+    [selectedBlueprint],
+  );
+  const categories = [
+    ...new Set(blueprints.map((blueprint) => blueprint.category)),
+  ].sort();
 
   useEffect(() => {
     let active = true;
@@ -43,6 +58,8 @@ export function PracticeSetupPage() {
         const first = rows[0];
         if (first) {
           setBlueprintId(first.id);
+          setCategory(first.category);
+          setTopics(blueprintTopics(first));
           setQuestionCount(String(first.total_questions));
         }
       })
@@ -65,9 +82,24 @@ export function PracticeSetupPage() {
     setBlueprintId(nextId);
     const nextBlueprint = blueprints.find((blueprint) => blueprint.id === nextId);
     setQuestionCount(nextBlueprint ? String(nextBlueprint.total_questions) : "");
+    setTopics(blueprintTopics(nextBlueprint ?? null));
     setResult(null);
     setMessage(null);
     idempotencyKey.current = newIdempotencyKey();
+  };
+
+  const resetRequest = () => {
+    idempotencyKey.current = newIdempotencyKey();
+    setResult(null);
+    setMessage(null);
+  };
+
+  const toggle = (value: string, items: string[], update: (next: string[]) => void) => {
+    update(
+      items.includes(value)
+        ? items.filter((item) => item !== value)
+        : [...items, value],
+    );
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -83,18 +115,34 @@ export function PracticeSetupPage() {
     try {
       const requestedCount = parseRequestedQuestionCount(questionCount);
       validateSeed(seed);
+      if (difficulties.length === 0) throw new Error("Select at least one difficulty.");
+      if (availableTopics.length > 0 && topics.length === 0)
+        throw new Error("Select at least one topic.");
+      const timerMinutes =
+        timer === "none" ? null : Number(timer === "custom" ? customMinutes : timer);
+      if (
+        timerMinutes !== null &&
+        (!Number.isInteger(timerMinutes) || timerMinutes < 1 || timerMinutes > 999)
+      ) {
+        throw new Error("Timer must be between 1 and 999 minutes.");
+      }
       setSubmitting(true);
-      const generated = await generateTestFromBlueprint({
+      const generated = await generateCustomPractice({
         blueprintId: selectedBlueprint.id,
         expectedVersion: selectedBlueprint.version,
         requestedCount,
         seed,
         idempotencyKey: idempotencyKey.current,
+        difficulties,
+        topicTags: topics,
+        timerMinutes,
+        showAnswers,
+        showExplanations,
       });
       setResult(generated);
 
       if (generated.success) {
-        setMessage("Your deterministic test definition is ready.");
+        setMessage("Your test is ready.");
       } else {
         setMessage("The approved blueprint cannot be satisfied by the active pool.");
       }
@@ -108,17 +156,40 @@ export function PracticeSetupPage() {
   return (
     <div className="page-stack">
       <header className="page-header">
-        <p className="eyebrow">Deterministic generation</p>
-        <h1>Practice Setup</h1>
-        <p>
-          Generate a persistent Test ID from an approved blueprint. Selection and
-          ordering happen securely on the server.
-        </p>
+        <p className="eyebrow">Practice</p>
+        <h1>Generate Test</h1>
       </header>
 
       <div className="generation-layout">
         <Card>
-          <form className="form-stack" onSubmit={(event) => void handleSubmit(event)}>
+          <form
+            className="form-stack"
+            onChange={resetRequest}
+            onSubmit={(event) => void handleSubmit(event)}
+          >
+            <label className="field-label" htmlFor="category">
+              Category
+            </label>
+            <select
+              id="category"
+              value={category}
+              disabled={loading || submitting}
+              onChange={(event) => {
+                setCategory(event.target.value);
+                handleBlueprintChange(
+                  blueprints.find(
+                    (blueprint) => blueprint.category === event.target.value,
+                  )?.id ?? "",
+                );
+              }}
+            >
+              {categories.length === 0 && (
+                <option value="">No active categories</option>
+              )}
+              {categories.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
             <label className="field-label" htmlFor="blueprint">
               Blueprint
             </label>
@@ -131,12 +202,44 @@ export function PracticeSetupPage() {
               {blueprints.length === 0 && (
                 <option value="">No active blueprints</option>
               )}
-              {blueprints.map((blueprint) => (
-                <option key={blueprint.id} value={blueprint.id}>
-                  {blueprint.blueprint_name} - {blueprint.version}
-                </option>
-              ))}
+              {blueprints
+                .filter((blueprint) => blueprint.category === category)
+                .map((blueprint) => (
+                  <option key={blueprint.id} value={blueprint.id}>
+                    {blueprint.blueprint_name} - {blueprint.version}
+                  </option>
+                ))}
             </select>
+
+            <fieldset className="practice-options" disabled={submitting}>
+              <legend>Difficulty</legend>
+              {(["Easy", "Medium", "Hard"] as const).map((value) => (
+                <label key={value}>
+                  <input
+                    type="checkbox"
+                    checked={difficulties.includes(value)}
+                    onChange={() => toggle(value, difficulties, setDifficulties)}
+                  />
+                  {value}
+                </label>
+              ))}
+            </fieldset>
+            <fieldset className="practice-options" disabled={submitting}>
+              <legend>Topic Tags</legend>
+              {availableTopics.map((value) => (
+                <label key={value}>
+                  <input
+                    type="checkbox"
+                    checked={topics.includes(value)}
+                    onChange={() => toggle(value, topics, setTopics)}
+                  />
+                  {value}
+                </label>
+              ))}
+              {availableTopics.length === 0 && (
+                <span className="muted">All topics in this blueprint</span>
+              )}
+            </fieldset>
 
             <label className="field-label" htmlFor="question-count">
               Questions
@@ -156,6 +259,57 @@ export function PracticeSetupPage() {
               Approved blueprint total: {selectedBlueprint?.total_questions ?? "-"}
             </p>
 
+            <label className="field-label" htmlFor="timer">
+              Timer
+            </label>
+            <select
+              id="timer"
+              value={timer}
+              disabled={submitting}
+              onChange={(event) => setTimer(event.target.value)}
+            >
+              <option value="60">60 minutes</option>
+              <option value="none">No timer</option>
+              <option value="custom">Custom</option>
+            </select>
+            {timer === "custom" && (
+              <>
+                <label className="field-label" htmlFor="timer-minutes">
+                  Minutes
+                </label>
+                <input
+                  id="timer-minutes"
+                  type="number"
+                  min="1"
+                  max="999"
+                  step="1"
+                  value={customMinutes}
+                  disabled={submitting}
+                  onChange={(event) => setCustomMinutes(event.target.value)}
+                />
+              </>
+            )}
+            <fieldset className="practice-options" disabled={submitting}>
+              <legend>Study Mode</legend>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showAnswers}
+                  onChange={(event) => setShowAnswers(event.target.checked)}
+                />
+                Show answers after answering
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showExplanations}
+                  onChange={(event) => setShowExplanations(event.target.checked)}
+                />
+                Show explanations after answering
+              </label>
+            </fieldset>
+            <p className="field-help">Study mode requires premium access.</p>
+
             <label className="field-label" htmlFor="seed">
               Seed
             </label>
@@ -167,10 +321,6 @@ export function PracticeSetupPage() {
               placeholder="Leave empty to generate securely"
               onChange={(event) => setSeed(event.target.value)}
             />
-            <p className="field-help">
-              Leading zeros are preserved. The same seed and eligible pool reproduce the
-              same ordered questions.
-            </p>
 
             <Button
               type="submit"
@@ -185,6 +335,22 @@ export function PracticeSetupPage() {
           <p className="eyebrow">Approved blueprint</p>
           <h2>{selectedBlueprint?.blueprint_name ?? "Select a blueprint"}</h2>
           <dl className="detail-list">
+            <div>
+              <dt>Questions</dt>
+              <dd>{questionCount || "-"}</dd>
+            </div>
+            <div>
+              <dt>Topics</dt>
+              <dd>{topics.length || "All"}</dd>
+            </div>
+            <div>
+              <dt>Timer</dt>
+              <dd>
+                {timer === "none"
+                  ? "None"
+                  : `${timer === "custom" ? customMinutes : timer} minutes`}
+              </dd>
+            </div>
             <div>
               <dt>Category</dt>
               <dd>{selectedBlueprint?.category ?? "-"}</dd>

@@ -26,6 +26,8 @@ const question = {
 
 const mocks = vi.hoisted(() => ({
   fetchTestSession: vi.fn(),
+  fetchPracticeSessionSettings: vi.fn(),
+  fetchPracticeFeedback: vi.fn(),
   saveSessionAnswer: vi.fn(),
   saveSessionPosition: vi.fn(),
   pauseSession: vi.fn(),
@@ -66,6 +68,13 @@ describe("TestSessionPage", () => {
   beforeEach(() => {
     Object.values(mocks).forEach((mock) => mock.mockReset());
     mocks.fetchTestSession.mockResolvedValue([question]);
+    mocks.fetchPracticeSessionSettings.mockResolvedValue({
+      timer_seconds: null,
+      active_duration_seconds: 65,
+      status: "in_progress",
+      show_answers: false,
+      show_explanations: false,
+    });
     mocks.saveSessionAnswer.mockResolvedValue({
       session_version: 4,
       answer_version: 1,
@@ -73,6 +82,38 @@ describe("TestSessionPage", () => {
       total_questions: 1,
     });
     mocks.submitSession.mockResolvedValue({ session_id: question.session_id });
+  });
+
+  it("redirects to results after the server expires the timer", async () => {
+    mocks.fetchPracticeSessionSettings.mockResolvedValue({
+      timer_seconds: 60,
+      active_duration_seconds: 60,
+      status: "submitted",
+      show_answers: false,
+      show_explanations: false,
+    });
+    renderPage();
+    expect(await screen.findByText("Result route")).toBeInTheDocument();
+  });
+
+  it("loads premium study feedback only after an answer is saved", async () => {
+    mocks.fetchPracticeSessionSettings.mockResolvedValue({
+      timer_seconds: null,
+      active_duration_seconds: 65,
+      status: "in_progress",
+      show_answers: true,
+      show_explanations: true,
+    });
+    mocks.fetchPracticeFeedback.mockResolvedValue({
+      correct_option_id: "A",
+      explanation: "Study explanation",
+    });
+    renderPage();
+    await screen.findByText(question.question_text);
+    expect(mocks.fetchPracticeFeedback).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("radio", { name: /B Second/ }));
+    expect(await screen.findByText("Study explanation")).toBeInTheDocument();
+    expect(screen.getByText("Correct answer: A")).toBeInTheDocument();
   });
 
   it("loads only safe question data and persists one selected answer", async () => {

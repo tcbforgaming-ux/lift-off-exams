@@ -91,6 +91,31 @@ function rpcClient() {
   return getSupabaseBrowserClient() as unknown as SessionRpcClient;
 }
 
+export type PracticeSessionSettings = {
+  timer_seconds: number | null;
+  active_duration_seconds: number;
+  status: SessionQuestion["session_status"];
+  show_answers: boolean;
+  show_explanations: boolean;
+};
+
+export async function fetchPracticeSessionSettings(sessionId: string) {
+  const { data, error } = await rpcClient().rpc("get_practice_session_settings", {
+    p_session_id: sessionId,
+  });
+  if (error) throw new Error(error.message);
+  return data as PracticeSessionSettings;
+}
+
+export async function fetchPracticeFeedback(sessionId: string, questionId: string) {
+  const { data, error } = await rpcClient().rpc("get_practice_feedback", {
+    p_session_id: sessionId,
+    p_question_id: questionId,
+  });
+  if (error) throw new Error(error.message);
+  return data as { correct_option_id: string | null; explanation: string | null };
+}
+
 function rows<T>(data: unknown) {
   return (Array.isArray(data) ? data : []) as T[];
 }

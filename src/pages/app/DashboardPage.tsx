@@ -4,10 +4,10 @@ import { Card } from "../../components/ui/Card";
 
 const dashboardAreas = [
   {
-    title: "Practice setup",
-    detail: "Generate a deterministic test from an approved blueprint.",
-    to: paths.practiceSetup,
-    action: "Set Up Practice",
+    title: "Generate a test",
+    detail: "Choose your exam topics and practice settings.",
+    to: paths.generate,
+    action: "Generate Test",
   },
   {
     title: "Test ID entry",
@@ -24,8 +24,8 @@ export function DashboardPage() {
         <p className="eyebrow">Application</p>
         <h1>Dashboard</h1>
         <p>
-          Start an approved blueprint test or open a permanent Test ID. Test-taking and
-          results remain separate future milestones.
+          Start a new practice test, open a shared Test ID, or review your results in
+          History.
         </p>
       </header>
 
