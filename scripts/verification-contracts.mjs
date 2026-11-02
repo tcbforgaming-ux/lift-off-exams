@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 
 export function assertNoSchemaDrift(sql) {
+  if (sql.trimStart().startsWith("{")) {
+    const result = JSON.parse(sql);
+    if (typeof result.diff !== "string")
+      throw new Error("Unrecognized schema-diff response; refusing a false pass.");
+    sql = result.diff;
+  }
   const statements = sql
     .replace(/--[^\r\n]*/g, "")
     .replace(/\/\*[\s\S]*?\*\//g, "")

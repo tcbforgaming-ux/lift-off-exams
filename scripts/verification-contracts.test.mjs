@@ -19,6 +19,22 @@ test("DDL drift fails rather than only reporting success", () => {
     /schema drift/,
   );
 });
+test("CLI structured empty diff passes", () => {
+  assertNoSchemaDrift(JSON.stringify({ diff: "\n", message: "Diff complete." }));
+});
+test("CLI structured DDL fails", () => {
+  assert.throws(
+    () =>
+      assertNoSchemaDrift(
+        JSON.stringify({ diff: "create table public.unexpected(id int);" }),
+      ),
+    /schema drift/,
+  );
+});
+test("malformed or unrecognized CLI responses fail closed", () => {
+  assert.throws(() => assertNoSchemaDrift("{invalid}"));
+  assert.throws(() => assertNoSchemaDrift('{"message":"complete"}'), /Unrecognized/);
+});
 test("type comparison normalizes only line endings and trailing whitespace", () => {
   assertGeneratedTypesMatch("type A = string;\r\n", "type A = string;\n\n");
 });

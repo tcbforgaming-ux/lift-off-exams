@@ -69,8 +69,10 @@ historical uncertainty is disguised as a successful schema migration.
 The disposable runner previously printed a generated-type mismatch but returned
 success. It also trusted the exit code of `db diff`, which can return zero while
 emitting SQL. Both checks now fail closed: non-comment SQL or changed generated
-types makes the command fail. Four offline regression tests cover empty/comment
-diffs, DDL drift, permitted type normalization and actual type differences.
+types makes the command fail. Seven offline regression tests cover empty/comment
+diffs, structured CLI responses, DDL drift, permitted type normalization and actual
+type differences. The clean-checkout run exposed the CLI's JSON diff wrapper;
+the check now validates its SQL field and rejects malformed/unknown wrappers.
 These tests run before the pipeline fixtures in CI. No assertion was weakened.
 CI keeps four separated jobs and frozen installs, now with explicit read-only token
 permissions and a narrowly scoped review-branch push trigger. This trigger is

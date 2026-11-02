@@ -162,7 +162,7 @@
       "path": "docs/stabilization/phase-3.md",
       "group": "phase-3",
       "included": true,
-      "sha256": "fb9ea46ec4caf15f6741d38ba137764c0c5377d9cf8f9690f746d21aa30fce6b"
+      "sha256": "ce9e23044b49d71233d88eb54b5221158ba3784a6d6837c7e7b6a3750e9afb2c"
     },
     {
       "path": "docs/tests/custom-practice-deployment.md",
@@ -264,13 +264,13 @@
       "path": "scripts/verification-contracts.mjs",
       "group": "phase-3",
       "included": true,
-      "sha256": "9fef0d46ac2c916dc59cbdd1c1571771ef32a22b93bf61d761c06422ccdcb883"
+      "sha256": "a1ced6f144b487033ae409cba4065ec16d5947d015622afa12c1602d661ee8b2"
     },
     {
       "path": "scripts/verification-contracts.test.mjs",
       "group": "phase-3",
       "included": true,
-      "sha256": "4eb8d25bc9760c644e80e95baf44e094d4d66a930091dc9125578a461e4b585a"
+      "sha256": "b05bebeeedfb7bac29c551d03aefa0eba5fe109ad2852e6440b4c029a16c7fde"
     },
     {
       "path": "scripts/verify-backend.mjs",
