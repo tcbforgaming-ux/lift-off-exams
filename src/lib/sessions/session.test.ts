@@ -62,9 +62,10 @@ describe("session client", () => {
         session_id: "session-1",
       },
     );
-    expect(mocks.rpc).toHaveBeenCalledWith("start_test_session", {
+    expect(mocks.rpc).toHaveBeenCalledWith("start_test_session_configured", {
       p_test_id: "AB4F9D72K1PQ",
       p_idempotency_key: "launch-1",
+      p_options: null,
     });
   });
 

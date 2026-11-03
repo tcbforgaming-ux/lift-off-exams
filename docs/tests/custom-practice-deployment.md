@@ -35,12 +35,17 @@ Changing any form setting clears the previous result and rotates the retry key.
 
 ## Timer and Study Behavior
 
-New sessions snapshot the Test ID settings. Existing sessions and older Test IDs
-retain their previous untimed behavior. Active time excludes explicit pauses;
-closing a tab without pausing does not stop the timer. The server rejects late
-answers and prevents pausing after expiry. An open page synchronizes every ten
-seconds and automatically submits expired tests. A closed page is finalized on
-its next settings synchronization, not by a background scheduler.
+Superseded locally by the explicit November 2 auto-pause decision and Phase B
+forward migrations. New attempts persist launching-user settings, not blindly
+copied creator settings. Free launches use 60 minutes, no study feedback and at
+most 40 questions. Paid users may customize their own attempts; shorter attempts
+use the first N source members in saved order (November 3 decision).
+
+Navigation/hidden/closed pages attempt an explicit release. Lost exit requests
+recover on the next owned read at the last confirmed server presence, with a
+ten-second heartbeat and thirty-second lease. Recovery is lazy, not a background
+job; disconnected wall time is not added. Deadline enforcement remains server-side,
+and final submitted duration is immutable. See `../reconstruction/phase-b-completion.md`.
 
 Study feedback requires a current trusted premium entitlement, enabled session
 settings, an owned session, and a saved answer to the requested question. A free

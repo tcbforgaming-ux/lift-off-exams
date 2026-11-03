@@ -6,13 +6,26 @@ import { ButtonLink } from "../../components/ui/ButtonLink";
 import { Card } from "../../components/ui/Card";
 import { paths } from "../../app/urlPaths";
 import { useAuth } from "../../lib/auth/useAuth";
-import { fetchTestIdPreview, type TestIdPreview } from "../../lib/tests/generation";
-import { startTestSession } from "../../lib/sessions/session";
+import {
+  fetchTestIdPreview,
+  generateUpdatedTest,
+  type TestIdPreview,
+} from "../../lib/tests/generation";
+import {
+  startTestSession,
+  fetchLaunchOptions,
+  type LaunchOptions,
+} from "../../lib/sessions/session";
 
 export function TestIdPage() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const launchKey = useRef(crypto.randomUUID());
+  const updateKey = useRef(crypto.randomUUID());
+  const lookupRevision = useRef(0);
+  const [options, setOptions] = useState<
+    (LaunchOptions & { can_customize: boolean }) | null
+  >(null);
   const { status } = useAuth();
   const [code, setCode] = useState(params.get("code")?.toUpperCase() ?? "");
   const [preview, setPreview] = useState<TestIdPreview | null>(null);
@@ -20,6 +33,10 @@ export function TestIdPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const loadPreview = async (nextCode: string) => {
+    const revision = ++lookupRevision.current;
+    launchKey.current = crypto.randomUUID();
+    updateKey.current = crypto.randomUUID();
+    setOptions(null);
     const normalized = nextCode.trim().toUpperCase();
     if (!/^[A-Z0-9]{12}$/.test(normalized)) {
       setPreview(null);
@@ -31,14 +48,21 @@ export function TestIdPage() {
     setMessage(null);
     try {
       const nextPreview = await fetchTestIdPreview(normalized);
+      if (lookupRevision.current !== revision) return;
       setPreview(nextPreview);
+      if (nextPreview?.launch_available && status === "authenticated") {
+        const resolved = await fetchLaunchOptions(normalized);
+        if (lookupRevision.current !== revision) return;
+        setOptions(resolved);
+      }
       setMessage(nextPreview ? null : "That Test ID was not found.");
       setParams({ code: normalized }, { replace: true });
     } catch (error) {
+      if (lookupRevision.current !== revision) return;
       setPreview(null);
       setMessage(error instanceof Error ? error.message : "Test ID lookup failed.");
     } finally {
-      setLoading(false);
+      if (lookupRevision.current === revision) setLoading(false);
     }
   };
 
@@ -54,7 +78,14 @@ export function TestIdPage() {
     setLoading(true);
     setMessage(null);
     try {
-      const session = await startTestSession(preview.test_id, launchKey.current);
+      const session = options?.can_customize
+        ? await startTestSession(preview.test_id, launchKey.current, {
+            question_count: options.question_count,
+            timer_minutes: options.timer_minutes,
+            show_answers: options.show_answers,
+            show_explanations: options.show_explanations,
+          })
+        : await startTestSession(preview.test_id, launchKey.current);
       void navigate(
         session.status === "submitted"
           ? `/results/${session.session_id}`
@@ -62,6 +93,25 @@ export function TestIdPage() {
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Test launch failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateUpdated = async () => {
+    if (!preview) return;
+    setLoading(true);
+    setMessage(null);
+    try {
+      const result = await generateUpdatedTest(preview.test_id, updateKey.current);
+      if (!result.success || !result.test_id)
+        throw new Error(
+          "The current pool cannot satisfy the original blueprint. Create a shorter test or revise filters in Generate; the original Test ID is unchanged.",
+        );
+      setCode(result.test_id);
+      await loadPreview(result.test_id);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Updated generation failed.");
     } finally {
       setLoading(false);
     }
@@ -135,6 +185,14 @@ export function TestIdPage() {
               <dd>{preview.original_question_count}</dd>
             </div>
             <div>
+              <dt>Difficulty</dt>
+              <dd>{preview.difficulties.join(", ") || "All difficulties"}</dd>
+            </div>
+            <div>
+              <dt>Topic tags</dt>
+              <dd>{preview.topic_tags.join(", ") || "All blueprint topics"}</dd>
+            </div>
+            <div>
               <dt>Blueprint version</dt>
               <dd>{preview.blueprint_version}</dd>
             </div>
@@ -165,6 +223,16 @@ export function TestIdPage() {
           )}
 
           <div className="button-row">
+            {preview.updated_question_count > 0 && status === "authenticated" && (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={loading}
+                onClick={() => void generateUpdated()}
+              >
+                Generate Updated Test
+              </Button>
+            )}
             {preview.replacement_test_id && (
               <ButtonLink
                 to={`/test-id?code=${preview.replacement_test_id}`}
@@ -175,12 +243,103 @@ export function TestIdPage() {
             )}
             {preview.launch_available && status === "authenticated" ? (
               <Button type="button" disabled={loading} onClick={() => void launch()}>
-                Start Test
+                {preview.updated_question_count > 0 ? "Continue" : "Start Test"}
               </Button>
             ) : preview.launch_available ? (
               <ButtonLink to={paths.login}>Log In to Launch</ButtonLink>
             ) : null}
           </div>
+          {status === "authenticated" && (
+            <p>An unfinished attempt resumes with its saved questions and settings.</p>
+          )}
+          {options && (
+            <fieldset
+              className="form-stack"
+              disabled={loading || !options.can_customize}
+            >
+              <legend>Launch settings</legend>
+              <label className="field-label">
+                Question count
+                <input
+                  type="number"
+                  min={1}
+                  max={Math.min(250, preview.original_question_count)}
+                  step={1}
+                  value={options.question_count}
+                  onChange={(event) => {
+                    launchKey.current = crypto.randomUUID();
+                    setOptions({
+                      ...options,
+                      question_count: Number(event.target.value),
+                    });
+                  }}
+                />
+              </label>
+              <label className="field-label">
+                Timer
+                <select
+                  value={options.timer_minutes === null ? "none" : "timed"}
+                  onChange={(event) => {
+                    launchKey.current = crypto.randomUUID();
+                    setOptions({
+                      ...options,
+                      timer_minutes: event.target.value === "none" ? null : 60,
+                    });
+                  }}
+                >
+                  <option value="timed">Timed</option>
+                  <option value="none">No timer</option>
+                </select>
+              </label>
+              {options.timer_minutes !== null && (
+                <label className="field-label">
+                  Minutes
+                  <input
+                    type="number"
+                    min={1}
+                    max={999}
+                    step={1}
+                    value={options.timer_minutes}
+                    onChange={(event) => {
+                      launchKey.current = crypto.randomUUID();
+                      setOptions({
+                        ...options,
+                        timer_minutes: Number(event.target.value),
+                      });
+                    }}
+                  />
+                </label>
+              )}
+              <label>
+                <input
+                  type="checkbox"
+                  checked={options.show_answers}
+                  onChange={(event) => {
+                    launchKey.current = crypto.randomUUID();
+                    setOptions({ ...options, show_answers: event.target.checked });
+                  }}
+                />
+                Show correct answers during test
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={options.show_explanations}
+                  onChange={(event) => {
+                    launchKey.current = crypto.randomUUID();
+                    setOptions({ ...options, show_explanations: event.target.checked });
+                  }}
+                />
+                Show explanations during test
+              </label>
+            </fieldset>
+          )}
+          {options && !options.can_customize && (
+            <p>
+              Free access uses up to 40 questions, a 60-minute timer and no study
+              feedback.
+            </p>
+          )}
         </Card>
       )}
     </div>

@@ -15,7 +15,7 @@ test("a private user report can be reviewed, corrected, and audited by an admini
 }) => {
   await logIn(page, fixture.email);
   await page.goto(`/test-id?code=${fixture.testId}`);
-  await page.getByRole("button", { name: "Start Test" }).click();
+  await page.getByRole("button", { name: /^(Start Test|Continue)$/ }).click();
   await expect(page).toHaveURL(/\/sessions\/[0-9a-f-]+$/);
 
   await page.getByRole("button", { name: "Report Question" }).click();

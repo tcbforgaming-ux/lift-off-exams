@@ -1,8 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { fixture } from "./global-setup";
+import { createSessionUser } from "./local-session-fixtures";
 
-async function logIn(page: Page, email: string = fixture.email) {
+let sessionEmail: string;
+test.beforeEach(async () => {
+  sessionEmail = (await createSessionUser("session-regression")).email;
+});
+
+async function logIn(page: Page, email: string = sessionEmail) {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(fixture.password);
@@ -24,7 +30,7 @@ test("free user can recover, submit, and reopen a secure test session", async ({
   await expect(
     page.getByRole("heading", { name: "Milestone 7 Browser Fixture" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Start Test" }).click();
+  await page.getByRole("button", { name: /^(Start Test|Continue)$/ }).click();
   await expect(page).toHaveURL(/\/sessions\/[0-9a-f-]+$/);
   const sessionUrl = page.url();
 
@@ -83,7 +89,7 @@ test("users cannot open another user's session or result", async ({
 }) => {
   await logIn(page);
   await page.goto(`/test-id?code=${fixture.testId}`);
-  await page.getByRole("button", { name: "Start Test" }).click();
+  await page.getByRole("button", { name: /^(Start Test|Continue)$/ }).click();
   await expect(page).toHaveURL(/\/sessions\/[0-9a-f-]+$/);
   const sessionUrl = page.url();
   await page.getByRole("button", { name: "Submit Test" }).click();

@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { SessionSubmitDialog } from "../../components/ui/SessionSubmitDialog";
 import { ReportQuestionDialog } from "../../components/reports/ReportQuestionDialog";
 import {
   fetchTestSession,
   fetchPracticeSessionSettings,
   fetchPracticeFeedback,
+  heartbeatSession,
+  releaseSessionPresence,
   type PracticeSessionSettings,
   formatDuration,
   parseAnswerOptions,
@@ -16,12 +19,56 @@ import {
   saveSessionAnswer,
   saveSessionPosition,
   submitSession,
+  clearSessionAnswer,
   type SessionQuestion,
 } from "../../lib/sessions/session";
 
+// A duplicated tab may inherit sessionStorage, but is still a different client.
+// Only a real reload reuses the previous document's persisted claim identity.
+const documentClientId = crypto.randomUUID();
+
 export function TestSessionPage() {
   const { sessionId = "" } = useParams();
+  return <TestSessionContent key={sessionId} />;
+}
+
+function TestSessionContent() {
+  const { sessionId = "" } = useParams();
   const navigate = useNavigate();
+  const [presenceIdentity] = useState(() => {
+    const key = `liftoff:session-presence:${sessionId}`;
+    try {
+      const previous = JSON.parse(sessionStorage.getItem(key) ?? "null") as {
+        clientId?: string;
+        generation?: number;
+      } | null;
+      const next = {
+        clientId:
+          (
+            performance.getEntriesByType?.("navigation")?.[0] as
+              PerformanceNavigationTiming | undefined
+          )?.type === "reload" &&
+          previous?.clientId &&
+          /^[0-9a-f-]{36}$/i.test(previous.clientId)
+            ? previous.clientId
+            : documentClientId,
+        generation: Number.isSafeInteger(previous?.generation)
+          ? Number(previous?.generation) + 1
+          : 1,
+      };
+      sessionStorage.setItem(key, JSON.stringify(next));
+      return next;
+    } catch {
+      return { clientId: crypto.randomUUID(), generation: 1 };
+    }
+  });
+  const clientId = useRef(presenceIdentity.clientId);
+  const presenceGeneration = useRef(presenceIdentity.generation);
+  const presenceReady = useRef(false);
+  const loadRevision = useRef(0);
+  const lifecycle = useRef(0);
+  const latestSessionId = useRef(sessionId);
+  latestSessionId.current = sessionId;
   const [questions, setQuestions] = useState<SessionQuestion[]>([]);
   const [position, setPosition] = useState(1);
   const [version, setVersion] = useState(0);
@@ -33,8 +80,15 @@ export function TestSessionPage() {
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [settings, setSettings] = useState<PracticeSessionSettings | null>(null);
-  const [clock, setClock] = useState({ seconds: 0, syncedAt: Date.now() });
-  const [now, setNow] = useState(Date.now());
+  const [clock, setClock] = useState({ seconds: 0, syncedAt: performance.now() });
+  const [now, setNow] = useState(performance.now());
+  const [timerHidden, setTimerHidden] = useState(() => {
+    try {
+      return sessionStorage.getItem(`liftoff:timer-hidden:${sessionId}`) === "true";
+    } catch {
+      return false;
+    }
+  });
   const [feedback, setFeedback] = useState<{
     correct_option_id: string | null;
     explanation: string | null;
@@ -43,15 +97,35 @@ export function TestSessionPage() {
   useEffect(() => {
     let active = true;
     const synchronize = async () => {
+      const requestedGeneration = presenceGeneration.current;
       try {
+        if (document.visibilityState === "hidden" || !presenceReady.current) return;
+        if (status === "in_progress") {
+          const presence = await heartbeatSession(
+            sessionId,
+            clientId.current,
+            requestedGeneration,
+          );
+          if (!active || requestedGeneration !== presenceGeneration.current) return;
+          if (presence.status === "paused") {
+            const refreshed = await fetchTestSession(sessionId);
+            if (!active) return;
+            setQuestions(refreshed);
+            setVersion(presence.session_version);
+            setStatus("paused");
+          }
+        }
         const next = await fetchPracticeSessionSettings(sessionId);
         if (!active) return;
         setSettings(next);
-        setClock({ seconds: next.active_duration_seconds, syncedAt: Date.now() });
+        setClock({
+          seconds: next.active_duration_seconds,
+          syncedAt: performance.now(),
+        });
         if (next.status === "submitted")
           void navigate(`/results/${sessionId}`, { replace: true });
       } catch (error) {
-        if (active)
+        if (active && requestedGeneration === presenceGeneration.current)
           setMessage(
             error instanceof Error ? error.message : "Timer could not synchronize.",
           );
@@ -59,33 +133,111 @@ export function TestSessionPage() {
     };
     void synchronize();
     const polling = setInterval(() => void synchronize(), 10000);
-    const ticking = setInterval(() => setNow(Date.now()), 1000);
+    const ticking = setInterval(() => setNow(performance.now()), 1000);
     return () => {
       active = false;
       clearInterval(polling);
       clearInterval(ticking);
     };
-  }, [sessionId, status, navigate]);
+  }, [sessionId, status, navigate, presenceIdentity.generation]);
 
   const load = async () => {
+    const revision = ++loadRevision.current;
+    presenceReady.current = false;
     setLoading(true);
     setMessage(null);
     try {
-      const rows = await fetchTestSession(sessionId);
+      let rows = await fetchTestSession(sessionId);
+      if (loadRevision.current !== revision) return;
+      let exitGeneration = 0;
+      try {
+        exitGeneration = Number(
+          sessionStorage.getItem(`liftoff:session-exit:${sessionId}`),
+        );
+      } catch {
+        /* Server expiry remains available without storage. */
+      }
+      if (Number.isSafeInteger(exitGeneration) && exitGeneration > 0) {
+        await releaseSessionPresence(sessionId, clientId.current, exitGeneration);
+        try {
+          sessionStorage.removeItem(`liftoff:session-exit:${sessionId}`);
+        } catch {
+          /* Optional persistence. */
+        }
+        rows = await fetchTestSession(sessionId);
+      }
+      if (rows[0]?.session_status === "in_progress")
+        await heartbeatSession(sessionId, clientId.current, presenceGeneration.current);
+      const nextSettings = await fetchPracticeSessionSettings(sessionId);
+      if (loadRevision.current !== revision) return;
+      presenceReady.current = true;
+      setSettings(nextSettings);
+      setClock({
+        seconds: nextSettings.active_duration_seconds,
+        syncedAt: performance.now(),
+      });
+      if (nextSettings.status === "submitted") {
+        void navigate(`/results/${sessionId}`, { replace: true });
+        return;
+      }
       setQuestions(rows);
       setPosition(rows[0]?.current_position ?? 1);
       setVersion(rows[0]?.session_version ?? 0);
       setStatus(rows[0]?.session_status ?? "in_progress");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Session could not load.");
+      if (loadRevision.current === revision)
+        setMessage(error instanceof Error ? error.message : "Session could not load.");
     } finally {
-      setLoading(false);
+      if (loadRevision.current === revision) setLoading(false);
     }
   };
 
   useEffect(() => {
+    const requests = loadRevision;
     void load();
+    return () => {
+      ++requests.current;
+    };
     // sessionId is the stable route identity for this lifecycle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
+  useEffect(() => {
+    const generationState = lifecycle;
+    const sessionIdentity = latestSessionId;
+    const epoch = ++generationState.current;
+    const id = clientId.current;
+    const release = () => {
+      try {
+        sessionStorage.setItem(
+          `liftoff:session-exit:${sessionId}`,
+          String(presenceGeneration.current),
+        );
+      } catch {
+        /* Server expiry is authoritative. */
+      }
+      void releaseSessionPresence(sessionId, id, presenceGeneration.current).catch(
+        () => {
+          // A lost exit request is recovered by the server's presence timeout.
+        },
+      );
+    };
+    const visibility = () => {
+      if (document.visibilityState === "hidden") release();
+      else void load();
+    };
+    document.addEventListener("visibilitychange", visibility);
+    window.addEventListener("pagehide", release);
+    return () => {
+      document.removeEventListener("visibilitychange", visibility);
+      window.removeEventListener("pagehide", release);
+      // Ignore React StrictMode's synchronous test unmount/remount cycle.
+      queueMicrotask(() => {
+        if (generationState.current === epoch || sessionIdentity.current !== sessionId)
+          release();
+      });
+    };
+    // The server owns presence and version checks; this is an exit fast path.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
@@ -101,6 +253,9 @@ export function TestSessionPage() {
         : 0)
     : (current?.active_duration_seconds ?? 0);
   const expired = settings?.timer_seconds != null && elapsed >= settings.timer_seconds;
+  const finalFiveMinutes =
+    settings?.timer_seconds != null && settings.timer_seconds - elapsed <= 300;
+  const timerVisible = !timerHidden || finalFiveMinutes;
 
   useEffect(() => {
     let active = true;
@@ -193,9 +348,22 @@ export function TestSessionPage() {
   const resume = async () => {
     setSaving(true);
     try {
+      presenceGeneration.current++;
+      try {
+        sessionStorage.setItem(
+          `liftoff:session-presence:${sessionId}`,
+          JSON.stringify({
+            clientId: clientId.current,
+            generation: presenceGeneration.current,
+          }),
+        );
+      } catch {
+        /* Server versions still protect persistence. */
+      }
       const nextVersion = await resumeSession(sessionId, version);
       setVersion(nextVersion);
       setStatus("in_progress");
+      await load();
       setMessage("Session resumed.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Session could not resume.");
@@ -227,6 +395,9 @@ export function TestSessionPage() {
       <Card>
         <h1>Session unavailable</h1>
         <p role="alert">{message ?? "This session could not be opened."}</p>
+        <Button type="button" onClick={() => void load()}>
+          Reload Session
+        </Button>
       </Card>
     );
   }
@@ -254,12 +425,35 @@ export function TestSessionPage() {
               {settings?.timer_seconds != null ? "Time remaining" : "Active time"}
             </dt>
             <dd>
-              {formatDuration(
-                settings?.timer_seconds != null
-                  ? settings.timer_seconds - elapsed
-                  : elapsed,
-              )}
+              {timerVisible
+                ? formatDuration(
+                    settings?.timer_seconds != null
+                      ? settings.timer_seconds - elapsed
+                      : elapsed,
+                  )
+                : "Hidden"}
             </dd>
+            {settings?.timer_seconds != null && (
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={finalFiveMinutes}
+                aria-pressed={timerHidden && !finalFiveMinutes}
+                onClick={() => {
+                  setTimerHidden(!timerHidden);
+                  try {
+                    sessionStorage.setItem(
+                      `liftoff:timer-hidden:${sessionId}`,
+                      String(!timerHidden),
+                    );
+                  } catch {
+                    /* Session storage may be unavailable. */
+                  }
+                }}
+              >
+                {timerVisible ? "Hide Timer" : "Show Timer"}
+              </Button>
+            )}
           </div>
           <div>
             <dt>Status</dt>
@@ -289,9 +483,12 @@ export function TestSessionPage() {
           </Button>
         </div>
       )}
+      {finalFiveMinutes && (
+        <p role="status">Final five minutes: the timer is visible.</p>
+      )}
 
       <div className="test-workspace">
-        <main className="question-panel" aria-labelledby="question-heading">
+        <section className="question-panel" aria-labelledby="question-heading">
           <div className="question-meta">
             <span>{current.difficulty}</span>
             <span>{current.question_type}</span>
@@ -322,7 +519,59 @@ export function TestSessionPage() {
                 <span>{option.text}</span>
               </label>
             ))}
+            <label
+              className={
+                current.selected_option_id === "UNKNOWN"
+                  ? "answer-option answer-option-selected"
+                  : "answer-option"
+              }
+            >
+              <input
+                type="radio"
+                name={`answer-${current.question_id}`}
+                value="UNKNOWN"
+                checked={current.selected_option_id === "UNKNOWN"}
+                onChange={() => void selectAnswer("UNKNOWN")}
+              />
+              <span>I Don't Know</span>
+            </label>
           </fieldset>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={
+              !current.selected_option_id ||
+              saving ||
+              status !== "in_progress" ||
+              expired
+            }
+            onClick={() => {
+              setSaving(true);
+              void clearSessionAnswer(sessionId, current.question_id, version)
+                .then((nextVersion) => {
+                  setVersion(nextVersion);
+                  setQuestions((rows) =>
+                    rows.map((row) =>
+                      row.question_id === current.question_id
+                        ? { ...row, selected_option_id: null }
+                        : row,
+                    ),
+                  );
+                  setMessage("Response cleared.");
+                })
+                .catch(async (error: unknown) => {
+                  setMessage(
+                    error instanceof Error
+                      ? error.message
+                      : "Response could not clear.",
+                  );
+                  await load();
+                })
+                .finally(() => setSaving(false));
+            }}
+          >
+            Clear Response
+          </Button>
           {feedback && (
             <section className="practice-feedback" aria-label="Study feedback">
               {feedback.correct_option_id && (
@@ -355,7 +604,7 @@ export function TestSessionPage() {
               Report Question
             </Button>
           </div>
-        </main>
+        </section>
 
         <aside className="question-map" aria-label="Question navigation">
           <div className="question-map-grid">
@@ -398,34 +647,27 @@ export function TestSessionPage() {
       </div>
 
       {confirmingSubmit && (
-        <div className="modal-backdrop" role="presentation">
-          <Card
-            className="modal-card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="submit-title"
-          >
-            <h2 id="submit-title">Submit this test?</h2>
-            <p>
-              {questions.length - answered} unanswered question
-              {questions.length - answered === 1 ? " remains" : "s remain"}. Unanswered
-              questions score as incorrect.
-            </p>
-            <div className="button-row">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setConfirmingSubmit(false)}
-                disabled={saving}
-              >
-                Keep Working
-              </Button>
-              <Button type="button" onClick={() => void submit()} disabled={saving}>
-                {saving ? "Submitting…" : "Submit Test"}
-              </Button>
-            </div>
-          </Card>
-        </div>
+        <SessionSubmitDialog busy={saving} onClose={() => setConfirmingSubmit(false)}>
+          <h2 id="submit-title">Submit this test?</h2>
+          <p>
+            {questions.length - answered} unanswered question
+            {questions.length - answered === 1 ? " remains" : "s remain"}. Unanswered
+            questions score as incorrect.
+          </p>
+          <div className="button-row">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setConfirmingSubmit(false)}
+              disabled={saving}
+            >
+              Keep Working
+            </Button>
+            <Button type="button" onClick={() => void submit()} disabled={saving}>
+              {saving ? "Submitting…" : "Submit Test"}
+            </Button>
+          </div>
+        </SessionSubmitDialog>
       )}
       {reporting && (
         <ReportQuestionDialog

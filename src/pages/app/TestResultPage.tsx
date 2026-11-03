@@ -5,6 +5,7 @@ import { ButtonLink } from "../../components/ui/ButtonLink";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { ReportQuestionDialog } from "../../components/reports/ReportQuestionDialog";
+import { summarizeResult } from "../../lib/sessions/resultSummaries";
 import {
   fetchTestResult,
   formatDuration,
@@ -53,7 +54,7 @@ export function TestResultPage() {
   });
 
   return (
-    <div className="page-stack">
+    <div className="page-stack result-page">
       <header className="page-header">
         <p className="eyebrow">Submitted result · {summary.test_id}</p>
         <h1>{summary.percentage.toFixed(2)}%</h1>
@@ -81,6 +82,54 @@ export function TestResultPage() {
           <dd>{formatDuration(summary.active_duration_seconds)}</dd>
         </div>
       </dl>
+      {(["topic", "difficulty"] as const).map((dimension) => (
+        <section key={dimension} aria-label={`${dimension} performance`}>
+          <h2>
+            {dimension === "topic" ? "Topic performance" : "Difficulty performance"}
+          </h2>
+          {dimension === "topic" && (
+            <p>
+              Topic groups may overlap. Each question counts once within each topic;
+              group totals must not be added together. Unanswered and I Don't Know
+              responses count as incorrect.
+            </p>
+          )}
+          <table className="repository-table">
+            <thead>
+              <tr>
+                <th>{dimension === "topic" ? "Topic" : "Difficulty"}</th>
+                <th>Correct</th>
+                <th>Accuracy</th>
+                <th>Questions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summarizeResult(items, dimension).map((group) => (
+                <tr key={group.label}>
+                  <th scope="row">{group.label}</th>
+                  <td>
+                    {group.correct} / {group.total}
+                  </td>
+                  <td>{((100 * group.correct) / group.total).toFixed(2)}%</td>
+                  <td>
+                    <details>
+                      <summary>{group.total} questions</summary>
+                      {group.questionIds.map((id) => (
+                        <a key={id} href={`#result-${id}`}>
+                          {
+                            items.find((item) => item.question_id === id)
+                              ?.question_position
+                          }{" "}
+                        </a>
+                      ))}
+                    </details>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
 
       {!summary.can_view_explanations && (
         <p className="form-message form-message-success" role="status">
@@ -101,6 +150,7 @@ export function TestResultPage() {
           return (
             <Card
               key={item.question_id}
+              id={`result-${item.question_id}`}
               className={
                 item.is_correct
                   ? "result-item result-correct"
@@ -121,7 +171,13 @@ export function TestResultPage() {
               <dl className="review-answers">
                 <div>
                   <dt>Your answer</dt>
-                  <dd>{selected ? `${selected.id}. ${selected.text}` : "No answer"}</dd>
+                  <dd>
+                    {item.selected_option_id === "UNKNOWN"
+                      ? "I Don't Know"
+                      : selected
+                        ? `${selected.id}. ${selected.text}`
+                        : "No answer"}
+                  </dd>
                 </div>
                 <div>
                   <dt>Correct answer</dt>

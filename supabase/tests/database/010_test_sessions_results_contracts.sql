@@ -50,7 +50,7 @@ $$;
 grant usage on schema tests to authenticated;
 grant execute on all functions in schema tests to authenticated;
 
-select plan(50);
+select plan(89);
 
 select ok(
   has_table_privilege('service_role', 'public.test_definition_questions', 'DELETE'),
@@ -265,7 +265,7 @@ select ok(
       'select * from public.save_test_session_answer(%L::uuid,%L::uuid,%L,%s)',
       (select value from m7_runtime where key = 'free_session'),
       (select value from m7_runtime where key = 'question_one'), 'E', 3
-    ), 'A, B, C, or D'
+    ), 'A, B, C, D, or UNKNOWN'
   ),
   'invalid option IDs are rejected'
 );
@@ -408,6 +408,28 @@ select ok(
 
 select is((select count(*)::integer from public.get_test_history(20, null, null, null)), 0, 'history never returns another user records');
 
+select is((public.get_test_launch_options('M7LARGE00001')->>'question_count')::integer,40,'free launch is capped at 40');
+select is((public.get_test_launch_options('M7LARGE00001')->>'timer_minutes')::integer,60,'free default timer is 60 minutes');
+select ok(tests.expect_fails($q$select public.start_test_session_configured('M7LARGE00001','free-modified','{"question_count":2}')$q$,'premium'),'free launch customization is rejected');
+insert into m7_runtime select 'free_capped',session_id::text from public.start_test_session('M7LARGE00001','legacy-free-capped');
+select is((select count(*)::integer from public.get_test_session((select value::uuid from m7_runtime where key='free_capped'))),40,'legacy launch endpoint also persists only 40 questions for free users');
+select is((select total_questions from public.submit_test_session((select value::uuid from m7_runtime where key='free_capped'),1)),40,'free capped submission stores 40 result items');
+reset role;
+update public.profiles set account_tier='premium' where user_id='00000000-0000-0000-0000-000000010002';
+select tests.authenticate_as('00000000-0000-0000-0000-000000010002','session-other@example.test');
+select is(public.get_test_launch_options('M7LARGE00001')->>'can_customize','false','profile tier does not grant customization');
+reset role;
+insert into public.subscriptions(user_id,status,current_period_end) values('00000000-0000-0000-0000-000000010002','active',now()+interval '1 month');
+select tests.authenticate_as('00000000-0000-0000-0000-000000010002','session-other@example.test');
+select ok(tests.expect_fails($q$select public.start_test_session_configured('M7LARGE00001','bad-minutes','{"timer_minutes":1000}')$q$,'Timer'),'paid timer rejects more than 999 minutes');
+select ok(tests.expect_fails($q$select public.start_test_session_configured('M7LARGE00001','bad-count','{"question_count":2.5}')$q$,'whole'),'fractional counts are rejected');
+insert into m7_runtime select 'short_session',public.start_test_session_configured('M7LARGE00001','short-paid','{"question_count":3,"timer_minutes":999,"show_answers":true}')->>'session_id';
+select is((select count(*)::integer from public.get_test_session((select value::uuid from m7_runtime where key='short_session'))),3,'paid subset has exact requested length');
+select is((select array_agg(question_id order by question_position)::text from public.get_test_session((select value::uuid from m7_runtime where key='short_session'))),array['a7000000-0000-0000-0000-000000000001','a7000000-0000-0000-0000-000000000002','a7000000-0000-0000-0000-000000000003']::text,'paid subset preserves first N source order');
+select is(public.get_practice_session_settings((select value::uuid from m7_runtime where key='short_session'))->>'timer_seconds','59940','custom maximum timer persists');
+select ok(tests.expect_fails($q$select public.start_test_session_configured('M7LARGE00001','short-paid','{"question_count":2}')$q$,'Idempotency'),'changed launch settings cannot reuse a committed key');
+select public.submit_test_session((select value::uuid from m7_runtime where key='short_session'),1);
+
 insert into m7_runtime(key, value)
 select 'large_session', session_id::text
 from public.start_test_session('M7LARGE00001', 'large-start-1');
@@ -437,5 +459,64 @@ select ok((select count(*) >= 4 from public.admin_audit_logs where resource_type
 select tests.authenticate_as('00000000-0000-0000-0000-000000010001', 'session-free@example.test');
 select ok(tests.expect_denied('select * from public.test_session_answers'), 'clients cannot directly read or mutate authoritative answer storage');
 
+select lives_ok(format('select * from public.save_test_session_answer(%L::uuid,%L::uuid,''UNKNOWN'',1)',
+  (select value from m7_runtime where key='retake_session'),
+  (select value from m7_runtime where key='question_one')), 'owned active session accepts explicit uncertainty');
+select is((select selected_option_id from public.get_test_session((select value::uuid from m7_runtime where key='retake_session')) where question_position=1),
+  'UNKNOWN', 'uncertainty survives the safe session read');
+select lives_ok(format('select public.clear_test_session_answer(%L::uuid,%L::uuid,2)',(select value from m7_runtime where key='retake_session'),(select value from m7_runtime where key='question_one')),'explicit uncertainty can be cleared');
+select is((select selected_option_id from public.get_test_session((select value::uuid from m7_runtime where key='retake_session')) where question_position=1),null::text,'clearing restores unanswered rather than UNKNOWN');
+select lives_ok(format('select * from public.save_test_session_answer(%L::uuid,%L::uuid,''A'',3)',(select value from m7_runtime where key='retake_session'),(select value from m7_runtime where key='question_one')),'ordinary selection replaces unanswered');
+select lives_ok(format('select * from public.save_test_session_answer(%L::uuid,%L::uuid,''UNKNOWN'',4)',(select value from m7_runtime where key='retake_session'),(select value from m7_runtime where key='question_one')),'uncertainty replaces ordinary selection');
+select is((select answered_questions from public.submit_test_session((select value::uuid from m7_runtime where key='retake_session'),5)),
+  1, 'explicit uncertainty counts as answered');
+select is((select min(percentage)::numeric from public.get_test_result((select value::uuid from m7_runtime where key='retake_session'))),
+  0::numeric, 'uncertainty never scores as correct');
+select is((select min(unanswered_questions)::integer from public.get_test_result((select value::uuid from m7_runtime where key='retake_session'))),
+  3, 'unanswered count excludes explicit uncertainty');
+select is(jsonb_array_length(public.get_test_history_metadata(1)),1,'metadata history remains bounded');
+select is(public.get_test_history_metadata(1)->0->>'has_next_page','true','metadata history retains cursor continuation');
+select ok((public.get_test_history_metadata(1)->0->'difficulties') ? 'Easy','history difficulty is derived from session snapshots');
+insert into m7_runtime(key,value)
+select 'presence_session',session_id::text from public.start_test_session('M7SMALL00001','presence-test');
+select lives_ok(format('select public.heartbeat_test_session(%L::uuid,''00000000-0000-0000-0000-000000000001''::uuid)',
+  (select value from m7_runtime where key='presence_session')), 'owned session enrolls server presence');
+select ok(tests.expect_fails(format('select public.heartbeat_test_session(%L::uuid,''00000000-0000-0000-0000-000000000002''::uuid)',
+  (select value from m7_runtime where key='presence_session')), 'another tab'), 'concurrent tab cannot acquire an active presence claim');
+reset role;
+update public.test_sessions set active_period_started_at=now()-interval '100 seconds',
+  presence_seen_at=now()-interval '90 seconds',presence_expires_at=now()-interval '60 seconds'
+  where id=(select value::uuid from m7_runtime where key='presence_session');
+select tests.authenticate_as('00000000-0000-0000-0000-000000010001','session-free@example.test');
+select is((select min(session_status) from public.get_test_session((select value::uuid from m7_runtime where key='presence_session'))),
+  'paused','expired presence auto-pauses on recovery');
+select is((select min(active_duration_seconds)::integer from public.get_test_session((select value::uuid from m7_runtime where key='presence_session'))),
+  10,'recovered time freezes at last confirmed presence, not disconnected wall time');
+select is(public.heartbeat_test_session((select value::uuid from m7_runtime where key='presence_session'),
+  '00000000-0000-0000-0000-000000000002')->>'status','paused','heartbeat does not silently resume a paused test');
+select public.resume_test_session((select value::uuid from m7_runtime where key='presence_session'),
+  (select min(session_version) from public.get_test_session((select value::uuid from m7_runtime where key='presence_session'))));
+select lives_ok(format('select public.heartbeat_test_session(%L::uuid,''00000000-0000-0000-0000-000000000002''::uuid)',
+  (select value from m7_runtime where key='presence_session')), 'new tab can claim after an explicit resume');
+select is(public.release_test_session((select value::uuid from m7_runtime where key='presence_session'),
+  '00000000-0000-0000-0000-000000000001')->>'status','in_progress','stale exit cannot pause a newer client claim');
+select is((select min(active_duration_seconds)::integer from public.get_test_session((select value::uuid from m7_runtime where key='presence_session'))),
+  10,'resume retains accumulated confirmed duration');
+select lives_ok(format('select public.heartbeat_test_session(%L::uuid,''00000000-0000-0000-0000-000000000002''::uuid,2)',
+  (select value from m7_runtime where key='presence_session')), 'mount generation enrolls on the owned client');
+select is(public.release_test_session((select value::uuid from m7_runtime where key='presence_session'),
+  '00000000-0000-0000-0000-000000000002',1)->>'status','in_progress','old mount exit cannot pause a newer generation');
+select ok(tests.expect_fails(format('select public.heartbeat_test_session(%L::uuid,''00000000-0000-0000-0000-000000000002''::uuid,1)',
+  (select value from m7_runtime where key='presence_session')), 'Stale'), 'old mount heartbeat cannot renew a newer generation');
+select lives_ok(format('select public.heartbeat_test_session(%L::uuid,''00000000-0000-0000-0000-000000000002''::uuid,3)',
+  (select value from m7_runtime where key='presence_session')), 'reload may advance its tab generation');
+select is(public.release_test_session((select value::uuid from m7_runtime where key='presence_session'),
+  '00000000-0000-0000-0000-000000000002',3)->>'status','paused','current mount exit pauses authoritatively');
+reset role;
+select tests.authenticate_as('00000000-0000-0000-0000-000000010002','session-other@example.test');
+select ok(tests.expect_fails(format('select public.heartbeat_test_session(%L::uuid,''00000000-0000-0000-0000-000000000003''::uuid)',
+  (select value from m7_runtime where key='presence_session')), 'not found'), 'cross-user heartbeat is denied');
+select ok(tests.expect_fails(format('select public.release_test_session(%L::uuid,''00000000-0000-0000-0000-000000000003''::uuid)',
+  (select value from m7_runtime where key='presence_session')), 'not found'), 'cross-user release is denied');
 select * from finish();
 rollback;

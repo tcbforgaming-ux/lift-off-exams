@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { Card } from "../../components/ui/Card";
+import { CursorNavigation } from "../../components/ui/CursorNavigation";
 import {
   fetchReportQueue,
   reportCategories,
   reportCategoryLabels,
   type ReportQueueRow,
+  type ReportCursor,
 } from "../../lib/reports/reports";
 
 export function ReportQueuePage() {
@@ -16,19 +18,32 @@ export function ReportQueuePage() {
   const [reports, setReports] = useState<ReportQueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [cursors, setCursors] = useState<ReportCursor[]>([]);
+  const cursor = cursors.at(-1);
 
   useEffect(() => {
+    let active = true;
     setLoading(true);
     setMessage("");
-    fetchReportQueue({ status, category })
-      .then(setReports)
-      .catch((error: unknown) =>
-        setMessage(error instanceof Error ? error.message : "Queue could not load."),
+    fetchReportQueue({ status, category, cursor })
+      .then((rows) => {
+        if (active) setReports(rows);
+      })
+      .catch(
+        (error: unknown) =>
+          active &&
+          setMessage(error instanceof Error ? error.message : "Queue could not load."),
       )
-      .finally(() => setLoading(false));
-  }, [category, status]);
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [category, status, cursor]);
 
   function setFilter(key: string, value: string) {
+    setCursors([]);
     const next = new URLSearchParams(params);
     if (value) next.set(key, value);
     else next.delete(key);
@@ -136,6 +151,20 @@ export function ReportQueuePage() {
           </div>
         </Card>
       )}
+      <CursorNavigation
+        page={cursors.length}
+        loading={loading}
+        hasNext={!message && Boolean(reports.at(-1)?.has_next_page)}
+        onPrevious={() => setCursors((items) => items.slice(0, -1))}
+        onNext={() => {
+          const last = reports.at(-1);
+          if (last)
+            setCursors((items) => [
+              ...items,
+              { at: last.updated_at, id: last.report_id },
+            ]);
+        }}
+      />
     </div>
   );
 }

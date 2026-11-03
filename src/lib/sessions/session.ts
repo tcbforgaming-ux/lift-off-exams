@@ -75,6 +75,7 @@ export type HistoryEntry = {
   percentage: number | null;
   category: string;
   topic_tags: string[];
+  difficulties?: string[];
   has_next_page: boolean;
 };
 
@@ -160,10 +161,28 @@ export function formatDuration(totalSeconds: number) {
     : `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-export async function startTestSession(testId: string, idempotencyKey: string) {
-  const { data, error } = await rpcClient().rpc("start_test_session", {
+export type LaunchOptions = {
+  question_count: number;
+  timer_minutes: number | null;
+  show_answers: boolean;
+  show_explanations: boolean;
+};
+export async function fetchLaunchOptions(testId: string) {
+  const { data, error } = await rpcClient().rpc("get_test_launch_options", {
+    p_test_id: testId,
+  });
+  if (error) throw new Error(error.message);
+  return data as LaunchOptions & { can_customize: boolean };
+}
+export async function startTestSession(
+  testId: string,
+  idempotencyKey: string,
+  options?: LaunchOptions,
+) {
+  const { data, error } = await rpcClient().rpc("start_test_session_configured", {
     p_test_id: testId.trim().toUpperCase(),
     p_idempotency_key: idempotencyKey,
+    p_options: options ?? null,
   });
   if (error) throw new Error(error.message);
   return first<SessionStart>(data, "The session service returned no session.");
@@ -177,6 +196,20 @@ export async function fetchTestSession(sessionId: string) {
   const result = rows<SessionQuestion>(data);
   if (result.length === 0) throw new Error("The session contains no questions.");
   return result;
+}
+
+export async function clearSessionAnswer(
+  sessionId: string,
+  questionId: string,
+  version: number,
+) {
+  const { data, error } = await rpcClient().rpc("clear_test_session_answer", {
+    p_session_id: sessionId,
+    p_question_id: questionId,
+    p_expected_session_version: version,
+  });
+  if (error) throw new Error(error.message);
+  return (data as { session_version: number }).session_version;
 }
 
 export async function saveSessionAnswer(input: {
@@ -235,6 +268,34 @@ export function resumeSession(sessionId: string, expectedVersion: number) {
   return transitionSession("resume_test_session", sessionId, expectedVersion);
 }
 
+export async function heartbeatSession(
+  sessionId: string,
+  clientId: string,
+  generation: number,
+) {
+  const { data, error } = await rpcClient().rpc("heartbeat_test_session", {
+    p_session_id: sessionId,
+    p_client_id: clientId,
+    p_generation: generation,
+  });
+  if (error) throw new Error(error.message);
+  return data as { status: SessionQuestion["session_status"]; session_version: number };
+}
+
+export async function releaseSessionPresence(
+  sessionId: string,
+  clientId: string,
+  generation: number,
+) {
+  const { data, error } = await rpcClient().rpc("release_test_session", {
+    p_session_id: sessionId,
+    p_client_id: clientId,
+    p_generation: generation,
+  });
+  if (error) throw new Error(error.message);
+  return data as { status: SessionQuestion["session_status"]; session_version: number };
+}
+
 export async function submitSession(sessionId: string, expectedVersion: number) {
   const { data, error } = await rpcClient().rpc("submit_test_session", {
     p_session_id: sessionId,
@@ -277,7 +338,7 @@ export async function fetchTestHistory(
     status?: string | null;
   } = {},
 ) {
-  const { data, error } = await rpcClient().rpc("get_test_history", {
+  const { data, error } = await rpcClient().rpc("get_test_history_metadata", {
     p_page_size: input.pageSize ?? 20,
     p_cursor_activity_at: input.cursorActivityAt ?? null,
     p_cursor_session_id: input.cursorSessionId ?? null,

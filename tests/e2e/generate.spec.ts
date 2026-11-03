@@ -33,7 +33,8 @@ test("custom practice generates, launches, and fits desktop and mobile", async (
   await page.getByRole("button", { name: "Start Test" }).click();
   await expect(page.getByRole("heading", { name: "Question 1 of 2" })).toBeVisible();
   await expect(page.getByText("Time remaining", { exact: true })).toBeVisible();
-  await expect(page.getByRole("radio")).toHaveCount(4);
+  await expect(page.getByRole("radio")).toHaveCount(5);
+  await expect(page.getByRole("radio", { name: "I Don't Know" })).toBeVisible();
   await page.getByRole("button", { name: "Submit Test" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Submit Test" }).click();
   await expect(page).toHaveURL(/\/results\/[0-9a-f-]+$/);

@@ -1,25 +1,43 @@
 import { useEffect, useState } from "react";
 
 import { Card } from "../../components/ui/Card";
+import { CursorNavigation } from "../../components/ui/CursorNavigation";
 import {
   fetchOwnReports,
   reportCategoryLabels,
   type OwnQuestionReport,
+  type ReportCursor,
 } from "../../lib/reports/reports";
 
 export function MyReportsPage() {
   const [reports, setReports] = useState<OwnQuestionReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [cursors, setCursors] = useState<ReportCursor[]>([]);
+  const cursor = cursors.at(-1);
 
   useEffect(() => {
-    fetchOwnReports()
-      .then(setReports)
-      .catch((error: unknown) =>
-        setMessage(error instanceof Error ? error.message : "Reports could not load."),
+    let active = true;
+    setLoading(true);
+    setMessage("");
+    fetchOwnReports(cursor)
+      .then((rows) => {
+        if (active) setReports(rows);
+      })
+      .catch(
+        (error: unknown) =>
+          active &&
+          setMessage(
+            error instanceof Error ? error.message : "Reports could not load.",
+          ),
       )
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [cursor]);
 
   return (
     <div className="page-stack">
@@ -60,6 +78,20 @@ export function MyReportsPage() {
           </Card>
         ))}
       </div>
+      <CursorNavigation
+        page={cursors.length}
+        loading={loading}
+        hasNext={!message && Boolean(reports.at(-1)?.has_next_page)}
+        onPrevious={() => setCursors((items) => items.slice(0, -1))}
+        onNext={() => {
+          const last = reports.at(-1);
+          if (last)
+            setCursors((items) => [
+              ...items,
+              { at: last.created_at, id: last.report_id },
+            ]);
+        }}
+      />
     </div>
   );
 }

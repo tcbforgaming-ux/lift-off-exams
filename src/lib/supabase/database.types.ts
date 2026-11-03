@@ -2015,8 +2015,13 @@ export type Database = {
           id: string
           idempotency_key: string
           last_activity_at: string
+          launch_config: Json | null
           mode: string
           paused_at: string | null
+          presence_client_id: string | null
+          presence_expires_at: string | null
+          presence_generation: number
+          presence_seen_at: string | null
           question_count: number
           resumed_at: string | null
           scoring_rule_version: string
@@ -2040,8 +2045,13 @@ export type Database = {
           id?: string
           idempotency_key: string
           last_activity_at?: string
+          launch_config?: Json | null
           mode: string
           paused_at?: string | null
+          presence_client_id?: string | null
+          presence_expires_at?: string | null
+          presence_generation?: number
+          presence_seen_at?: string | null
           question_count: number
           resumed_at?: string | null
           scoring_rule_version?: string
@@ -2065,8 +2075,13 @@ export type Database = {
           id?: string
           idempotency_key?: string
           last_activity_at?: string
+          launch_config?: Json | null
           mode?: string
           paused_at?: string | null
+          presence_client_id?: string | null
+          presence_expires_at?: string | null
+          presence_generation?: number
+          presence_seen_at?: string | null
           question_count?: number
           resumed_at?: string | null
           scoring_rule_version?: string
@@ -2356,6 +2371,14 @@ export type Database = {
         Args: { p_decision?: string; p_vote_id: string }
         Returns: string
       }
+      clear_test_session_answer: {
+        Args: {
+          p_expected_session_version: number
+          p_question_id: string
+          p_session_id: string
+        }
+        Returns: Json
+      }
       commit_generation_output_line: {
         Args: {
           p_batch_job_id: string
@@ -2437,6 +2460,10 @@ export type Database = {
         }[]
       }
       generate_test_share_code: { Args: never; Returns: string }
+      generate_updated_test: {
+        Args: { p_idempotency_key: string; p_test_id: string }
+        Returns: Json
+      }
       generated_difficulty_label: { Args: { p_value: string }; Returns: string }
       generated_question_type_label: {
         Args: { p_value: string }
@@ -2545,6 +2572,15 @@ export type Database = {
           topic_tags: string[]
         }[]
       }
+      get_test_history_metadata: {
+        Args: {
+          p_cursor_activity_at?: string
+          p_cursor_session_id?: string
+          p_page_size?: number
+          p_status?: string
+        }
+        Returns: Json
+      }
       get_test_id_preview: {
         Args: { p_test_id: string }
         Returns: {
@@ -2565,6 +2601,7 @@ export type Database = {
           updated_question_count: number
         }[]
       }
+      get_test_launch_options: { Args: { p_test_id: string }; Returns: Json }
       get_test_question_explanation: {
         Args: { p_question_id: string; p_test_id: string }
         Returns: {
@@ -2633,6 +2670,16 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: boolean
       }
+      heartbeat_test_session:
+        | { Args: { p_client_id: string; p_session_id: string }; Returns: Json }
+        | {
+            Args: {
+              p_client_id: string
+              p_generation: number
+              p_session_id: string
+            }
+            Returns: Json
+          }
       initiate_owner_removal_vote: {
         Args: {
           p_expires_at?: string
@@ -2707,6 +2754,16 @@ export type Database = {
         Args: { p_batch_job_id: string; p_sources: Json }
         Returns: undefined
       }
+      release_test_session:
+        | { Args: { p_client_id: string; p_session_id: string }; Returns: Json }
+        | {
+            Args: {
+              p_client_id: string
+              p_generation: number
+              p_session_id: string
+            }
+            Returns: Json
+          }
       resolve_legacy_test_id: {
         Args: {
           p_legacy_test_id: string
@@ -2925,6 +2982,10 @@ export type Database = {
           status: string
           test_id: string
         }[]
+      }
+      start_test_session_configured: {
+        Args: { p_idempotency_key: string; p_options?: Json; p_test_id: string }
+        Returns: Json
       }
       submit_question_report: {
         Args: {

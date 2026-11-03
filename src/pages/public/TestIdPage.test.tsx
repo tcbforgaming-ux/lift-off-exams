@@ -26,6 +26,8 @@ const mocks = vi.hoisted(() => ({
   authStatus: "unauthenticated",
   fetchTestIdPreview: vi.fn(),
   startTestSession: vi.fn(),
+  fetchLaunchOptions: vi.fn(),
+  generateUpdatedTest: vi.fn(),
 }));
 
 vi.mock("../../lib/auth/useAuth", () => ({
@@ -34,10 +36,12 @@ vi.mock("../../lib/auth/useAuth", () => ({
 
 vi.mock("../../lib/tests/generation", () => ({
   fetchTestIdPreview: mocks.fetchTestIdPreview,
+  generateUpdatedTest: mocks.generateUpdatedTest,
 }));
 
 vi.mock("../../lib/sessions/session", () => ({
   startTestSession: mocks.startTestSession,
+  fetchLaunchOptions: mocks.fetchLaunchOptions,
 }));
 
 import { TestIdPage } from "./TestIdPage";
@@ -47,6 +51,13 @@ describe("TestIdPage", () => {
     mocks.authStatus = "unauthenticated";
     mocks.fetchTestIdPreview.mockReset();
     mocks.startTestSession.mockReset();
+    mocks.fetchLaunchOptions.mockResolvedValue({
+      question_count: 40,
+      timer_minutes: 60,
+      show_answers: false,
+      show_explanations: false,
+      can_customize: false,
+    });
     mocks.fetchTestIdPreview.mockResolvedValue(preview);
     mocks.startTestSession.mockResolvedValue({
       session_id: "00000000-0000-4000-8000-000000000001",
@@ -68,6 +79,8 @@ describe("TestIdPage", () => {
 
     expect(await screen.findByText("State Marketing Exam")).toBeInTheDocument();
     expect(screen.getByText("250")).toBeInTheDocument();
+    expect(screen.getByText("Easy, Medium, Hard")).toBeInTheDocument();
+    expect(screen.getByText("Core")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Log In to Launch" })).toBeInTheDocument();
     expect(mocks.startTestSession).not.toHaveBeenCalled();
   });

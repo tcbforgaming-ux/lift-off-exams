@@ -200,6 +200,15 @@ export async function fetchTestIdPreview(testId: string) {
   return (Array.isArray(data) ? data[0] : data) as TestIdPreview | null;
 }
 
+export async function generateUpdatedTest(testId: string, key: string) {
+  const { data, error } = await rpcClient().rpc("generate_updated_test", {
+    p_test_id: testId,
+    p_idempotency_key: key,
+  });
+  if (error) throw new Error(error.message);
+  return data as TestGenerationResult;
+}
+
 export async function fetchGeneratedTestManifest(testId: string) {
   const { data, error } = await rpcClient().rpc("get_generated_test_manifest", {
     p_test_id: testId.trim().toUpperCase(),

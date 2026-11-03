@@ -37,7 +37,7 @@ select is((select total_questions from public.blueprint_versions where id = 'ac0
 select is((select public.generate_custom_practice('ac000000-0000-0000-0000-000000000001','1',2,array['Easy'],array['Business Law'],1,false,false,'seed','custom-1')->>'test_id'),(select value->>'test_id' from practice_runtime where key='test'),'idempotent retries return the same Test ID');
 select ok(tests.practice_fails($q$select public.generate_custom_practice('ac000000-0000-0000-0000-000000000001','1',3,array['Easy'],array['Business Law'],1,false,false,'seed','custom-1')$q$,'Idempotency'),'changed settings cannot reuse an idempotency key');
 insert into practice_runtime select 'session',to_jsonb(s) from public.start_test_session((select value->>'test_id' from practice_runtime where key='test'),'start-custom') s;
-select is((select public.get_practice_session_settings((value->>'session_id')::uuid)->>'timer_seconds' from practice_runtime where key='session'),'60','session snapshots custom timer');
+select is((select public.get_practice_session_settings((value->>'session_id')::uuid)->>'timer_seconds' from practice_runtime where key='session'),'3600','free launch uses default timer rather than creator custom timer');
 select is((select count(*)::integer from public.get_test_session((select (value->>'session_id')::uuid from practice_runtime where key='session')) where tags @> array['Business Law']),2,'only selected topic questions are included');
 
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000012002',true);
@@ -48,7 +48,7 @@ select ok(tests.practice_fails(format('select public.get_practice_feedback(%L,%L
 reset role;
 -- Expire the active period without sleeping; only local trusted test setup can do this.
 alter table public.test_sessions disable trigger test_session_practice_clock;
-update public.test_sessions set active_period_started_at = now() - interval '2 minutes'
+update public.test_sessions set active_period_started_at = now() - interval '61 minutes'
 where id = (select (value->>'session_id')::uuid from practice_runtime where key='session');
 alter table public.test_sessions enable trigger test_session_practice_clock;
 set local role authenticated;
@@ -58,7 +58,7 @@ select ok(tests.practice_fails(format('select * from public.save_test_session_an
   (select value->>'session_id' from practice_runtime where key='session'),
   (select question_id from public.get_test_session((select (value->>'session_id')::uuid from practice_runtime where key='session')) limit 1)),'expired'),'server rejects answers after expiry');
 select is((select public.get_practice_session_settings((value->>'session_id')::uuid)->>'status' from practice_runtime where key='session'),'submitted','expired test is automatically submitted on synchronization');
-select is((select active_duration_seconds from public.get_test_result((select (value->>'session_id')::uuid from practice_runtime where key='session')) limit 1),60,'result duration is capped at the timer');
+select is((select active_duration_seconds from public.get_test_result((select (value->>'session_id')::uuid from practice_runtime where key='session')) limit 1),3600,'result duration is capped at the default timer');
 
 reset role;
 insert into public.subscriptions(user_id,status,current_period_end)
@@ -75,6 +75,12 @@ select lives_ok(format('select * from public.save_test_session_answer(%L,%L,''B'
   (select value->>'session_id' from practice_runtime where key='study-session'),(select value#>>'{}' from practice_runtime where key='question')),'study answer saves');
 select is(public.get_practice_feedback((select (value->>'session_id')::uuid from practice_runtime where key='study-session'),(select (value#>>'{}')::uuid from practice_runtime where key='question'))->>'explanation','Protected explanation','premium study explanation is returned after answering');
 select is((select public.get_practice_session_settings((value->>'session_id')::uuid)->>'timer_seconds' from practice_runtime where key='study-session'),null::text,'no-timer mode stays untimed');
+
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000012002',true);
+insert into practice_runtime select 'shared-free',to_jsonb(s) from public.start_test_session((select value->>'test_id' from practice_runtime where key='study'),'free-shared-study') s;
+select is((select public.get_practice_session_settings((value->>'session_id')::uuid)->>'timer_seconds' from practice_runtime where key='shared-free'),'3600','another free user does not inherit the creator untimed setting');
+select is((select public.get_practice_session_settings((value->>'session_id')::uuid)->>'show_answers' from practice_runtime where key='shared-free'),'false','free launcher does not inherit creator study answers');
+select is((select public.get_practice_session_settings((value->>'session_id')::uuid)->>'show_explanations' from practice_runtime where key='shared-free'),'false','free launcher does not inherit creator protected explanations');
 
 select * from finish();
 rollback;

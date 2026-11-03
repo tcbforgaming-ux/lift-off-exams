@@ -33,6 +33,8 @@ const mocks = vi.hoisted(() => ({
   pauseSession: vi.fn(),
   resumeSession: vi.fn(),
   submitSession: vi.fn(),
+  heartbeatSession: vi.fn(),
+  releaseSessionPresence: vi.fn(),
 }));
 
 vi.mock("../../lib/sessions/session", () => {
@@ -66,6 +68,7 @@ function renderPage() {
 
 describe("TestSessionPage", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     Object.values(mocks).forEach((mock) => mock.mockReset());
     mocks.fetchTestSession.mockResolvedValue([question]);
     mocks.fetchPracticeSessionSettings.mockResolvedValue({
@@ -82,6 +85,45 @@ describe("TestSessionPage", () => {
       total_questions: 1,
     });
     mocks.submitSession.mockResolvedValue({ session_id: question.session_id });
+    mocks.heartbeatSession.mockResolvedValue({
+      status: "in_progress",
+      session_version: 3,
+    });
+    mocks.releaseSessionPresence.mockResolvedValue({
+      status: "paused",
+      session_version: 4,
+    });
+  });
+
+  it("persists a hidden timer for this session without changing the deadline", async () => {
+    mocks.fetchPracticeSessionSettings.mockResolvedValue({
+      timer_seconds: 600,
+      active_duration_seconds: 65,
+      status: "in_progress",
+      show_answers: false,
+      show_explanations: false,
+    });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Hide Timer" }));
+    expect(screen.getByText("Hidden")).toBeInTheDocument();
+    expect(sessionStorage.getItem(`liftoff:timer-hidden:${question.session_id}`)).toBe(
+      "true",
+    );
+    expect(mocks.saveSessionAnswer).not.toHaveBeenCalled();
+  });
+
+  it("reveals a previously hidden timer immediately when starting in the final five minutes", async () => {
+    sessionStorage.setItem(`liftoff:timer-hidden:${question.session_id}`, "true");
+    mocks.fetchPracticeSessionSettings.mockResolvedValue({
+      timer_seconds: 300,
+      active_duration_seconds: 0,
+      status: "in_progress",
+      show_answers: false,
+      show_explanations: false,
+    });
+    renderPage();
+    expect(await screen.findByRole("button", { name: "Hide Timer" })).toBeDisabled();
+    expect(screen.queryByText("Hidden")).not.toBeInTheDocument();
   });
 
   it("redirects to results after the server expires the timer", async () => {
@@ -94,6 +136,15 @@ describe("TestSessionPage", () => {
     });
     renderPage();
     expect(await screen.findByText("Result route")).toBeInTheDocument();
+  });
+  it("saves explicit uncertainty separately from an unanswered question", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole("radio", { name: "I Don't Know" }));
+    await waitFor(() =>
+      expect(mocks.saveSessionAnswer).toHaveBeenCalledWith(
+        expect.objectContaining({ selectedOptionId: "UNKNOWN" }),
+      ),
+    );
   });
 
   it("loads premium study feedback only after an answer is saved", async () => {

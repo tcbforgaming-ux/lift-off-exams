@@ -228,7 +228,7 @@ try {
     }
   } else if (mode === "e2e") {
     const values = status();
-    run("pnpm", ["exec", "playwright", "test"], {
+    run("pnpm", ["exec", "playwright", "test", ...process.argv.slice(3)], {
       env: {
         ...process.env,
         VITE_SUPABASE_URL: api,

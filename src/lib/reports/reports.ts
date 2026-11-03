@@ -137,11 +137,13 @@ export async function submitQuestionReport(input: {
   );
 }
 
-export async function fetchOwnReports() {
+export type ReportCursor = { at: string; id: string };
+
+export async function fetchOwnReports(cursor?: ReportCursor) {
   const { data, error } = await client().rpc("get_own_question_reports", {
     p_page_size: 50,
-    p_cursor_created_at: null,
-    p_cursor_id: null,
+    p_cursor_created_at: cursor?.at ?? null,
+    p_cursor_id: cursor?.id ?? null,
   });
   if (error) throw new Error(error.message);
   return rows<OwnQuestionReport>(data);
@@ -152,12 +154,13 @@ export async function fetchReportQueue(
     status?: string;
     category?: string;
     lifecycleState?: string;
+    cursor?: ReportCursor;
   } = {},
 ) {
   const { data, error } = await client().rpc("search_question_report_queue", {
     p_page_size: 100,
-    p_cursor_updated_at: null,
-    p_cursor_id: null,
+    p_cursor_updated_at: input.cursor?.at ?? null,
+    p_cursor_id: input.cursor?.id ?? null,
     p_status: input.status || null,
     p_category: input.category || null,
     p_lifecycle_state: input.lifecycleState || null,
@@ -277,18 +280,30 @@ export function resolveReportLifecycle(input: {
   );
 }
 
-export async function fetchAuditLogs(reportId?: string) {
+export async function fetchAuditLogs(
+  reportId?: string,
+  input: {
+    cursor?: ReportCursor;
+    action?: string;
+    resourceType?: string;
+    actorUserId?: string;
+    resourceId?: string;
+    reportId?: string;
+    createdFrom?: string;
+    createdTo?: string;
+  } = {},
+) {
   const { data, error } = await client().rpc("search_admin_audit_logs", {
     p_page_size: 100,
-    p_cursor_created_at: null,
-    p_cursor_id: null,
-    p_actor_user_id: null,
-    p_action: null,
-    p_resource_type: null,
-    p_resource_id: null,
-    p_report_id: reportId || null,
-    p_created_from: null,
-    p_created_to: null,
+    p_cursor_created_at: input.cursor?.at ?? null,
+    p_cursor_id: input.cursor?.id ?? null,
+    p_actor_user_id: input.actorUserId || null,
+    p_action: input.action || null,
+    p_resource_type: input.resourceType || null,
+    p_resource_id: input.resourceId || null,
+    p_report_id: reportId || input.reportId || null,
+    p_created_from: input.createdFrom || null,
+    p_created_to: input.createdTo || null,
   });
   if (error) throw new Error(error.message);
   return rows<AuditLogRow>(data);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "../../components/ui/Button";
 import { ButtonLink } from "../../components/ui/ButtonLink";
@@ -14,8 +14,10 @@ export function TestHistoryPage() {
     null,
   );
   const [hasNext, setHasNext] = useState(false);
+  const revision = useRef(0);
 
   const load = async (append = false) => {
+    const request = ++revision.current;
     setLoading(true);
     setMessage(null);
     try {
@@ -25,6 +27,7 @@ export function TestHistoryPage() {
         cursorSessionId: append ? cursor?.sessionId : null,
         status: status || null,
       });
+      if (request !== revision.current) return;
       setEntries((existing) => (append ? [...existing, ...page] : page));
       const last = page.at(-1);
       setCursor(
@@ -32,15 +35,20 @@ export function TestHistoryPage() {
       );
       setHasNext(page[0]?.has_next_page ?? false);
     } catch (error) {
+      if (request !== revision.current) return;
       setMessage(error instanceof Error ? error.message : "History could not load.");
     } finally {
-      setLoading(false);
+      if (request === revision.current) setLoading(false);
     }
   };
 
   useEffect(() => {
+    const requests = revision;
     setCursor(null);
     void load(false);
+    return () => {
+      ++requests.current;
+    };
     // Status changes reset pagination.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
@@ -93,6 +101,14 @@ export function TestHistoryPage() {
               </span>
             </div>
             <h2>{entry.category}</h2>
+            <p>{entry.mode}</p>
+            <p className="muted">
+              Difficulty:{" "}
+              {entry.difficulties?.join(", ") || "Legacy metadata unavailable"}
+            </p>
+            <p className="muted">
+              {entry.topic_tags.join(", ") || "Topic metadata unavailable"}
+            </p>
             <p className="muted">
               {entry.answered_questions} of {entry.question_count} answered
             </p>

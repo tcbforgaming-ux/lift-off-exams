@@ -9,6 +9,8 @@ vi.mock("../supabase/browserClient", () => ({
 import {
   correctReportedQuestion,
   fetchReportQueue,
+  fetchOwnReports,
+  fetchAuditLogs,
   submitQuestionReport,
   transitionQuestionReport,
   type ReportDetail,
@@ -16,6 +18,43 @@ import {
 
 describe("question report RPC boundary", () => {
   beforeEach(() => rpc.mockReset());
+
+  it("forwards stable paired cursors for all three bounded lists", async () => {
+    rpc.mockResolvedValue({ data: [], error: null });
+    const cursor = { at: "2026-11-02T00:00:00Z", id: "cursor-id" };
+    await fetchOwnReports(cursor);
+    expect(rpc).toHaveBeenLastCalledWith(
+      "get_own_question_reports",
+      expect.objectContaining({
+        p_page_size: 50,
+        p_cursor_created_at: cursor.at,
+        p_cursor_id: cursor.id,
+      }),
+    );
+    await fetchReportQueue({ cursor });
+    expect(rpc).toHaveBeenLastCalledWith(
+      "search_question_report_queue",
+      expect.objectContaining({
+        p_page_size: 100,
+        p_cursor_updated_at: cursor.at,
+        p_cursor_id: cursor.id,
+      }),
+    );
+    await fetchAuditLogs(undefined, {
+      cursor,
+      action: "question.corrected",
+      resourceType: "question",
+    });
+    expect(rpc).toHaveBeenLastCalledWith(
+      "search_admin_audit_logs",
+      expect.objectContaining({
+        p_cursor_created_at: cursor.at,
+        p_cursor_id: cursor.id,
+        p_action: "question.corrected",
+        p_resource_type: "question",
+      }),
+    );
+  });
 
   it("submits only the session reference and user-authored report fields", async () => {
     rpc.mockResolvedValue({

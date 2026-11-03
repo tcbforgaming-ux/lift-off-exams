@@ -1,4 +1,6 @@
 import { paths } from "../../app/urlPaths";
+import { useEffect, useState } from "react";
+import { fetchTestHistory, type HistoryEntry } from "../../lib/sessions/session";
 import { ButtonLink } from "../../components/ui/ButtonLink";
 import { Card } from "../../components/ui/Card";
 
@@ -18,6 +20,29 @@ const dashboardAreas = [
 ] as const;
 
 export function DashboardPage() {
+  const [resume, setResume] = useState<HistoryEntry | null>(null);
+  const [resumeError, setResumeError] = useState("");
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetchTestHistory({ pageSize: 1, status: "paused" }),
+      fetchTestHistory({ pageSize: 1, status: "in_progress" }),
+    ])
+      .then((pages) => {
+        if (!active) return;
+        const latest = pages
+          .flat()
+          .sort((a, b) => b.last_activity_at.localeCompare(a.last_activity_at))[0];
+        setResume(latest ?? null);
+      })
+      .catch(() => {
+        if (active)
+          setResumeError("Unfinished sessions could not load. Open History to retry.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   return (
     <div className="page-stack">
       <header className="page-header">
@@ -28,6 +53,19 @@ export function DashboardPage() {
           History.
         </p>
       </header>
+
+      {resumeError && <p role="alert">{resumeError}</p>}
+      {resume && (
+        <section className="paused-banner" aria-label="Resume unfinished test">
+          <div>
+            <strong>Continue your unfinished test?</strong>
+            <p>
+              {resume.category} · {resume.test_id}
+            </p>
+          </div>
+          <ButtonLink to={`/sessions/${resume.session_id}`}>Resume Session</ButtonLink>
+        </section>
+      )}
 
       <section className="grid two-column">
         {dashboardAreas.map((area) => (
