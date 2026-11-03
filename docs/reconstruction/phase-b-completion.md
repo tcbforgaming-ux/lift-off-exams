@@ -193,3 +193,17 @@ wrapping, Escape and trigger restoration are now actual browser assertions too.
 Final unchanged full-suite repeat: **exit 0, 24/24 passed in 1.3 minutes**. No test
 was skipped or retried automatically. Final document formatting and
 `git diff --check` also exit 0. Phase B has no unresolved product decisions.
+
+## Local Checkpoint
+
+Verified combined Phase A/B implementation:
+`4cfffd664fa4b38b527aebf4e2f7014ff9e17cd2` on `codex/local-reconstruction`.
+Fifty explicitly named files were staged and reviewed; cached whitespace and
+common secret-pattern checks passed. No runtime artifacts or environment files
+were staged. The reconstruction worktree was clean after that commit. This
+documentation follow-up records its SHA without amending verified code.
+
+`pnpm test:backend:stop` exited 0; only the marked disposable stack stopped,
+with its volumes retained. No hosted/remote action occurred. Next scope is Phase C:
+candidate review, question/manual-bulk import, tag and blueprint administration;
+it has not begun.
