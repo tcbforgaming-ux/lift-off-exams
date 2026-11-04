@@ -99,6 +99,13 @@ reset role;
 select set_config('request.jwt.claim.sub','f0180000-0000-4000-8000-000000000003',true);
 set local role authenticated;
 select lives_ok($$select public.set_user_platform_role('f0180000-0000-4000-8000-000000000004','admin','Permission regression')$$,'owner role-management wrapper still succeeds');
+select throws_ok($$select public.set_own_owner_privileges_suspended(true)$$,'42501','Reauthenticate before changing owner access.','owner access changes require fresh authentication');
+select set_config('request.jwt.claims',jsonb_build_object('amr',jsonb_build_array(
+ jsonb_build_object('method','password','timestamp',extract(epoch from now()))))::text,true);
+select throws_ok($$select public.set_own_owner_privileges_suspended(true)$$,'P0001','The last eligible owner cannot suspend owner privileges.','last eligible owner cannot self-suspend');
+reset role;
+update public.profiles set role='owner' where user_id='f0180000-0000-4000-8000-000000000004';
+set local role authenticated;
 select lives_ok($$select public.set_own_owner_privileges_suspended(true)$$,'self-suspension nested admin audit remains compatible');
 select lives_ok($$select public.set_own_owner_privileges_suspended(false)$$,'self-restoration nested admin audit remains compatible');
 reset role;

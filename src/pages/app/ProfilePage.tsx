@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -42,6 +43,10 @@ export function ProfilePage() {
       <div className="page-header">
         <p className="eyebrow">Account</p>
         <h1>Profile</h1>
+        {(role === "owner" ||
+          (profile?.owner_state && profile.owner_state !== "active")) && (
+          <Link to="/owner-access">Owner Access</Link>
+        )}
         <p>Basic account details and trusted role information.</p>
       </div>
 

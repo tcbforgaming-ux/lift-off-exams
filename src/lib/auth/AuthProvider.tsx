@@ -121,7 +121,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return result;
   }, []);
 
-  const role = isKnownAppRole(profile?.role) ? profile.role : null;
+  const role =
+    !profile || !isKnownAppRole(profile.role)
+      ? null
+      : profile.suspended_until === "infinity" ||
+          (profile.suspended_until && Date.parse(profile.suspended_until) >= Date.now())
+        ? "student"
+        : profile.role === "owner" &&
+            profile.owner_state &&
+            profile.owner_state !== "active"
+          ? "admin"
+          : profile.role;
+  useEffect(() => {
+    if (role !== "owner" || !session?.user.id) return;
+    const record = async () => {
+      await getSupabaseBrowserClient().rpc("record_owner_activity");
+    };
+    void record().catch(() => undefined);
+  }, [role, session?.user.id]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,

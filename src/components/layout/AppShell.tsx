@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 
 import { primaryNavigationRoutes } from "../../app/routes";
 import { paths } from "../../app/urlPaths";
-import { displayRole } from "../../lib/auth/roles";
+import { canAccessRole, displayRole } from "../../lib/auth/roles";
 import { useAuth } from "../../lib/auth/useAuth";
 import { ButtonLink } from "../ui/ButtonLink";
 import { Button } from "../ui/Button";
@@ -37,7 +37,11 @@ export function AppShell({ children }: AppShellProps) {
           <p className="sidebar-label">Administration</p>
           <nav className="admin-nav" aria-label="Admin navigation">
             {primaryNavigationRoutes
-              .filter((route) => route.navigation === "admin")
+              .filter(
+                (route) =>
+                  route.navigation === "admin" &&
+                  canAccessRole(role, route.requiredRole),
+              )
               .map((route) => (
                 <NavLink
                   key={route.path}

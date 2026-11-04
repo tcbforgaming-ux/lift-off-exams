@@ -2357,6 +2357,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_owner_invitation: { Args: { p_token: string }; Returns: undefined }
       accept_team_invite: {
         Args: { p_token_hash: string }
         Returns: {
@@ -2365,6 +2366,10 @@ export type Database = {
           role_label: string
           team_id: string
         }[]
+      }
+      act_on_owner_proposal: {
+        Args: { p_action: string; p_id: string }
+        Returns: Json
       }
       activate_staff_blueprint: {
         Args: { p_id: string; p_reason: string }
@@ -2780,6 +2785,10 @@ export type Database = {
         Args: { p_question_id: string }
         Returns: boolean
       }
+      list_owner_governance: {
+        Args: { p_before?: string; p_before_id?: string; p_view: string }
+        Returns: Json
+      }
       list_review_candidates: {
         Args: {
           p_before?: string
@@ -2841,6 +2850,7 @@ export type Database = {
         }
         Returns: Json
       }
+      record_owner_activity: { Args: never; Returns: undefined }
       register_generation_output_sources: {
         Args: { p_batch_job_id: string; p_sources: Json }
         Returns: undefined
@@ -2855,6 +2865,15 @@ export type Database = {
             }
             Returns: Json
           }
+      request_owner_action: {
+        Args: {
+          p_email: string
+          p_kind: string
+          p_reason: string
+          p_target: string
+        }
+        Returns: string
+      }
       resolve_legacy_test_id: {
         Args: {
           p_legacy_test_id: string

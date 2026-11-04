@@ -108,6 +108,21 @@ const AdminDashboardPage = lazy(() =>
     default: module.AdminDashboardPage,
   })),
 );
+const OwnerGovernancePage = lazy(() =>
+  import("../pages/admin/OwnerGovernancePage").then((module) => ({
+    default: module.OwnerGovernancePage,
+  })),
+);
+const OwnerInvitationPage = lazy(() =>
+  import("../pages/admin/OwnerGovernancePage").then((module) => ({
+    default: module.OwnerInvitationPage,
+  })),
+);
+const OwnerAccessPage = lazy(() =>
+  import("../pages/app/OwnerAccessPage").then((module) => ({
+    default: module.OwnerAccessPage,
+  })),
+);
 const GenerationPipelinePage = lazy(() =>
   import("../pages/admin/GenerationPipelinePage").then((module) => ({
     default: module.GenerationPipelinePage,
@@ -323,6 +338,28 @@ export const routes = [
     navigation: "admin",
     auth: "protected",
     requiredRole: "admin",
+  },
+  {
+    path: "/admin/governance",
+    label: "Owner Governance",
+    element: OwnerGovernancePage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "owner",
+  },
+  {
+    path: "/owner-invitation",
+    label: "Owner Invitation",
+    element: OwnerInvitationPage,
+    navigation: "hidden",
+    auth: "protected",
+  },
+  {
+    path: "/owner-access",
+    label: "Owner Access",
+    element: OwnerAccessPage,
+    navigation: "hidden",
+    auth: "protected",
   },
   {
     path: paths.profile,
