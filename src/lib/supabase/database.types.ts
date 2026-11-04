@@ -2239,6 +2239,7 @@ export type Database = {
       user_question_status: {
         Row: {
           last_seen_at: string | null
+          legacy_answer_unverified: boolean
           question_id: string
           seen_count: number
           status: string
@@ -2247,6 +2248,7 @@ export type Database = {
         }
         Insert: {
           last_seen_at?: string | null
+          legacy_answer_unverified?: boolean
           question_id: string
           seen_count?: number
           status?: string
@@ -2255,6 +2257,7 @@ export type Database = {
         }
         Update: {
           last_seen_at?: string | null
+          legacy_answer_unverified?: boolean
           question_id?: string
           seen_count?: number
           status?: string
@@ -2752,6 +2755,10 @@ export type Database = {
           test_id: string
           total_questions: number
         }[]
+      }
+      grade_my_bank_question: {
+        Args: { p_id: string; p_option: string; p_request: string }
+        Returns: Json
       }
       has_premium_explanation_access: {
         Args: { p_user_id?: string }

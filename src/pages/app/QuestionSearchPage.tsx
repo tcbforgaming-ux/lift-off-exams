@@ -10,6 +10,10 @@ type Row = {
   tags: string[];
   status: string;
   seen_count: number;
+  latest_option_id?: string | null;
+  ever_correct: boolean;
+  ever_incorrect: boolean;
+  legacy_answer_unverified: boolean;
 };
 type Review = {
   id: string;
@@ -37,6 +41,7 @@ export function QuestionSearchPage() {
   const [busy, setBusy] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const trigger = useRef<HTMLButtonElement>(null);
+  const gradeKeys = useRef(new Map<string, string>());
   const reviewHeading = useRef<HTMLHeadingElement>(null);
   const after = cursor.at(-1);
 
@@ -82,15 +87,21 @@ export function QuestionSearchPage() {
     setBusy(true);
     setReviewError("");
     try {
-      const { data, error } = await getSupabaseBrowserClient().rpc(
-        "review_my_bank_question",
-        {
-          p_id: selected.id,
-          p_action: action,
-          p_acknowledge: action !== "grade",
-          ...(action === "grade" ? { p_option: option } : {}),
-        },
-      );
+      const api = getSupabaseBrowserClient();
+      const key = gradeKeys.current.get(option) ?? crypto.randomUUID();
+      if (action === "grade") gradeKeys.current.set(option, key);
+      const { data, error } =
+        action === "grade"
+          ? await api.rpc("grade_my_bank_question", {
+              p_id: selected.id,
+              p_option: option,
+              p_request: key,
+            })
+          : await api.rpc("review_my_bank_question", {
+              p_id: selected.id,
+              p_action: action,
+              p_acknowledge: true,
+            });
       if (error) throw new Error(error.message);
       setReview(data as Review);
       setRevision((n) => n + 1);
@@ -285,6 +296,19 @@ export function QuestionSearchPage() {
             <p>
               {row.status} · Viewed {row.seen_count} times
             </p>
+            <p>
+              Latest answer:{" "}
+              {row.latest_option_id === "UNKNOWN"
+                ? "I Don't Know"
+                : (row.latest_option_id ?? "Not recorded")}
+            </p>
+            <p>
+              Ever correct: {row.ever_correct ? "Recorded" : "Not recorded"} · Ever
+              incorrect: {row.ever_incorrect ? "Recorded" : "Not recorded"}
+            </p>
+            {row.legacy_answer_unverified && (
+              <p>Earlier answer history could not be fully verified.</p>
+            )}
             <Button
               type="button"
               variant="secondary"
@@ -294,6 +318,7 @@ export function QuestionSearchPage() {
                 setSelected(row);
                 setReview(undefined);
                 setOption("");
+                gradeKeys.current.clear();
                 setReviewError("");
               }}
             >
