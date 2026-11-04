@@ -4,8 +4,8 @@ import { fixture } from "./global-setup";
 
 export function localService() {
   if (
-    process.env.VITE_SUPABASE_URL !== "http://127.0.0.1:58421" ||
-    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-stabilization-disposable"
+    process.env.VITE_SUPABASE_URL !== "http://127.0.0.1:58431" ||
+    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-verification-isolated"
   )
     throw new Error("Marked disposable backend required");
   return createClient<Database>(

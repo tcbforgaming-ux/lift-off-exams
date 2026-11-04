@@ -2427,6 +2427,15 @@ export type Database = {
       }
       current_team_role: { Args: { p_team_id: string }; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      edit_repository_question: {
+        Args: {
+          p_content: Json
+          p_expected: string
+          p_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       escape_repository_like: { Args: { p_value: string }; Returns: string }
       expire_owner_removal_votes: { Args: never; Returns: number }
       generate_custom_practice: {
@@ -2557,6 +2566,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_repository_question: { Args: { p_id: string }; Returns: Json }
       get_review_candidate: { Args: { p_id: string }; Returns: Json }
       get_test_history: {
         Args: {
@@ -2982,6 +2992,19 @@ export type Database = {
       }
       set_question_lifecycle_state: {
         Args: { p_new_state: string; p_question_id: string; p_reason: string }
+        Returns: {
+          lifecycle_state: string
+          question_id: string
+          updated_at: string
+        }[]
+      }
+      set_repository_question_lifecycle: {
+        Args: {
+          p_expected: string
+          p_new_state: string
+          p_question_id: string
+          p_reason: string
+        }
         Returns: {
           lifecycle_state: string
           question_id: string

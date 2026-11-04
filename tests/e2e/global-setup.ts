@@ -23,8 +23,8 @@ async function globalSetup() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (
     process.env.E2E_LOCAL_ONLY !== "true" ||
-    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-stabilization-disposable" ||
-    url !== "http://127.0.0.1:58421"
+    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-verification-isolated" ||
+    url !== "http://127.0.0.1:58431"
   ) {
     throw new Error(
       "Playwright fixtures require the marked disposable Supabase stack.",

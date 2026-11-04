@@ -1,8 +1,8 @@
 # Local Reconstruction Ledger
 
-November 4: Phase C remains partial. Staff candidate review and guarded
-publication are implemented; general editing, manual/bulk authoring, tags
-and blueprints remain open. See [Phase C checkpoint](phase-c-completion.md).
+November 4: Phase C Step 1 is verified locally. Candidate review verification
+and general question editing are complete; manual/bulk authoring, tags and
+blueprints remain open. See [Step 1 evidence](phase-c-step-1-completion.md).
 
 Base: `2c19dfe893465330d3aacdd81cd99feb0ff0a04e`.
 Branch: `codex/local-reconstruction`; independent worktree `.tmp/local-reconstruction`.
@@ -30,7 +30,7 @@ do not imply completed product workflows.
 | Explicit uncertainty; 21.3,36.8-36.10          | F08     | UNKNOWN/ordinary/clear persistence, answered-but-incorrect semantics                                                                                                     | B             | VERIFIED locally                   |
 | Auto-pause/recovery; 60.1-60.2                 | F09     | Exit recovery, dashboard prompt, genuine competing tab and stale-generation fencing, serialized submission                                                               | B             | VERIFIED locally                   |
 | Results/history summaries; 22,24,28            | F15     | Snapshot topic/difficulty summaries and bounded history metadata, immutable results and explanation denial                                                               | B             | VERIFIED locally                   |
-| Candidate/question tools; 6,13.2,37-38         | F16     | Monitoring is not review; implement validated edit/approve/reject/publish, one admin minimum and atomic audits                                                           | C             | PARTIAL                            |
+| Candidate/question tools; 6,13.2,37-38         | F16     | Candidate workflow and repository editing verified; concurrent publish, rollback, eligibility, history and browser coverage                                              | C Step 1      | VERIFIED locally                   |
 | Manual/bulk imports, tags, blueprints; 6,37-38 | F16     | Bounded validation, row errors, AND tag combinations, exact allocation and audited server confirmation                                                                   | C             | PARTIAL                            |
 | Owner interfaces; 48                           | F04     | Trusted removal foundation exists; interfaces/invites pending; creation unanimity and admin quorum read from actual PRD                                                  | D             | PARTIAL                            |
 | Self-service account lifecycle; 29.4-29.6,50   | F17     | Lifecycle confirmed November 2; implementation and failure/recovery verification remain pending                                                                          | E             | PARTIAL                            |

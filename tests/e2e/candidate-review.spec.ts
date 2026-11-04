@@ -40,6 +40,17 @@ test("staff can paginate, revise, approve and publish a generated candidate", as
     2,
   );
   await page.getByRole("button", { name: "Review", exact: true }).first().click();
+  await expect(page.getByRole("heading", { name: "Candidate Detail" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Back to Candidates" })).toBeFocused();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("textbox", { name: "Question", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.locator("main").evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.getByLabel("Reason").fill("The wording should be clearer.");
   await page.getByRole("button", { name: "Reject", exact: true }).click();
   await expect(page.getByText(/Rejected \/ Unchecked/)).toBeVisible();
@@ -52,6 +63,17 @@ test("staff can paginate, revise, approve and publish a generated candidate", as
   await page.getByRole("button", { name: "Approve", exact: true }).click();
   await expect(page.getByText(/Approved \/ Valid/)).toBeVisible();
   await page.getByLabel("Reason").fill("Publish the reviewed question.");
+  await page.route(
+    "**/rest/v1/rpc/publish_review_candidate",
+    async (route) => {
+      const [first, second] = await Promise.all([route.fetch(), route.fetch()]);
+      expect(first.ok()).toBe(true);
+      expect(second.ok()).toBe(true);
+      expect(await first.text()).toBe(await second.text());
+      await route.fulfill({ response: first });
+    },
+    { times: 1 },
+  );
   await page.getByRole("button", { name: "Publish", exact: true }).click();
   await expect(page.getByText(/Published \/ Valid/)).toBeVisible();
   const question = await api
@@ -61,7 +83,55 @@ test("staff can paginate, revise, approve and publish a generated candidate", as
     .single();
   expect(question.error).toBeNull();
   expect(question.data?.lifecycle_state).toBe("Active");
+  const audit = await api
+    .from("admin_audit_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("action", "candidate.publish")
+    .eq("reason", "Publish the reviewed question.")
+    .contains("metadata", {
+      question_id:
+        (await api.from("questions").select("id").eq("question_text", revised).single())
+          .data?.id ?? "",
+    });
+  expect(audit.error).toBeNull();
+  expect(audit.count).toBe(1);
   await page.getByRole("button", { name: "Back to Candidates" }).click();
   await expect(page.getByText("Page 2", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Search candidates")).toHaveValue(marker);
+  await expect(
+    page.getByRole("button", { name: "Review", exact: true }).first(),
+  ).toBeFocused();
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let arrived!: () => void;
+  const oldRequest = new Promise<void>((resolve) => {
+    arrived = resolve;
+  });
+  await page.route("**/rest/v1/rpc/list_review_candidates", async (route) => {
+    const body = route.request().postDataJSON() as { p_status: string | null };
+    if (body.p_status !== "Published") {
+      await route.continue();
+      return;
+    }
+    const response = await route.fetch();
+    arrived();
+    await held;
+    await route.fulfill({ response });
+  });
+  await page.getByRole("combobox", { name: "Review status" }).selectOption("Published");
+  await oldRequest;
+  await page.getByRole("combobox", { name: "Review status" }).selectOption("Rejected");
+  await expect(page.getByText("Page 1", { exact: true })).toBeVisible();
+  await expect(page.getByText("No matching candidates.")).toBeVisible();
+  const oldResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/list_review_candidates") &&
+      (response.request().postDataJSON() as { p_status: string }).p_status ===
+        "Published",
+  );
+  release();
+  await oldResponse;
+  await expect(page.getByText("No matching candidates.")).toBeVisible();
 });

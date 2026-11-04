@@ -7,8 +7,8 @@ test("explicit uncertainty persists through reload and scores separately from un
 }) => {
   const url = process.env.VITE_SUPABASE_URL;
   if (
-    url !== "http://127.0.0.1:58421" ||
-    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-stabilization-disposable"
+    url !== "http://127.0.0.1:58431" ||
+    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-verification-isolated"
   )
     throw new Error("Disposable backend required");
   const api = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, {

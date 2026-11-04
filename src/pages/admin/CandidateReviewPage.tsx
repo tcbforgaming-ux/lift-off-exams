@@ -73,6 +73,7 @@ export function CandidateReviewPage() {
   const [rows, setRows] = useState<Candidate[]>([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
+  const returnTarget = useRef<string | null>(null);
   const cursor = cursors.at(-1);
   useEffect(() => {
     if (id) return;
@@ -100,11 +101,32 @@ export function CandidateReviewPage() {
       active = false;
     };
   }, [id, search, status, validation, cursor]);
-  if (id) return <CandidateDetail key={id} id={id} back={() => setParams({})} />;
+  useEffect(() => {
+    if (id || busy || !returnTarget.current) return;
+    const target =
+      document.getElementById(`review-${returnTarget.current}`) ??
+      document.getElementById("candidate-list-heading");
+    target?.focus();
+    returnTarget.current = null;
+  }, [id, busy]);
+  if (id)
+    return (
+      <CandidateDetail
+        key={id}
+        id={id}
+        back={() => {
+          returnTarget.current = id;
+          setBusy(true);
+          setParams({});
+        }}
+      />
+    );
   return (
     <div className="page-stack">
       <header className="page-header">
-        <h1>Candidate Review</h1>
+        <h1 id="candidate-list-heading" tabIndex={-1}>
+          Candidate Review
+        </h1>
       </header>
       <div className="repository-filters">
         <label className="field-label">
@@ -203,6 +225,7 @@ export function CandidateReviewPage() {
                     <Button
                       type="button"
                       onClick={() => setParams({ candidate: row.id })}
+                      id={`review-${row.id}`}
                     >
                       Review
                     </Button>
@@ -228,6 +251,10 @@ export function CandidateReviewPage() {
 }
 
 function CandidateDetail({ id, back }: { id: string; back: () => void }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
   const [row, setRow] = useState<Detail | null>(null);
   const [draft, setDraft] = useState<Content | null>(null);
   const [history, setHistory] = useState<History[]>([]);
@@ -312,6 +339,9 @@ function CandidateDetail({ id, back }: { id: string; back: () => void }) {
     row?.review_status === "Pending Review" || row?.review_status === "Needs Edit";
   return (
     <div className="page-stack">
+      <h1 ref={heading} tabIndex={-1}>
+        Candidate Detail
+      </h1>
       <div className="button-row">
         <Button type="button" variant="secondary" onClick={back}>
           Back to Candidates
@@ -325,7 +355,6 @@ function CandidateDetail({ id, back }: { id: string; back: () => void }) {
           Reload Candidate
         </Button>
       </div>
-      <h1>Candidate Detail</h1>
       {busy && <p role="status">Loading or saving candidate...</p>}
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}

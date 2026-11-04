@@ -7,12 +7,12 @@ import {
 } from "./verification-contracts.mjs";
 
 const root = process.cwd();
-const work = path.join(root, ".tmp", "stabilization-backend");
-const project = "liftoff-stabilization-disposable";
+const work = path.join(root, ".tmp", "isolated-verification-backend");
+const project = "liftoff-verification-isolated";
 const marker = path.join(work, "disposable.json");
 const mode = process.argv[2] ?? "database";
 const repair = "20261018000100_stabilize_permission_boundaries.sql";
-const api = "http://127.0.0.1:58421";
+const api = "http://127.0.0.1:58431";
 const executable = (name) =>
   process.platform === "win32" && name === "pnpm" ? "pnpm.cmd" : name;
 
@@ -93,12 +93,12 @@ function prepare(includeRepair) {
     `project_id = "${project}"
 [api]
 enabled = true
-port = 58421
+port = 58431
 schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 [db]
-port = 58422
-shadow_port = 58429
+port = 58432
+shadow_port = 58439
 major_version = 15
 [studio]
 enabled = false
@@ -134,7 +134,7 @@ function status() {
   const db = new URL(values.DB_URL);
   if (
     db.hostname !== "127.0.0.1" ||
-    db.port !== "58422" ||
+    db.port !== "58432" ||
     db.pathname !== "/postgres"
   ) {
     throw new Error("Unexpected database target; refusing mutation.");
@@ -150,6 +150,28 @@ function start() {
 }
 function reset() {
   status();
+  const nonFixture = run(
+    "docker",
+    [
+      "exec",
+      `supabase_db_${project}`,
+      "psql",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-At",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-c",
+      "select count(*) from auth.users where email is null or email not like '%@example.test'",
+    ],
+    { capture: true },
+  ).trim();
+  if (nonFixture !== "0")
+    throw new Error(
+      "Non-fixture accounts found; refusing to reset verification database.",
+    );
   cli("db", "reset", "--local");
 }
 function sql(file) {

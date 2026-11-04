@@ -8,8 +8,8 @@ test("navigation and a lost exit both recover saved answers with a frozen server
 }) => {
   const url = process.env.VITE_SUPABASE_URL;
   if (
-    url !== "http://127.0.0.1:58421" ||
-    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-stabilization-disposable"
+    url !== "http://127.0.0.1:58431" ||
+    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-verification-isolated"
   )
     throw new Error("Disposable backend required");
   const api = createClient<Database>(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
