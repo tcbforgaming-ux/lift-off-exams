@@ -1,22 +1,23 @@
 # Lift Off Exams
 
-Production rebuild foundation for Lift Off Exams.
+Lift Off Exams is a DECA practice application with saved Test IDs, recoverable
+test sessions, results, and staff question review.
 
 The archived prototype remains in `outputs/lift-off-exams` for visual and functional
 reference. The production application starts from `src`.
 
 ## Requirements
 
-- Node.js 22 or newer
-- pnpm 11 or newer
-- Supabase project URL and anon key
+- Node.js 24 and pnpm 11.9.0 (the CI versions)
+- Supabase CLI and Docker Desktop for the isolated verification backend
+- The API URL and public anon key for your intended local development stack
 
 ## Local Setup
 
 1. Install dependencies:
 
    ```powershell
-   pnpm install
+   pnpm install --frozen-lockfile
    ```
 
 2. Create a local environment file:
@@ -33,7 +34,7 @@ reference. The production application starts from `src`.
    VITE_APP_ENV
    ```
 
-4. Start the app:
+4. With your intended development backend running, start the app:
 
    ```powershell
    pnpm dev
@@ -49,47 +50,35 @@ Run the full local check suite:
 pnpm verify
 ```
 
-Individual checks:
+For backend verification, use the marked isolated stack. The verification
+runner validates its local target and refuses to reset a database containing
+non-fixture accounts:
 
 ```powershell
-supabase db reset
-supabase test db
-supabase db diff --local --schema public
-pnpm typecheck
-pnpm lint
-pnpm format
-pnpm test
+pnpm test:backend
+pnpm test:hosted-grants
+pnpm test:pipeline
+pnpm test:pipeline:db
+pnpm exec playwright install chromium
 pnpm test:e2e
-pnpm build
+pnpm test:backend:stop
 ```
 
-Generate current local database types after migrations change:
+The backend check verifies schema drift and generated public types. On type
+drift it leaves the generated artifact under the marked verification directory
+for review, without overwriting the tracked file.
 
-```powershell
-supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts
-```
+## Current Scope
 
-## Milestone 0 Scope
+Available workflows include sign-in, Test Mode generation, Test ID preview and
+replay, session recovery, results and history, question reports, staff candidate
+and question review, blueprint management, owner governance, and local
+self-service account recovery and deletion verification.
 
-Implemented foundation only:
-
-- React + TypeScript + Vite application scaffold
-- Environment-variable validation
-- Supabase browser client factory
-- Route map and placeholder routes
-- Responsive application shell
-- Base design tokens and UI primitives
-- Error boundary and loading boundary
-- Vitest, ESLint, Prettier, TypeScript checks
-- GitHub Actions CI workflow
-
-Not implemented yet:
-
-- Tests, quizzes, or real test generation
-- Subscriptions or billing flows
-- Analytics
-- Admin features
-- Changes to the existing question-generation pipeline
+Demo, Quiz, Infinite Run, team assignments, and live billing and notification
+delivery are not ready for use. See the
+[reconstruction ledger](docs/reconstruction/completion-ledger.md) for the
+remaining Version 1 work and local verification limits.
 
 ## Authentication Configuration
 

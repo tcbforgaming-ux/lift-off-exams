@@ -62,8 +62,8 @@ jobs:
         with:
           name: database-failure-types
           path: |
-            .tmp/stabilization-backend/database.types.ts
-            .tmp/stabilization-backend/schema-diff.sql
+            .tmp/isolated-verification-backend/database.types.ts
+            .tmp/isolated-verification-backend/schema-diff.sql
             test-results/pipeline-db-results.json
           if-no-files-found: ignore
       - name: Stop only disposable services
