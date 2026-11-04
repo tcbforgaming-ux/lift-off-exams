@@ -128,6 +128,16 @@ const AccountDeletionPage = lazy(() =>
     default: module.AccountDeletionPage,
   })),
 );
+const AnalyticsPage = lazy(() =>
+  import("../pages/app/AnalyticsPage").then((module) => ({
+    default: module.AnalyticsPage,
+  })),
+);
+const QuestionSearchPage = lazy(() =>
+  import("../pages/app/QuestionSearchPage").then((module) => ({
+    default: module.QuestionSearchPage,
+  })),
+);
 const GenerationPipelinePage = lazy(() =>
   import("../pages/admin/GenerationPipelinePage").then((module) => ({
     default: module.GenerationPipelinePage,
@@ -269,7 +279,7 @@ export const routes = [
     path: paths.teams,
     label: "Teams",
     element: PlaceholderPage,
-    navigation: "team",
+    navigation: "hidden",
     auth: "protected",
   },
   {
@@ -374,6 +384,20 @@ export const routes = [
     auth: "protected",
   },
   {
+    path: paths.analytics,
+    label: "Analytics",
+    element: AnalyticsPage,
+    navigation: "app",
+    auth: "protected",
+  },
+  {
+    path: paths.search,
+    label: "Search",
+    element: QuestionSearchPage,
+    navigation: "app",
+    auth: "protected",
+  },
+  {
     path: "/account/deletion",
     label: "Account Deletion",
     element: AccountDeletionPage,
@@ -390,8 +414,5 @@ export const routes = [
 ] satisfies AppRoute[];
 
 export const primaryNavigationRoutes = routes.filter(
-  (route) =>
-    route.navigation === "app" ||
-    route.navigation === "team" ||
-    route.navigation === "admin",
+  (route) => route.navigation === "app" || route.navigation === "admin",
 );

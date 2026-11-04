@@ -14,7 +14,11 @@ recovery.
 
 November 4: [Phase E](phase-e-completion.md) adds verified self-service deletion,
 recovery-only access, deadline and warning handling, and retry-safe local
-finalization. Phase F has not started.
+finalization.
+
+November 4: [local audit closeout](local-audit-closeout.md) reconciles F18–F20
+and carries forward Phase A–E evidence. [Phase F](phase-f-completion.md) adds
+owned analytics and customer question search. Version 1 remains incomplete.
 
 Base: `2c19dfe893465330d3aacdd81cd99feb0ff0a04e`.
 Branch: `codex/local-reconstruction`; independent worktree `.tmp/local-reconstruction`.
@@ -50,10 +54,10 @@ do not imply completed product workflows.
 | Teams/assignments; approved V1 amendment     | —       | Tables/invite foundation insufficient; complete membership, assignments, student submission and instructor results                                                       | F             | PARTIAL                            |
 | Billing and trusted entitlements; 17-18,27   | —       | Provider adapters/local fixtures and usable billing interfaces; no live verification authorized                                                                          | F             | PARTIAL                            |
 | Notifications/settings; 29,50,59.4           | —       | Local capture/adapters, preferences, truthful persistence and retry required                                                                                             | F             | PARTIAL                            |
-| Analytics/search/exports; 23-28              | —       | Implement actual owned records, bounded queries, protected data and export controls                                                                                      | F             | PARTIAL                            |
+| Analytics/search/exports; 23-28,38,40,53     | —       | Owned analytics and latest-status question search implemented; lifetime answer flags and export controls remain open                                                     | F             | PARTIAL                            |
 | Quiz/infinite/hardcore/demo; 7,17.2,19,21    | —       | Implement server contracts and local fixtures; no inert demo controls                                                                                                    | F             | PARTIAL                            |
-| Landing/README truthful claims               | F18     | Remove stale foundation-only claims after validating actual workflows                                                                                                    | Documentation | PARTIAL                            |
-| CI backend coverage                          | F19     | Candidate four-job config exists; local equivalents only; hosted runs forbidden                                                                                          | Baseline      | PARTIAL                            |
+| Landing/README truthful claims               | F18     | Corrected and checked on the running local app; Demo is not advertised as usable                                                                                         | Documentation | VERIFIED locally                   |
+| CI backend coverage                          | F19     | Four jobs checked in; underlying commands verified locally; GitHub execution not authorized or verified                                                                  | Baseline      | LOCAL ONLY                         |
 | Staging provenance/retention                 | F20     | Preserve verified catalog evidence, restrict known local entry points; unknown hosted definitions cannot be fabricated                                                   | Documentation | BLOCKED for hosted-only provenance |
 
 ## Historical Verification Record

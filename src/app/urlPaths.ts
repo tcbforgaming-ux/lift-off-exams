@@ -9,6 +9,8 @@ export const paths = {
   dashboard: "/dashboard",
   practiceSetup: "/practice/setup",
   history: "/history",
+  analytics: "/analytics",
+  search: "/search",
   reports: "/reports",
   testSession: "/sessions/:sessionId",
   testResult: "/results/:sessionId",

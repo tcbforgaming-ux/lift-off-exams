@@ -71,7 +71,8 @@ for review, without overwriting the tracked file.
 ## Current Scope
 
 Available workflows include sign-in, Test Mode generation, Test ID preview and
-replay, session recovery, results and history, question reports, staff candidate
+replay, session recovery, results, history, analytics, question search and review,
+question reports, staff candidate
 and question review, blueprint management, owner governance, and local
 self-service account recovery and deletion verification.
 

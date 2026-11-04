@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 import {
   fetchActiveBlueprints,
   generateCustomPractice,
@@ -25,6 +26,7 @@ export function PracticeSetupPage() {
   const [category, setCategory] = useState("");
   const [difficulties, setDifficulties] = useState(["Easy", "Medium", "Hard"]);
   const [topics, setTopics] = useState<string[]>([]);
+  const [weakTopics, setWeakTopics] = useState<string[]>([]);
   const [timer, setTimer] = useState("60");
   const [customMinutes, setCustomMinutes] = useState("60");
   const [showAnswers, setShowAnswers] = useState(false);
@@ -43,6 +45,12 @@ export function PracticeSetupPage() {
     () => blueprintTopics(selectedBlueprint),
     [selectedBlueprint],
   );
+  const rankedTopics = useMemo(() => {
+    const priority = new Map(weakTopics.map((tag, index) => [tag, index]));
+    return [...availableTopics].sort(
+      (a, b) => (priority.get(a) ?? Infinity) - (priority.get(b) ?? Infinity),
+    );
+  }, [availableTopics, weakTopics]);
   const categories = [
     ...new Set(blueprints.map((blueprint) => blueprint.category)),
   ].sort();
@@ -73,6 +81,40 @@ export function PracticeSetupPage() {
         if (active) setLoading(false);
       });
 
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const { data, error } = await getSupabaseBrowserClient().rpc(
+        "get_my_test_analytics",
+      );
+      if (
+        !active ||
+        error ||
+        !data ||
+        typeof data !== "object" ||
+        !("topics" in data) ||
+        !Array.isArray(data.topics)
+      )
+        return;
+      setWeakTopics(
+        data.topics.flatMap((topic) =>
+          topic &&
+          typeof topic === "object" &&
+          !Array.isArray(topic) &&
+          typeof topic.tag === "string" &&
+          typeof topic.correct === "number" &&
+          typeof topic.total === "number" &&
+          topic.correct < topic.total
+            ? [topic.tag]
+            : [],
+        ),
+      );
+    })().catch(() => undefined);
     return () => {
       active = false;
     };
@@ -226,7 +268,7 @@ export function PracticeSetupPage() {
             </fieldset>
             <fieldset className="practice-options" disabled={submitting}>
               <legend>Topic Tags</legend>
-              {availableTopics.map((value) => (
+              {rankedTopics.map((value) => (
                 <label key={value}>
                   <input
                     type="checkbox"
@@ -234,6 +276,7 @@ export function PracticeSetupPage() {
                     onChange={() => toggle(value, topics, setTopics)}
                   />
                   {value}
+                  {weakTopics.includes(value) && <small> · Needs practice</small>}
                 </label>
               ))}
               {availableTopics.length === 0 && (

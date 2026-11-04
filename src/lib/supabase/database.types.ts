@@ -2565,6 +2565,10 @@ export type Database = {
           updated_since_generation: boolean
         }[]
       }
+      get_my_test_analytics: {
+        Args: { p_from?: string; p_range?: string; p_to?: string }
+        Returns: Json
+      }
       get_own_question_reports: {
         Args: {
           p_cursor_created_at?: string
@@ -2934,6 +2938,15 @@ export type Database = {
         }
         Returns: Json
       }
+      review_my_bank_question: {
+        Args: {
+          p_acknowledge?: boolean
+          p_action: string
+          p_id: string
+          p_option?: string
+        }
+        Returns: Json
+      }
       save_staff_tag: {
         Args: {
           p_description: string
@@ -3026,6 +3039,17 @@ export type Database = {
           row_count: number
           scenario_needed: number
         }[]
+      }
+      search_my_question_bank: {
+        Args: {
+          p_after?: string
+          p_category?: string
+          p_difficulty?: string
+          p_keyword?: string
+          p_status?: string
+          p_tag?: string
+        }
+        Returns: Json
       }
       search_question_report_queue: {
         Args: {

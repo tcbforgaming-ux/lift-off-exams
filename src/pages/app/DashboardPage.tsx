@@ -17,6 +17,12 @@ const dashboardAreas = [
     to: paths.testId,
     action: "Open Test ID",
   },
+  {
+    title: "Analytics",
+    detail: "Review your test scores.",
+    to: paths.analytics,
+    action: "Open Analytics",
+  },
 ] as const;
 
 export function DashboardPage() {
