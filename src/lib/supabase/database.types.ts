@@ -2862,6 +2862,18 @@ export type Database = {
         Args: { p_expected_session_version: number; p_session_id: string }
         Returns: number
       }
+      prepare_my_test_export: {
+        Args: {
+          p_format: string
+          p_from?: string
+          p_kind: string
+          p_range?: string
+          p_request: string
+          p_session?: string
+          p_to?: string
+        }
+        Returns: Json
+      }
       preview_staff_questions: { Args: { p_rows: Json }; Returns: Json }
       publish_generated_question: {
         Args: { p_candidate_id: string }

@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { ButtonLink } from "../../components/ui/ButtonLink";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { TestExportControls } from "../../components/ui/TestExportControls";
 import { ReportQuestionDialog } from "../../components/reports/ReportQuestionDialog";
 import { summarizeResult } from "../../lib/sessions/resultSummaries";
 import {
@@ -63,6 +64,7 @@ export function TestResultPage() {
           questions appear first below.
         </p>
       </header>
+      <TestExportControls key={sessionId} kind="result" session={sessionId} />
 
       <dl className="result-summary">
         <div>

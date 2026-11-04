@@ -107,3 +107,11 @@ preserved. Only the marked isolated backend was used.
 
 No exports, additional activity modes, teams, billing or quota enforcement
 were implemented in these checkpoints.
+
+## Phase F Test Mode Exports
+
+[Completion and evidence](phase-f-exports-completion.md) for Test result,
+analytics, and completed performance history in PDF and CSV. The later
+approved unpaid limit is three exports per Monday UTC week, with no protected
+explanations; paid exports include owned snapshot explanations. The test quota
+and other activity modes remain separate.

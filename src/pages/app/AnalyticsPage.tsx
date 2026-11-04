@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TestExportControls } from "../../components/ui/TestExportControls";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { CursorNavigation } from "../../components/ui/CursorNavigation";
@@ -297,6 +298,16 @@ export function AnalyticsPage() {
           )}
           <Button type="submit">Apply Range</Button>
         </form>
+      )}
+      {!loading && !error && data && (
+        <TestExportControls
+          key={JSON.stringify(query)}
+          kind="analytics"
+          range={query.range}
+          from={query.range === "custom" ? query.from : undefined}
+          through={query.range === "custom" ? query.to : undefined}
+          dateFilter={!data.premium}
+        />
       )}
       {loading && <p role="status">Loading analytics.</p>}
       {error && (

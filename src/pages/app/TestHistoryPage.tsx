@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../../components/ui/Button";
 import { ButtonLink } from "../../components/ui/ButtonLink";
 import { Card } from "../../components/ui/Card";
+import { TestExportControls } from "../../components/ui/TestExportControls";
 import { fetchTestHistory, type HistoryEntry } from "../../lib/sessions/session";
 
 export function TestHistoryPage() {
@@ -76,6 +77,9 @@ export function TestHistoryPage() {
           <option value="submitted">Submitted</option>
         </select>
       </div>
+      {(status === "" || status === "submitted") && (
+        <TestExportControls kind="history" dateFilter />
+      )}
 
       {message && (
         <p className="form-message form-message-error" role="alert">
