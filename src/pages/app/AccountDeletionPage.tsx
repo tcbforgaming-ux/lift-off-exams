@@ -15,7 +15,7 @@ type Lifecycle = {
 const reauthKey = "lift-off-deletion-reauth";
 
 export function AccountDeletionPage() {
-  const { user, refreshProfile } = useAuth();
+  const { user, status: authStatus, refreshProfile } = useAuth();
   const [params, setParams] = useSearchParams();
   const [lifecycle, setLifecycle] = useState<Lifecycle>();
   const [password, setPassword] = useState("");
@@ -44,7 +44,7 @@ export function AccountDeletionPage() {
     return () => {
       current = false;
     };
-  }, [user?.id, loadVersion]);
+  }, [user?.id, authStatus, loadVersion]);
 
   async function submit() {
     if (!user || !lifecycle || pending.current) return;
