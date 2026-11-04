@@ -19,6 +19,7 @@
     "test:hosted-grants": "node scripts/verify-backend.mjs hosted",
     "test:backend:e2e": "node scripts/verify-backend.mjs e2e",
     "test:backend:stop": "node scripts/verify-backend.mjs stop",
+    "account-erasure:local": "node scripts/verify-backend.mjs erasure",
     "test:pipeline": "node --test scripts/verification-contracts.test.mjs && node scripts/check-pipeline-types.mjs && node --experimental-vm-modules scripts/test-pipeline.mjs",
     "test:pipeline:db": "node scripts/verify-backend.mjs pipeline",
     "test:e2e": "node scripts/verify-backend.mjs e2e",

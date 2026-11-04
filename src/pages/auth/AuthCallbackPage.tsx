@@ -52,7 +52,13 @@ export function AuthCallbackPage() {
 
   useEffect(() => {
     if (!completed) return;
-    if (status === "authenticated") {
+    if (status === "recovering") {
+      const next = sanitizeRedirectPath(searchParams.get("next"));
+      void navigate(
+        next.startsWith("/account/deletion?") ? next : "/account/deletion",
+        { replace: true },
+      );
+    } else if (status === "authenticated") {
       void navigate(sanitizeRedirectPath(searchParams.get("next")), { replace: true });
     } else if (status === "error") {
       setFailed(true);

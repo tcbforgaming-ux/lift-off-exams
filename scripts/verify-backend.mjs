@@ -248,6 +248,15 @@ try {
     } finally {
       sql(path.join(root, "scripts/pipeline-db-cleanup.sql"));
     }
+  } else if (mode === "erasure") {
+    const values = status();
+    run("node", ["scripts/run-local-account-erasure.mjs"], {
+      env: {
+        ...process.env,
+        ACCOUNT_ERASURE_LOCAL_API: api,
+        ACCOUNT_ERASURE_LOCAL_SERVICE_KEY: values.SERVICE_ROLE_KEY,
+      },
+    });
   } else if (mode === "e2e") {
     const values = status();
     run("pnpm", ["exec", "playwright", "test", ...process.argv.slice(3)], {

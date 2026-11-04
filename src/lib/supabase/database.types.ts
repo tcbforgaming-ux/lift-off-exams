@@ -2367,12 +2367,20 @@ export type Database = {
           team_id: string
         }[]
       }
+      account_lifecycle_allows_actor: {
+        Args: { p_actor: string }
+        Returns: boolean
+      }
       act_on_owner_proposal: {
         Args: { p_action: string; p_id: string }
         Returns: Json
       }
       activate_staff_blueprint: {
         Args: { p_id: string; p_reason: string }
+        Returns: string
+      }
+      advance_account_erasure: {
+        Args: { p_job: string; p_simulate_failure?: string }
         Returns: string
       }
       backfill_legacy_test_membership: {
@@ -2488,6 +2496,7 @@ export type Database = {
         }
         Returns: Json
       }
+      enforce_account_lifecycle: { Args: never; Returns: undefined }
       escape_repository_like: { Args: { p_value: string }; Returns: string }
       expire_owner_removal_votes: { Args: never; Returns: number }
       generate_custom_practice: {
@@ -2536,6 +2545,7 @@ export type Database = {
         Args: { p_value: string }
         Returns: string
       }
+      get_account_deletion_status: { Args: never; Returns: Json }
       get_active_owner_count: { Args: never; Returns: number }
       get_candidate_review_history: { Args: { p_id: string }; Returns: Json }
       get_candidate_review_revision: { Args: { p_id: string }; Returns: number }
@@ -2785,6 +2795,7 @@ export type Database = {
         Args: { p_question_id: string }
         Returns: boolean
       }
+      list_due_account_erasure_jobs: { Args: never; Returns: string[] }
       list_owner_governance: {
         Args: { p_before?: string; p_before_id?: string; p_view: string }
         Returns: Json
@@ -2851,6 +2862,7 @@ export type Database = {
         Returns: Json
       }
       record_owner_activity: { Args: never; Returns: undefined }
+      recover_account_from_deletion: { Args: never; Returns: Json }
       register_generation_output_sources: {
         Args: { p_batch_job_id: string; p_sources: Json }
         Returns: undefined
@@ -2865,6 +2877,10 @@ export type Database = {
             }
             Returns: Json
           }
+      request_account_deletion: {
+        Args: { p_confirmation: string }
+        Returns: Json
+      }
       request_owner_action: {
         Args: {
           p_email: string

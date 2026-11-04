@@ -123,6 +123,11 @@ const OwnerAccessPage = lazy(() =>
     default: module.OwnerAccessPage,
   })),
 );
+const AccountDeletionPage = lazy(() =>
+  import("../pages/app/AccountDeletionPage").then((module) => ({
+    default: module.AccountDeletionPage,
+  })),
+);
 const GenerationPipelinePage = lazy(() =>
   import("../pages/admin/GenerationPipelinePage").then((module) => ({
     default: module.GenerationPipelinePage,
@@ -366,6 +371,13 @@ export const routes = [
     label: "Profile",
     element: ProfilePage,
     navigation: "app",
+    auth: "protected",
+  },
+  {
+    path: "/account/deletion",
+    label: "Account Deletion",
+    element: AccountDeletionPage,
+    navigation: "hidden",
     auth: "protected",
   },
   {

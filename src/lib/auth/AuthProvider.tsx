@@ -27,6 +27,7 @@ async function loadProfile(userId: string) {
     .eq("user_id", userId)
     .maybeSingle();
 
+  if (error?.details === "account_recovery_only") return "recovering" as const;
   if (error) throw error;
   return data as Profile | null;
 }
@@ -55,6 +56,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const nextProfile = await loadProfile(nextSession.user.id);
       if (revision.current !== requestRevision) return;
+      if (nextProfile === "recovering") {
+        setStatus("recovering");
+        return;
+      }
       setProfile(nextProfile);
       setStatus(nextProfile ? "authenticated" : "error");
       setError(
@@ -106,7 +111,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const nextProfile = await loadProfile(session.user.id);
     if (!nextProfile || revision.current !== requestRevision)
       throw new Error("Your profile could not be refreshed.");
+    if (nextProfile === "recovering") {
+      setProfile(null);
+      setStatus("recovering");
+      return;
+    }
     setProfile(nextProfile);
+    setStatus("authenticated");
   }, [session?.user]);
 
   const signOut = useCallback(async () => {

@@ -77,6 +77,13 @@ Deno.serve(async (request) => {
       );
     }
 
+    const { data: active, error: lifecycleError } = await supabaseAdmin.rpc(
+      "account_lifecycle_allows_actor", { p_actor: user.id },
+    );
+    if (lifecycleError || active !== true) {
+      return jsonResponse({ error: "Billing access is unavailable for this account." }, 403);
+    }
+
     const requestBody = await request.json().catch(() => ({}));
     const requestedReturnUrl =
       requestBody.return_url || requestBody.returnUrl;

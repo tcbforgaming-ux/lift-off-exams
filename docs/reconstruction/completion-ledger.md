@@ -10,7 +10,11 @@ See [Step 1 evidence](phase-c-step-1-completion.md),
 
 November 4: [Phase D](phase-d-completion.md) adds audited owner governance,
 recipient-bound invitations, live quorum checks, rejection and owner access
-recovery. Phase E has not started.
+recovery.
+
+November 4: [Phase E](phase-e-completion.md) adds verified self-service deletion,
+recovery-only access, deadline and warning handling, and retry-safe local
+finalization. Phase F has not started.
 
 Base: `2c19dfe893465330d3aacdd81cd99feb0ff0a04e`.
 Branch: `codex/local-reconstruction`; independent worktree `.tmp/local-reconstruction`.
@@ -42,7 +46,7 @@ do not imply completed product workflows.
 | Manual/JSON authoring; 6.1-6.2               | F16     | Staff-only pending candidates, read-only preview, exact duplicate detection, durable retry and transactional audit                                                       | C Step 2      | VERIFIED locally                   |
 | Tag/blueprint management; 5-6,19.3,49        | F16     | Audited metadata, drafts, activation, joint inventory and historical Test ID integrity; retired blueprint regeneration uses original rules against current inventory     | C Step 3      | VERIFIED locally                   |
 | Owner interfaces; 48                         | F04     | Owner role proposals, invitations, removal, suspension, recovery and audit verified locally; notification delivery and maintenance scheduling not deployed               | D             | VERIFIED locally                   |
-| Self-service account lifecycle; 29.4-29.6,50 | F17     | Lifecycle confirmed November 2; implementation and failure/recovery verification remain pending                                                                          | E             | PARTIAL                            |
+| Self-service account lifecycle; 29.4-29.6,50 | F17     | Recent Auth, recoverable deletion, warning gating, ownership checks, anonymization and finalization verified locally; live providers not enabled                         | E             | VERIFIED locally                   |
 | Teams/assignments; approved V1 amendment     | —       | Tables/invite foundation insufficient; complete membership, assignments, student submission and instructor results                                                       | F             | PARTIAL                            |
 | Billing and trusted entitlements; 17-18,27   | —       | Provider adapters/local fixtures and usable billing interfaces; no live verification authorized                                                                          | F             | PARTIAL                            |
 | Notifications/settings; 29,50,59.4           | —       | Local capture/adapters, preferences, truthful persistence and retry required                                                                                             | F             | PARTIAL                            |

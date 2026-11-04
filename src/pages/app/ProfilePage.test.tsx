@@ -1,7 +1,16 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProfilePage } from "./ProfilePage";
+
+function renderProfile() {
+  return render(
+    <MemoryRouter>
+      <ProfilePage />
+    </MemoryRouter>,
+  );
+}
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -46,7 +55,7 @@ describe("truthful profile saving", () => {
         mocks.refresh.mockRejectedValue(new Error("refresh failed"));
       if (kind === "thrown request")
         mocks.result.mockRejectedValue(new Error("offline"));
-      render(<ProfilePage />);
+      renderProfile();
       fireEvent.change(screen.getByLabelText("Display name"), {
         target: { value: "Keep my input" },
       });
@@ -59,7 +68,7 @@ describe("truthful profile saving", () => {
   }
   it("reports success only after the expected row and profile refresh", async () => {
     mocks.result.mockResolvedValue({ data: { user_id: "user-1" }, error: null });
-    render(<ProfilePage />);
+    renderProfile();
     fireEvent.click(screen.getByRole("button", { name: "Save Profile" }));
     await waitFor(() =>
       expect(screen.getByText("Profile updated.")).toBeInTheDocument(),

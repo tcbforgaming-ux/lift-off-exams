@@ -22,6 +22,22 @@ export function AppShell({ children }: AppShellProps) {
     (route) => route.navigation !== "admin",
   );
 
+  if (status === "recovering") {
+    return (
+      <div className="app-shell">
+        <header className="topbar">
+          <NavLink to="/account/deletion" className="brand">
+            Lift Off Exams
+          </NavLink>
+          <Button type="button" variant="ghost" onClick={() => void signOut()}>
+            Log Out
+          </Button>
+        </header>
+        <main className="app-main">{children}</main>
+      </div>
+    );
+  }
+
   if (staff && (pathname === paths.admin || pathname.startsWith(`${paths.admin}/`))) {
     return (
       <div className="app-shell admin-shell">

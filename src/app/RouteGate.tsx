@@ -27,6 +27,14 @@ export function RouteGate({
     return <LoadingBoundary label="Checking session" />;
   }
 
+  if (status === "recovering") {
+    return location.pathname === "/account/deletion" ? (
+      <Component />
+    ) : (
+      <Navigate to="/account/deletion" replace />
+    );
+  }
+
   if (status === "authenticated" && auth === "guest") {
     const from = (location.state as { from?: unknown } | null)?.from;
     return <Navigate to={sanitizeRedirectPath(from)} replace />;

@@ -3,7 +3,8 @@ import type { AuthError, Session, User } from "@supabase/supabase-js";
 
 import type { AppRole, Profile } from "../supabase/types";
 
-export type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "error";
+export type AuthStatus =
+  "loading" | "authenticated" | "recovering" | "unauthenticated" | "error";
 
 export type AuthContextValue = {
   status: AuthStatus;

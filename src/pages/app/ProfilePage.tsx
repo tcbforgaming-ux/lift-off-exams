@@ -43,6 +43,7 @@ export function ProfilePage() {
       <div className="page-header">
         <p className="eyebrow">Account</p>
         <h1>Profile</h1>
+        <Link to="/account/deletion">Account Deletion</Link>
         {(role === "owner" ||
           (profile?.owner_state && profile.owner_state !== "active")) && (
           <Link to="/owner-access">Owner Access</Link>
