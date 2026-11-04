@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -235,6 +235,7 @@ export function QuestionRepositoryPage() {
       <header className="page-header">
         <p className="eyebrow">Administration</p>
         <h1>Question Repository</h1>
+        <Link to="/admin/questions/author">Author or Import Questions</Link>
         <p>
           Search, filter, retire, and restore questions through bounded staff-only
           Supabase queries.

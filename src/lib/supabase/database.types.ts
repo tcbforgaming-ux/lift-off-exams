@@ -373,6 +373,8 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           source_custom_id: string | null
+          staff_import_id: string | null
+          staff_import_row: number | null
           tags: string[]
           updated_at: string
           validation_errors: string[]
@@ -402,6 +404,8 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           source_custom_id?: string | null
+          staff_import_id?: string | null
+          staff_import_row?: number | null
           tags?: string[]
           updated_at?: string
           validation_errors?: string[]
@@ -431,6 +435,8 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           source_custom_id?: string | null
+          staff_import_id?: string | null
+          staff_import_row?: number | null
           tags?: string[]
           updated_at?: string
           validation_errors?: string[]
@@ -2398,6 +2404,16 @@ export type Database = {
         }
         Returns: Json
       }
+      commit_staff_questions: {
+        Args: {
+          p_key: string
+          p_reason: string
+          p_rows: Json
+          p_source: string
+          p_token: string
+        }
+        Returns: Json
+      }
       correct_reported_question: {
         Args: {
           p_correct_option_id: string
@@ -2763,6 +2779,7 @@ export type Database = {
         Args: { p_expected_session_version: number; p_session_id: string }
         Returns: number
       }
+      preview_staff_questions: { Args: { p_rows: Json }; Returns: Json }
       publish_generated_question: {
         Args: { p_candidate_id: string }
         Returns: string

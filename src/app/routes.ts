@@ -93,6 +93,11 @@ const QuestionRepositoryPage = lazy(() =>
     default: module.QuestionRepositoryPage,
   })),
 );
+const QuestionAuthoringPage = lazy(() =>
+  import("../pages/admin/QuestionAuthoringPage").then((module) => ({
+    default: module.QuestionAuthoringPage,
+  })),
+);
 const AdminDashboardPage = lazy(() =>
   import("../pages/admin/AdminDashboardPage").then((module) => ({
     default: module.AdminDashboardPage,
@@ -262,6 +267,14 @@ export const routes = [
     path: paths.adminGeneration,
     label: "Generation Pipeline",
     element: GenerationPipelinePage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: "/admin/questions/author",
+    label: "Question Authoring",
+    element: QuestionAuthoringPage,
     navigation: "admin",
     auth: "protected",
     requiredRole: "admin",
