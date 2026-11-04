@@ -1,9 +1,11 @@
 # Local Reconstruction Ledger
 
-November 4: Phase C Steps 1 and 2 are verified locally. Candidate review,
-repository editing and manual/JSON authoring are implemented. Tag and blueprint
-management remain Step 3. See [Step 1 evidence](phase-c-step-1-completion.md)
-and [Step 2 evidence](phase-c-step-2-completion.md).
+November 4: Phase C Steps 1 and 2 are verified locally. Step 3 adds staff tag
+and blueprint workflows, including joint inventory validation across overlapping
+strata. F16 stays open pending the decision on regenerating from retired versions.
+See [Step 1 evidence](phase-c-step-1-completion.md),
+[Step 2 evidence](phase-c-step-2-completion.md) and
+[Step 3 evidence](phase-c-step-3-completion.md).
 
 Base: `2c19dfe893465330d3aacdd81cd99feb0ff0a04e`.
 Branch: `codex/local-reconstruction`; independent worktree `.tmp/local-reconstruction`.
@@ -33,7 +35,7 @@ do not imply completed product workflows.
 | Results/history summaries; 22,24,28          | F15     | Snapshot topic/difficulty summaries and bounded history metadata, immutable results and explanation denial                                                               | B             | VERIFIED locally                   |
 | Candidate/question tools; 6,13.2,37-38       | F16     | Candidate workflow and repository editing verified; concurrent publish, rollback, eligibility, history and browser coverage                                              | C Step 1      | VERIFIED locally                   |
 | Manual/JSON authoring; 6.1-6.2               | F16     | Staff-only pending candidates, read-only preview, exact duplicate detection, durable retry and transactional audit                                                       | C Step 2      | VERIFIED locally                   |
-| Tag/blueprint management; 5-6,19.3,49        | F16     | Catalog workflows and blueprint version editing remain open                                                                                                              | C Step 3      | PARTIAL                            |
+| Tag/blueprint management; 5-6,19.3,49        | F16     | Audited metadata, drafts, activation, joint inventory and historical Test ID integrity; updating a Test ID from a retired version remains unresolved                     | C Step 3      | PARTIAL                            |
 | Owner interfaces; 48                         | F04     | Trusted removal foundation exists; interfaces/invites pending; creation unanimity and admin quorum read from actual PRD                                                  | D             | PARTIAL                            |
 | Self-service account lifecycle; 29.4-29.6,50 | F17     | Lifecycle confirmed November 2; implementation and failure/recovery verification remain pending                                                                          | E             | PARTIAL                            |
 | Teams/assignments; approved V1 amendment     | —       | Tables/invite foundation insufficient; complete membership, assignments, student submission and instructor results                                                       | F             | PARTIAL                            |

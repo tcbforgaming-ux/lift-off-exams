@@ -98,6 +98,11 @@ const QuestionAuthoringPage = lazy(() =>
     default: module.QuestionAuthoringPage,
   })),
 );
+const CatalogManagementPage = lazy(() =>
+  import("../pages/admin/CatalogManagementPage").then((module) => ({
+    default: module.CatalogManagementPage,
+  })),
+);
 const AdminDashboardPage = lazy(() =>
   import("../pages/admin/AdminDashboardPage").then((module) => ({
     default: module.AdminDashboardPage,
@@ -275,6 +280,14 @@ export const routes = [
     path: "/admin/questions/author",
     label: "Question Authoring",
     element: QuestionAuthoringPage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: "/admin/catalog",
+    label: "Tags & Blueprints",
+    element: CatalogManagementPage,
     navigation: "admin",
     auth: "protected",
     requiredRole: "admin",

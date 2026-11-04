@@ -205,6 +205,8 @@ export type Database = {
           practice_owner_id: string | null
           practice_parent_id: string | null
           practice_request_hash: string | null
+          staff_expected_active_ids: string[] | null
+          staff_source_version_id: string | null
           status: string
           total_questions: number
           version: string
@@ -222,6 +224,8 @@ export type Database = {
           practice_owner_id?: string | null
           practice_parent_id?: string | null
           practice_request_hash?: string | null
+          staff_expected_active_ids?: string[] | null
+          staff_source_version_id?: string | null
           status?: string
           total_questions?: number
           version: string
@@ -239,6 +243,8 @@ export type Database = {
           practice_owner_id?: string | null
           practice_parent_id?: string | null
           practice_request_hash?: string | null
+          staff_expected_active_ids?: string[] | null
+          staff_source_version_id?: string | null
           status?: string
           total_questions?: number
           version?: string
@@ -247,6 +253,13 @@ export type Database = {
           {
             foreignKeyName: "blueprint_versions_practice_parent_id_fkey"
             columns: ["practice_parent_id"]
+            isOneToOne: false
+            referencedRelation: "blueprint_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blueprint_versions_staff_source_version_id_fkey"
+            columns: ["staff_source_version_id"]
             isOneToOne: false
             referencedRelation: "blueprint_versions"
             referencedColumns: ["id"]
@@ -2353,6 +2366,10 @@ export type Database = {
           team_id: string
         }[]
       }
+      activate_staff_blueprint: {
+        Args: { p_id: string; p_reason: string }
+        Returns: string
+      }
       backfill_legacy_test_membership: {
         Args: {
           p_legacy_test_id: string
@@ -2440,6 +2457,20 @@ export type Database = {
           report_status: string
           report_version: number
         }[]
+      }
+      create_staff_blueprint_draft: {
+        Args: {
+          p_category: string
+          p_distribution: Json
+          p_expected_active: string[]
+          p_level: string
+          p_name: string
+          p_reason: string
+          p_source: string
+          p_total: number
+          p_version: string
+        }
+        Returns: string
       }
       current_team_role: { Args: { p_team_id: string }; Returns: string }
       current_user_role: { Args: never; Returns: string }
@@ -2584,6 +2615,8 @@ export type Database = {
       }
       get_repository_question: { Args: { p_id: string }; Returns: Json }
       get_review_candidate: { Args: { p_id: string }; Returns: Json }
+      get_staff_blueprint: { Args: { p_id: string }; Returns: Json }
+      get_staff_tag_dependencies: { Args: { p_label: string }; Returns: Json }
       get_test_history: {
         Args: {
           p_cursor_activity_at?: string
@@ -2757,6 +2790,14 @@ export type Database = {
         }
         Returns: Json
       }
+      list_staff_blueprints: {
+        Args: { p_before?: string; p_before_id?: string; p_search?: string }
+        Returns: Json
+      }
+      list_staff_tags: {
+        Args: { p_after?: string; p_search?: string }
+        Returns: Json
+      }
       mark_inactive_owners: { Args: { p_before?: string }; Returns: number }
       normalize_generated_difficulty: {
         Args: { p_value: string }
@@ -2855,6 +2896,15 @@ export type Database = {
           p_key: string
           p_reason: string
           p_revision: number
+        }
+        Returns: Json
+      }
+      save_staff_tag: {
+        Args: {
+          p_description: string
+          p_expected: number
+          p_label: string
+          p_reason: string
         }
         Returns: Json
       }
