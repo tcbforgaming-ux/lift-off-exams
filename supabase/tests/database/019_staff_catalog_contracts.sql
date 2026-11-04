@@ -30,7 +30,7 @@ select throws_ok($q$select public.activate_staff_blueprint(null,'Student attempt
 insert into catalog_fixture select 'original',test_definition_id from public.generate_test_from_blueprint('00000000-0000-0000-0000-000000019003','1',1,'catalog-old','catalog-old') where success;
 reset role;
 create temp table catalog_history as
-select t.blueprint_snapshot,
+select t.id as test_code,t.blueprint_snapshot,
   (select jsonb_agg(to_jsonb(q) order by q.position) from public.test_definition_questions q where q.test_definition_id=t.definition_id) membership
 from public.test_ids t where t.definition_id=(select id from catalog_fixture where k='original');
 select is((select jsonb_array_length(membership) from catalog_history),1,'baseline Test ID has ordered membership');
@@ -74,5 +74,25 @@ select is((select blueprint_snapshot from public.test_ids where definition_id=(s
  (select blueprint_snapshot from catalog_history),'original snapshot unchanged');
 select is((select jsonb_agg(to_jsonb(q) order by q.position) from public.test_definition_questions q where q.test_definition_id=(select id from catalog_fixture where k='original')),
  (select membership from catalog_history),'original ordered membership unchanged');
+grant select on catalog_history to authenticated;
+select ok(not has_function_privilege('authenticated','private.generate_test_from_saved_rules(uuid,text,integer,text,text,jsonb)','EXECUTE'),
+  'browser callers cannot supply arbitrary saved rules');
+update public.questions set lifecycle_state='Retired'
+where id=(select (membership->0->>'question_id')::uuid from catalog_history);
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000019002',true);
+select throws_ok($q$select * from public.generate_test_from_blueprint('00000000-0000-0000-0000-000000019003','1',1,null,'direct-retired')$q$,
+  'P0001','Only active blueprint versions can generate tests.','ordinary generation still rejects retired versions');
+create temp table catalog_refresh as
+select public.generate_updated_test((select test_code from catalog_history),'update-retired') as result;
+select is((select result->>'success' from catalog_refresh),'true','retired source can generate an updated test');
+select isnt((select result->>'test_id' from catalog_refresh),(select test_code from catalog_history),'updated test has a new share code');
+select is((select result->'blueprint_summary' from catalog_refresh),(select blueprint_snapshot from catalog_history),'updated test uses exact saved rules');
+select is(public.generate_updated_test((select test_code from catalog_history),'update-retired'),(select result from catalog_refresh),'updated generation retries return the same result');
+reset role;
+select isnt((select question_id::text from public.test_definition_questions where test_definition_id=(select (result->>'test_definition_id')::uuid from catalog_refresh)),
+  (select membership->0->>'question_id' from catalog_history),'updated test uses current inventory and excludes the retired question');
+select is((select jsonb_agg(to_jsonb(q) order by q.position) from public.test_definition_questions q where q.test_definition_id=(select id from catalog_fixture where k='original')),
+ (select membership from catalog_history),'regeneration leaves original ordered membership unchanged');
 select * from finish();
 rollback;

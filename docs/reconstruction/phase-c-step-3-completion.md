@@ -51,5 +51,26 @@ production-scale inventory benchmark was performed.
 
 - No tag rename, merge, retirement or deletion. Before adding those operations, decide which roles may perform each action and whether active questions, pending candidates and future blueprint versions should migrate, retain labels or block the action. Historical snapshots must not be rewritten.
 - No direct historical reactivation or standalone retirement. Copying an older version does not bypass explicit activation. The PRD's three-day rule for direct reversion is not implemented as direct reactivation.
-- Original Test IDs stay playable after retirement. By inspection, Phase B's separate **Generate Updated Test** operation passes the stored source version to the active-only generator and therefore rejects a retired source. Decide whether this operation should explicitly reuse the retired rules against current stock, offer the replacement as a separate action, or disclose that only replay is available. Do not silently change the old Test ID or its rules. F16 remains open pending this lifecycle decision and a regression check.
 - Inventory is a point-in-time feasibility check, not a promise that the existing seeded generator will find that assignment or that stock will remain unchanged. The preflight reports shortages without changing the activation or generation algorithm.
+
+## Saved-Rule Regeneration Follow-up
+
+Approved behavior: **Generate Updated Test** uses the original saved blueprint
+rules against current eligible questions, even after the blueprint is retired.
+The original Test ID still replays its stored questions. IDs without supported
+saved rules remain replay-only.
+
+Baseline: `fef97956ff98bfa9b7ad8d3a4b28c4be2e160ec1`. Forward migration
+`20261104000900_regenerate_saved_blueprint.sql` shares the existing generator via
+a private function. Only the trusted Test ID lookup can supply a saved snapshot;
+ordinary generation still rejects retired blueprints and the free count cap is
+unchanged. The regression in `019_staff_catalog_contracts.sql` checks current
+inventory, exact rules, idempotency, a new share code, and unchanged old membership.
+
+Follow-up verification: `pnpm test:backend` exited 0 with 612 assertions, no
+public schema drift, and identical generated types. `pnpm verify` exited 0 with
+81 unit tests plus type checking, lint, formatting, and build.
+`pnpm test:e2e` exited 0 with all 29 Chromium cases passing, including the
+existing updated-generation and depleted-pool flow. F16 is closed locally. The pipeline
+and hosted-default grant checks listed above are from the Step 3 baseline;
+no pipeline code or public function grants changed in this follow-up.
