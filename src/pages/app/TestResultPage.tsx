@@ -9,6 +9,7 @@ import { ReportQuestionDialog } from "../../components/reports/ReportQuestionDia
 import { summarizeResult } from "../../lib/sessions/resultSummaries";
 import {
   fetchTestResult,
+  fetchPracticeSessionSettings,
   formatDuration,
   parseAnswerOptions,
   type SessionResultItem,
@@ -23,9 +24,9 @@ export function TestResultPage() {
 
   useEffect(() => {
     let active = true;
-    fetchTestResult(sessionId)
-      .then((result) => {
-        if (active) setItems(result);
+    Promise.all([fetchTestResult(sessionId), fetchPracticeSessionSettings(sessionId)])
+      .then(([result, settings]) => {
+        if (active) setItems(result.map((item) => ({ ...item, mode: settings.mode })));
       })
       .catch((error: unknown) => {
         if (active)
@@ -57,14 +58,18 @@ export function TestResultPage() {
   return (
     <div className="page-stack result-page">
       <header className="page-header">
-        <p className="eyebrow">Submitted result · {summary.test_id}</p>
+        <p className="eyebrow">
+          Submitted {summary.mode === "Quiz" ? "Quiz " : ""}result · {summary.test_id}
+        </p>
         <h1>{summary.percentage.toFixed(2)}%</h1>
         <p>
           Your score is calculated and stored by the server. Incorrect and unanswered
           questions appear first below.
         </p>
       </header>
-      <TestExportControls key={sessionId} kind="result" session={sessionId} />
+      {summary.mode !== "Quiz" && (
+        <TestExportControls key={sessionId} kind="result" session={sessionId} />
+      )}
 
       <dl className="result-summary">
         <div>

@@ -68,6 +68,9 @@ const TestIdPage = lazy(() =>
     default: module.TestIdPage,
   })),
 );
+const QuizPage = lazy(() =>
+  import("../pages/app/QuizPage").then((module) => ({ default: module.QuizPage })),
+);
 const TestSessionPage = lazy(() =>
   import("../pages/app/TestSessionPage").then((module) => ({
     default: module.TestSessionPage,
@@ -230,6 +233,13 @@ export const routes = [
     path: paths.generate,
     label: "Generate",
     element: PracticeSetupPage,
+    navigation: "app",
+    auth: "protected",
+  },
+  {
+    path: paths.quiz,
+    label: "Quiz",
+    element: QuizPage,
     navigation: "app",
     auth: "protected",
   },

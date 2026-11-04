@@ -38,6 +38,7 @@ export type SessionStart = {
 };
 
 export type SessionResultItem = {
+  mode?: string;
   session_id: string;
   test_id: string;
   total_questions: number;
@@ -93,12 +94,19 @@ function rpcClient() {
 }
 
 export type PracticeSessionSettings = {
+  mode?: string;
   timer_seconds: number | null;
   active_duration_seconds: number;
   status: SessionQuestion["session_status"];
   show_answers: boolean;
   show_explanations: boolean;
 };
+
+export async function startQuiz(request: string) {
+  const { data, error } = await rpcClient().rpc("start_quiz", { p_request: request });
+  if (error) throw new Error(error.message);
+  return data as SessionStart;
+}
 
 export async function fetchPracticeSessionSettings(sessionId: string) {
   const { data, error } = await rpcClient().rpc("get_practice_session_settings", {
@@ -312,7 +320,6 @@ export async function fetchTestResult(sessionId: string) {
   if (error) throw new Error(error.message);
   const result = rows<SessionResultItem>(data);
   if (result.length === 0) throw new Error("The result contains no questions.");
-
   if (!result[0]?.can_view_explanations) return result;
 
   const explanationResponse = await rpcClient().rpc("get_test_result_explanations", {

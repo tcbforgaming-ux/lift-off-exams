@@ -15,6 +15,7 @@ export const paths = {
   testSession: "/sessions/:sessionId",
   testResult: "/results/:sessionId",
   generate: "/generate",
+  quiz: "/quiz",
   testId: "/test-id",
   teams: "/teams",
   admin: "/admin",

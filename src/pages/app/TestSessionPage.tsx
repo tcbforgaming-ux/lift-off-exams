@@ -408,7 +408,9 @@ function TestSessionContent() {
     <div className="page-stack test-session-page">
       <header className="session-toolbar">
         <div>
-          <p className="eyebrow">Test ID {current.test_id}</p>
+          <p className="eyebrow">
+            {settings?.mode === "Quiz" ? "Quiz · " : ""}Test ID {current.test_id}
+          </p>
           <h1>
             Question {position} of {questions.length}
           </h1>
@@ -640,7 +642,7 @@ function TestSessionContent() {
               onClick={() => setConfirmingSubmit(true)}
               disabled={saving || status !== "in_progress"}
             >
-              Submit Test
+              {settings?.mode === "Quiz" ? "Submit Quiz" : "Submit Test"}
             </Button>
           </div>
         </aside>
@@ -648,7 +650,9 @@ function TestSessionContent() {
 
       {confirmingSubmit && (
         <SessionSubmitDialog busy={saving} onClose={() => setConfirmingSubmit(false)}>
-          <h2 id="submit-title">Submit this test?</h2>
+          <h2 id="submit-title">
+            {settings?.mode === "Quiz" ? "Submit this quiz?" : "Submit this test?"}
+          </h2>
           <p>
             {questions.length - answered} unanswered question
             {questions.length - answered === 1 ? " remains" : "s remain"}. Unanswered
@@ -664,7 +668,11 @@ function TestSessionContent() {
               Keep Working
             </Button>
             <Button type="button" onClick={() => void submit()} disabled={saving}>
-              {saving ? "Submitting…" : "Submit Test"}
+              {saving
+                ? "Submitting…"
+                : settings?.mode === "Quiz"
+                  ? "Submit Quiz"
+                  : "Submit Test"}
             </Button>
           </div>
         </SessionSubmitDialog>

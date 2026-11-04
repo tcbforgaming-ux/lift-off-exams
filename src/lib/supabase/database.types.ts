@@ -3184,6 +3184,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      start_quiz: {
+        Args: { p_question_count?: number; p_request: string }
+        Returns: Json
+      }
       start_test_session: {
         Args: { p_idempotency_key: string; p_test_id: string }
         Returns: {
