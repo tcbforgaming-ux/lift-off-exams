@@ -1,5 +1,9 @@
 # Local Reconstruction Ledger
 
+November 4: Phase C remains partial. Staff candidate review and guarded
+publication are implemented; general editing, manual/bulk authoring, tags
+and blueprints remain open. See [Phase C checkpoint](phase-c-completion.md).
+
 Base: `2c19dfe893465330d3aacdd81cd99feb0ff0a04e`.
 Branch: `codex/local-reconstruction`; independent worktree `.tmp/local-reconstruction`.
 No hosted access, deployment, provider calls or normal-development DB mutation authorized.

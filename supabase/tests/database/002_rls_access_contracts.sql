@@ -280,7 +280,7 @@ reset role;
 select tests.authenticate_as('00000000-0000-0000-0000-000000000201', 'admin@example.test');
 
 select ok(
-  tests.expect_lives($sql$
+  tests.expect_denied($sql$
     insert into public.questions(
       partition_key,
       question_text,
@@ -298,7 +298,7 @@ select ok(
       array['Marketing']
     )
   $sql$),
-  'admin can insert questions'
+  'admin cannot bypass trusted question publication'
 );
 
 select ok(

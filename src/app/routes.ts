@@ -103,6 +103,11 @@ const GenerationPipelinePage = lazy(() =>
     default: module.GenerationPipelinePage,
   })),
 );
+const CandidateReviewPage = lazy(() =>
+  import("../pages/admin/CandidateReviewPage").then((module) => ({
+    default: module.CandidateReviewPage,
+  })),
+);
 const ReportQueuePage = lazy(() =>
   import("../pages/admin/ReportQueuePage").then((module) => ({
     default: module.ReportQueuePage,
@@ -257,6 +262,14 @@ export const routes = [
     path: paths.adminGeneration,
     label: "Generation Pipeline",
     element: GenerationPipelinePage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: "/admin/candidates",
+    label: "Candidate Review",
+    element: CandidateReviewPage,
     navigation: "admin",
     auth: "protected",
     requiredRole: "admin",

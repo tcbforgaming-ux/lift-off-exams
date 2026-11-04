@@ -180,13 +180,13 @@ select ok(
 );
 
 select ok(
-  exists (
+  not exists (
     select 1 from pg_policies
     where schemaname = 'public'
       and tablename = 'generated_question_candidates'
       and policyname = 'generated_question_candidates_staff_update'
   ),
-  'generated candidate staff update policy exists'
+  'candidate writes cannot bypass trusted review operations'
 );
 
 select ok(

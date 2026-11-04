@@ -350,6 +350,7 @@ export type Database = {
       }
       generated_question_candidates: {
         Row: {
+          approved_content: Json | null
           batch_job_id: string | null
           category: string | null
           correct_option_id: string
@@ -367,6 +368,7 @@ export type Database = {
           question_text: string
           question_type: string
           raw_response: Json
+          review_revision: number
           review_status: string
           reviewed_at: string | null
           reviewed_by: string | null
@@ -377,6 +379,7 @@ export type Database = {
           validation_status: string
         }
         Insert: {
+          approved_content?: Json | null
           batch_job_id?: string | null
           category?: string | null
           correct_option_id: string
@@ -394,6 +397,7 @@ export type Database = {
           question_text: string
           question_type: string
           raw_response?: Json
+          review_revision?: number
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -404,6 +408,7 @@ export type Database = {
           validation_status?: string
         }
         Update: {
+          approved_content?: Json | null
           batch_job_id?: string | null
           category?: string | null
           correct_option_id?: string
@@ -421,6 +426,7 @@ export type Database = {
           question_text?: string
           question_type?: string
           raw_response?: Json
+          review_revision?: number
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -2470,6 +2476,8 @@ export type Database = {
         Returns: string
       }
       get_active_owner_count: { Args: never; Returns: number }
+      get_candidate_review_history: { Args: { p_id: string }; Returns: Json }
+      get_candidate_review_revision: { Args: { p_id: string }; Returns: number }
       get_generated_test_manifest: {
         Args: { p_test_id: string }
         Returns: {
@@ -2549,6 +2557,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_review_candidate: { Args: { p_id: string }; Returns: Json }
       get_test_history: {
         Args: {
           p_cursor_activity_at?: string
@@ -2712,6 +2721,16 @@ export type Database = {
         Args: { p_question_id: string }
         Returns: boolean
       }
+      list_review_candidates: {
+        Args: {
+          p_before?: string
+          p_before_id?: string
+          p_search?: string
+          p_status?: string
+          p_validation?: string
+        }
+        Returns: Json
+      }
       mark_inactive_owners: { Args: { p_before?: string }; Returns: number }
       normalize_generated_difficulty: {
         Args: { p_value: string }
@@ -2736,6 +2755,10 @@ export type Database = {
       }
       publish_generated_question: {
         Args: { p_candidate_id: string }
+        Returns: string
+      }
+      publish_review_candidate: {
+        Args: { p_id: string; p_reason: string; p_revision: number }
         Returns: string
       }
       recalculate_generation_queue_needed: {
@@ -2796,6 +2819,17 @@ export type Database = {
       resume_test_session: {
         Args: { p_expected_session_version: number; p_session_id: string }
         Returns: number
+      }
+      review_candidate: {
+        Args: {
+          p_action: string
+          p_content?: Json
+          p_id: string
+          p_key: string
+          p_reason: string
+          p_revision: number
+        }
+        Returns: Json
       }
       save_test_session_answer: {
         Args: {
