@@ -93,3 +93,17 @@ pipeline and 16 actual importer DB cases pass. Application verification: 81 unit
 tests, types, lint, formatting and build pass. Diff check passes. See
 `phase-b-completion.md` for intermediate failures, local auth-startup risk,
 recovery tolerances and exact commands. No Phase C-F work was performed.
+
+## November 4 Phase F Checkpoints
+
+Starting branch: `codex/local-reconstruction`, baseline
+`75c55a12c5090c86a675836dc24fdb309ee8280a`. The untracked focused audit was
+preserved. Only the marked isolated backend was used.
+
+| Task                | Checkpoint                                                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owned answer status | [Completion and evidence](phase-f-answer-status-completion.md); commit `4b462e682c816fe176776774411293bf909e59d5`. Legacy search outcomes without durable evidence remain unverified. |
+| Test Mode analytics | [Completion and evidence](phase-f-test-analytics-completion.md). Mixed, shortened and non-blueprint histories remain raw-only until expected exposure rules are approved.             |
+
+No exports, additional activity modes, teams, billing or quota enforcement
+were implemented in these checkpoints.

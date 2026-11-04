@@ -29,18 +29,45 @@ test("landing actions are real and owned analytics reflect a persisted test", as
       })
     ).error,
   ).toBeNull();
+  const generation = {
+    p_blueprint_id: "e7300000-0000-4000-8000-000000000001",
+    p_expected_blueprint_version: "1.0.0",
+    p_requested_count: 4,
+    p_seed: "analytics-highlight",
+  };
+  const original = await api.rpc("generate_test_from_blueprint", {
+    ...generation,
+    p_idempotency_key: "before-highlight",
+  });
+  expect(original.error).toBeNull();
+  const originalId = original.data![0].test_id;
+  const originalManifest = await api.rpc("get_generated_test_manifest", {
+    p_test_id: originalId,
+  });
+  expect(originalManifest.error).toBeNull();
   const start = await api.rpc("start_test_session", {
-    p_test_id: fixture.testId,
+    p_test_id: originalId,
     p_idempotency_key: "analytics-browser",
   });
   expect(start.error).toBeNull();
   const session = start.data?.[0];
   expect(session?.session_id).toBeTruthy();
+  let version = session!.session_version;
+  for (const [index, question] of originalManifest.data!.entries()) {
+    const saved = await api.rpc("save_test_session_answer", {
+      p_session_id: session!.session_id,
+      p_question_id: question.question_id,
+      p_selected_option_id: index === 0 ? "UNKNOWN" : "B",
+      p_expected_session_version: version,
+    });
+    expect(saved.error).toBeNull();
+    version = saved.data![0].session_version;
+  }
   expect(
     (
       await api.rpc("submit_test_session", {
         p_session_id: session!.session_id,
-        p_expected_session_version: session!.session_version,
+        p_expected_session_version: version,
       })
     ).error,
   ).toBeNull();
@@ -61,6 +88,10 @@ test("landing actions are real and owned analytics reflect a persisted test", as
   ).toBeNull();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Topic Accuracy" })).toBeVisible();
+  await expect(page.getByText(/1 of 4 submitted answers/)).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "I Don’t Know Responses" }).getByRole("link"),
+  ).toHaveCount(1);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByLabel("Time range").selectOption("lifetime");
   await page.getByRole("button", { name: "Apply Range" }).click();
@@ -76,4 +107,16 @@ test("landing actions are real and owned analytics reflect a persisted test", as
     page.getByRole("checkbox", { name: /Milestone 7.*Needs practice/ }),
   ).toBeChecked();
   await expect(page.getByLabel("Questions", { exact: true })).toHaveValue("4");
+  const repeated = await api.rpc("generate_test_from_blueprint", {
+    ...generation,
+    p_idempotency_key: "after-highlight",
+  });
+  expect(repeated.error).toBeNull();
+  const manifest = await api.rpc("get_generated_test_manifest", {
+    p_test_id: repeated.data![0].test_id,
+  });
+  expect(manifest.error).toBeNull();
+  expect(manifest.data!.map((row) => row.question_id)).toEqual(
+    originalManifest.data!.map((row) => row.question_id),
+  );
 });

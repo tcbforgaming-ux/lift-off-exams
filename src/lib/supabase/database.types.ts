@@ -2572,6 +2572,17 @@ export type Database = {
         Args: { p_from?: string; p_range?: string; p_to?: string }
         Returns: Json
       }
+      get_my_test_analytics_detail: {
+        Args: {
+          p_as_of?: string
+          p_from?: string
+          p_page?: number
+          p_range?: string
+          p_section: string
+          p_to?: string
+        }
+        Returns: Json
+      }
       get_own_question_reports: {
         Args: {
           p_cursor_created_at?: string

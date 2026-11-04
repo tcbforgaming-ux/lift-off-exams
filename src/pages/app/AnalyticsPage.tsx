@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
+import { CursorNavigation } from "../../components/ui/CursorNavigation";
 import { useAuth } from "../../lib/auth/useAuth";
 import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 
@@ -16,11 +17,192 @@ type Analytics = {
   premium: boolean;
   test_count: number;
   average_score: number | null;
-  history?: Score[];
-  topics?: { tag: string; correct: number; total: number; uncertain: number }[];
+  as_of?: string;
   extremes?: { highest?: Extreme; lowest?: Extreme };
 };
 const initial = { range: "month", from: "", to: "" };
+type Query = typeof initial;
+type Topic = {
+  tag: string;
+  correct: number;
+  total: number;
+  answered: number;
+  uncertain: number;
+  required: number | null;
+  eligible: boolean;
+};
+type UncertainItem = {
+  session_id: string;
+  position: number;
+  question_text: string;
+  category: string;
+  difficulty: string;
+  tags: string[];
+};
+type Breakdown = { label: string; uncertain: number; answered: number };
+type Confidence = {
+  answered: number;
+  uncertain: number;
+  skipped: number;
+  wrong_choices: number;
+  percentage: number | null;
+  categories: Breakdown[];
+  difficulties: Breakdown[];
+};
+
+function useDetail<T>(
+  section: string,
+  query: Query,
+  anchor: string,
+  page: number,
+  retry: number,
+) {
+  const [data, setData] = useState<T>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let current = true;
+    setLoading(true);
+    setError("");
+    void (async () => {
+      try {
+        const { data, error } = await getSupabaseBrowserClient().rpc(
+          "get_my_test_analytics_detail",
+          {
+            p_section: section,
+            p_range: query.range,
+            p_page: page,
+            p_as_of: anchor,
+            ...(query.range === "custom" ? { p_from: query.from, p_to: query.to } : {}),
+          },
+        );
+        if (error) throw new Error(error.message);
+        if (current) setData(data as T);
+      } catch (e) {
+        if (current)
+          setError(e instanceof Error ? e.message : "Analytics could not load.");
+      } finally {
+        if (current) setLoading(false);
+      }
+    })();
+    return () => {
+      current = false;
+    };
+  }, [section, query, anchor, page, retry]);
+  return { data, loading, error };
+}
+
+function DetailPage<T>({
+  section,
+  title,
+  query,
+  anchor,
+  render,
+}: {
+  section: string;
+  title: string;
+  query: Query;
+  anchor: string;
+  render: (row: T) => React.ReactNode;
+}) {
+  const [page, setPage] = useState(0);
+  const [retry, setRetry] = useState(0);
+  const { data, loading, error } = useDetail<{ items: T[]; has_more: boolean }>(
+    section,
+    query,
+    anchor,
+    page,
+    retry,
+  );
+  return (
+    <section aria-label={title}>
+      <h2>{title}</h2>
+      {loading && <p role="status">Loading {title.toLowerCase()}.</p>}
+      {error && (
+        <>
+          <p role="alert">{error}</p>
+          <Button type="button" onClick={() => setRetry((n) => n + 1)}>
+            Retry
+          </Button>
+        </>
+      )}
+      {!loading && !error && data && (
+        <>
+          {data.items.length ? (
+            <ul className="page-stack">{data.items.map(render)}</ul>
+          ) : (
+            <p>No records in this range.</p>
+          )}
+          {(data.has_more || page > 0) && (
+            <CursorNavigation
+              page={page}
+              loading={loading}
+              hasNext={data.has_more}
+              onPrevious={() => setPage((n) => n - 1)}
+              onNext={() => setPage((n) => n + 1)}
+            />
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function ConfidencePanel({ query, anchor }: { query: Query; anchor: string }) {
+  const [retry, setRetry] = useState(0);
+  const { data, loading, error } = useDetail<Confidence>(
+    "confidence",
+    query,
+    anchor,
+    0,
+    retry,
+  );
+  return (
+    <section aria-label="Confidence analysis">
+      <h2>Confidence Analysis</h2>
+      {loading && <p role="status">Loading confidence analysis.</p>}
+      {error && (
+        <>
+          <p role="alert">{error}</p>
+          <Button type="button" onClick={() => setRetry((n) => n + 1)}>
+            Retry
+          </Button>
+        </>
+      )}
+      {data && !loading && !error && (
+        <>
+          <p>
+            {data.uncertain} of {data.answered} submitted answers were “I Don’t Know”
+            {data.percentage === null ? "." : ` (${data.percentage}%).`} Skipped
+            questions are excluded.
+          </p>
+          <p>
+            {data.wrong_choices} wrong choices · {data.skipped} skipped
+          </p>
+          <div className="grid two-column">
+            {(
+              [
+                ["By category", data.categories],
+                ["By difficulty", data.difficulties],
+              ] as const
+            ).map(([label, rows]) => (
+              <div key={label}>
+                <h3>{label}</h3>
+                <ul>
+                  {rows.map((row) => (
+                    <li key={row.label}>
+                      {row.label}: {row.uncertain}/{row.answered}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
 const ranges = [
   ["day", "Past 24 hours"],
   ["week", "Past week"],
@@ -145,7 +327,7 @@ export function AnalyticsPage() {
               </dd>
             </div>
           </dl>
-          {data.premium && data.test_count > 0 && (
+          {data.premium && data.test_count > 0 && data.as_of && (
             <>
               <section className="grid two-column" aria-label="Score extremes">
                 {(
@@ -168,39 +350,74 @@ export function AnalyticsPage() {
                     ),
                 )}
               </section>
-              <section aria-label="Score history">
-                <h2>Score History</h2>
-                <ol className="page-stack">
-                  {data.history?.map((score) => (
-                    <li key={score.session_id}>
-                      <Link to={`/results/${score.session_id}`}>
-                        {new Date(score.submitted_at).toLocaleDateString()} ·{" "}
-                        {score.percentage}%
-                      </Link>
-                      <div
-                        aria-hidden="true"
-                        style={{
-                          height: 5,
-                          width: `${score.percentage}%`,
-                          background: "currentColor",
-                        }}
-                      />
-                    </li>
-                  ))}
-                </ol>
-              </section>
-              <section aria-label="Topic accuracy">
-                <h2>Topic Accuracy</h2>
-                <ul className="page-stack">
-                  {data.topics?.map((topic) => (
-                    <li key={topic.tag}>
-                      <strong>{topic.tag}</strong> ·{" "}
-                      {Math.round((100 * topic.correct) / topic.total)}% correct (
-                      {topic.correct}/{topic.total}) · {topic.uncertain} I Don’t Know
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <DetailPage<Score>
+                section="history"
+                title="Score History"
+                query={query}
+                anchor={data.as_of}
+                render={(score) => (
+                  <li key={score.session_id}>
+                    <Link to={`/results/${score.session_id}`}>
+                      {new Date(score.submitted_at).toLocaleDateString()} ·{" "}
+                      {score.percentage}%
+                    </Link>
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        height: 5,
+                        width: `${score.percentage}%`,
+                        background: "currentColor",
+                      }}
+                    />
+                  </li>
+                )}
+              />
+              <DetailPage<Topic>
+                section="topics"
+                title="Topic Accuracy"
+                query={query}
+                anchor={data.as_of}
+                render={(topic) => (
+                  <li key={topic.tag}>
+                    <strong>{topic.tag}</strong> ·{" "}
+                    {Math.round((100 * topic.correct) / topic.total)}% correct (
+                    {topic.correct}/{topic.total}) · {topic.uncertain} I Don’t Know
+                    {!topic.eligible && (
+                      <span>
+                        {" "}
+                        · Insufficient Data
+                        {topic.required === null
+                          ? ""
+                          : ` (${topic.answered}/${topic.required} answers)`}
+                      </span>
+                    )}
+                  </li>
+                )}
+              />
+              <ConfidencePanel query={query} anchor={data.as_of} />
+              <DetailPage<string>
+                section="recommendations"
+                title="Recommended Topics"
+                query={query}
+                anchor={data.as_of}
+                render={(tag) => <li key={tag}>{tag}</li>}
+              />
+              <DetailPage<UncertainItem>
+                section="uncertainty"
+                title="I Don’t Know Responses"
+                query={query}
+                anchor={data.as_of}
+                render={(item) => (
+                  <li key={`${item.session_id}:${item.position}`}>
+                    <Link to={`/results/${item.session_id}`}>{item.question_text}</Link>
+                    <p>
+                      {[item.category, item.difficulty, ...new Set(item.tags)].join(
+                        " · ",
+                      )}
+                    </p>
+                  </li>
+                )}
+              />
             </>
           )}
         </>

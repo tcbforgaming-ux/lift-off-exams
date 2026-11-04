@@ -90,29 +90,20 @@ export function PracticeSetupPage() {
     let active = true;
     void (async () => {
       const { data, error } = await getSupabaseBrowserClient().rpc(
-        "get_my_test_analytics",
+        "get_my_test_analytics_detail",
+        { p_section: "recommendations" },
       );
       if (
         !active ||
         error ||
         !data ||
         typeof data !== "object" ||
-        !("topics" in data) ||
-        !Array.isArray(data.topics)
+        !("items" in data) ||
+        !Array.isArray(data.items)
       )
         return;
       setWeakTopics(
-        data.topics.flatMap((topic) =>
-          topic &&
-          typeof topic === "object" &&
-          !Array.isArray(topic) &&
-          typeof topic.tag === "string" &&
-          typeof topic.correct === "number" &&
-          typeof topic.total === "number" &&
-          topic.correct < topic.total
-            ? [topic.tag]
-            : [],
-        ),
+        data.items.filter((topic): topic is string => typeof topic === "string"),
       );
     })().catch(() => undefined);
     return () => {
