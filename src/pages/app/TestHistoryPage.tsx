@@ -60,6 +60,7 @@ export function TestHistoryPage() {
         <p className="eyebrow">Saved activity</p>
         <h1>Test History</h1>
         <p>Resume unfinished sessions or reopen server-calculated results.</p>
+        <ButtonLink to="/hardcore?history=1">Hardcore History</ButtonLink>
       </header>
 
       <div className="history-toolbar">

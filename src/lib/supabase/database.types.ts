@@ -2386,6 +2386,15 @@ export type Database = {
         Args: { p_job: string; p_simulate_failure?: string }
         Returns: string
       }
+      advance_hardcore: {
+        Args: {
+          p_position: number
+          p_request: string
+          p_response: string
+          p_run: string
+        }
+        Returns: Json
+      }
       backfill_legacy_test_membership: {
         Args: {
           p_legacy_test_id: string
@@ -2568,6 +2577,7 @@ export type Database = {
           updated_since_generation: boolean
         }[]
       }
+      get_hardcore: { Args: { p_run: string }; Returns: Json }
       get_my_activity_analytics: {
         Args: {
           p_from?: string
@@ -2839,6 +2849,10 @@ export type Database = {
         Returns: boolean
       }
       list_due_account_erasure_jobs: { Args: never; Returns: string[] }
+      list_hardcore: {
+        Args: { p_before?: string; p_before_id?: string }
+        Returns: Json[]
+      }
       list_owner_governance: {
         Args: { p_before?: string; p_before_id?: string; p_view: string }
         Returns: Json
@@ -2988,6 +3002,10 @@ export type Database = {
           p_revision: number
         }
         Returns: Json
+      }
+      review_hardcore: {
+        Args: { p_after?: number; p_explanations?: boolean; p_run: string }
+        Returns: Json[]
       }
       review_my_bank_question: {
         Args: {
@@ -3204,6 +3222,10 @@ export type Database = {
           p_target_user_id: string
         }
         Returns: undefined
+      }
+      start_hardcore: {
+        Args: { p_allow_unknown?: boolean; p_cap?: number; p_request: string }
+        Returns: Json
       }
       start_quiz: {
         Args: { p_question_count?: number; p_request: string }

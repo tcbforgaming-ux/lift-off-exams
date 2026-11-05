@@ -71,6 +71,11 @@ const TestIdPage = lazy(() =>
 const QuizPage = lazy(() =>
   import("../pages/app/QuizPage").then((module) => ({ default: module.QuizPage })),
 );
+const HardcorePage = lazy(() =>
+  import("../pages/app/HardcorePage").then((module) => ({
+    default: module.HardcorePage,
+  })),
+);
 const TestSessionPage = lazy(() =>
   import("../pages/app/TestSessionPage").then((module) => ({
     default: module.TestSessionPage,
@@ -240,6 +245,13 @@ export const routes = [
     path: paths.quiz,
     label: "Quiz",
     element: QuizPage,
+    navigation: "app",
+    auth: "protected",
+  },
+  {
+    path: "/hardcore",
+    label: "Hardcore",
+    element: HardcorePage,
     navigation: "app",
     auth: "protected",
   },

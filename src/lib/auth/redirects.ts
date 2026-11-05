@@ -16,6 +16,7 @@ const localPaths = new Set([
   "/profile",
   "/generate",
   "/quiz",
+  "/hardcore",
   "/history",
   "/analytics",
   "/search",
