@@ -2395,6 +2395,15 @@ export type Database = {
         }
         Returns: Json
       }
+      advance_infinite_run: {
+        Args: {
+          p_position: number
+          p_request: string
+          p_response: string
+          p_run: string
+        }
+        Returns: Json
+      }
       backfill_legacy_test_membership: {
         Args: {
           p_legacy_test_id: string
@@ -2511,6 +2520,7 @@ export type Database = {
       enforce_account_lifecycle: { Args: never; Returns: undefined }
       escape_repository_like: { Args: { p_value: string }; Returns: string }
       expire_owner_removal_votes: { Args: never; Returns: number }
+      finish_infinite_run: { Args: { p_run: string }; Returns: Json }
       generate_custom_practice: {
         Args: {
           p_blueprint_id: string
@@ -2578,6 +2588,7 @@ export type Database = {
         }[]
       }
       get_hardcore: { Args: { p_run: string }; Returns: Json }
+      get_infinite_run: { Args: { p_run: string }; Returns: Json }
       get_my_activity_analytics: {
         Args: {
           p_from?: string
@@ -2853,6 +2864,10 @@ export type Database = {
         Args: { p_before?: string; p_before_id?: string }
         Returns: Json[]
       }
+      list_infinite_runs: {
+        Args: { p_before?: string; p_before_id?: string }
+        Returns: Json[]
+      }
       list_owner_governance: {
         Args: { p_before?: string; p_before_id?: string; p_view: string }
         Returns: Json
@@ -3004,6 +3019,10 @@ export type Database = {
         Returns: Json
       }
       review_hardcore: {
+        Args: { p_after?: number; p_explanations?: boolean; p_run: string }
+        Returns: Json[]
+      }
+      review_infinite_run: {
         Args: { p_after?: number; p_explanations?: boolean; p_run: string }
         Returns: Json[]
       }
@@ -3225,6 +3244,15 @@ export type Database = {
       }
       start_hardcore: {
         Args: { p_allow_unknown?: boolean; p_cap?: number; p_request: string }
+        Returns: Json
+      }
+      start_infinite_run: {
+        Args: {
+          p_category?: string
+          p_difficulty?: string
+          p_request: string
+          p_tags?: string[]
+        }
         Returns: Json
       }
       start_quiz: {

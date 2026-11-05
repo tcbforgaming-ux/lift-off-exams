@@ -61,6 +61,7 @@ export function TestHistoryPage() {
         <h1>Test History</h1>
         <p>Resume unfinished sessions or reopen server-calculated results.</p>
         <ButtonLink to="/hardcore?history=1">Hardcore History</ButtonLink>
+        <ButtonLink to="/infinite-run?history=1">Infinite Run History</ButtonLink>
       </header>
 
       <div className="history-toolbar">

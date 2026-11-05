@@ -76,6 +76,11 @@ const HardcorePage = lazy(() =>
     default: module.HardcorePage,
   })),
 );
+const InfiniteRunPage = lazy(() =>
+  import("../pages/app/InfiniteRunPage").then((module) => ({
+    default: module.InfiniteRunPage,
+  })),
+);
 const TestSessionPage = lazy(() =>
   import("../pages/app/TestSessionPage").then((module) => ({
     default: module.TestSessionPage,
@@ -252,6 +257,13 @@ export const routes = [
     path: "/hardcore",
     label: "Hardcore",
     element: HardcorePage,
+    navigation: "app",
+    auth: "protected",
+  },
+  {
+    path: "/infinite-run",
+    label: "Infinite Run",
+    element: InfiniteRunPage,
     navigation: "app",
     auth: "protected",
   },
