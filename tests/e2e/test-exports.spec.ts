@@ -237,7 +237,7 @@ test("six paid downloads have matching scope and complete owned snapshot content
       await page.getByLabel("Through", { exact: true }).fill(day);
       const applied = page.waitForResponse(
         (response) =>
-          response.url().endsWith("/rpc/get_my_test_analytics") &&
+          response.url().endsWith("/rpc/get_my_activity_analytics") &&
           response.request().postData()?.includes('"p_range":"custom"') === true,
       );
       await page.getByRole("button", { name: "Apply Range" }).click();

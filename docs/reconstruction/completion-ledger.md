@@ -115,3 +115,11 @@ analytics, and completed performance history in PDF and CSV. The later
 approved unpaid limit is three exports per Monday UTC week, with no protected
 explanations; paid exports include owned snapshot explanations. The test quota
 and other activity modes remain separate.
+
+## Phase F Quiz and Combined Analytics
+
+[Quiz completion report](phase-f-quiz-completion.md) and
+[decision register addendum](decision-register.md). The playable paid Quiz
+and Test/Quiz analytics overview are separate checkpoints. Unpaid Quiz launch
+still needs an approved allowance policy. Test-only exports and Generate
+recommendations remain on their existing contracts.

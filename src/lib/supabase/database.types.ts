@@ -2568,6 +2568,27 @@ export type Database = {
           updated_since_generation: boolean
         }[]
       }
+      get_my_activity_analytics: {
+        Args: {
+          p_from?: string
+          p_mode?: string
+          p_range?: string
+          p_to?: string
+        }
+        Returns: Json
+      }
+      get_my_activity_analytics_detail: {
+        Args: {
+          p_as_of?: string
+          p_from?: string
+          p_mode?: string
+          p_page?: number
+          p_range?: string
+          p_section: string
+          p_to?: string
+        }
+        Returns: Json
+      }
       get_my_test_analytics: {
         Args: { p_from?: string; p_range?: string; p_to?: string }
         Returns: Json

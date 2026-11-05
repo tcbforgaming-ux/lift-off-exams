@@ -6,10 +6,16 @@ import { CursorNavigation } from "../../components/ui/CursorNavigation";
 import { useAuth } from "../../lib/auth/useAuth";
 import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 
-type Score = { session_id: string; submitted_at: string; percentage: number };
+type Score = {
+  session_id: string;
+  submitted_at: string;
+  percentage: number;
+  mode: string;
+};
 type Extreme = {
   session_id: string;
   score: number;
+  mode: string;
   category: string;
   difficulties: string[];
   tags: string[];
@@ -21,7 +27,7 @@ type Analytics = {
   as_of?: string;
   extremes?: { highest?: Extreme; lowest?: Extreme };
 };
-const initial = { range: "month", from: "", to: "" };
+const initial = { mode: "all", range: "month", from: "", to: "" };
 type Query = typeof initial;
 type Topic = {
   tag: string;
@@ -68,9 +74,10 @@ function useDetail<T>(
     void (async () => {
       try {
         const { data, error } = await getSupabaseBrowserClient().rpc(
-          "get_my_test_analytics_detail",
+          "get_my_activity_analytics_detail",
           {
             p_section: section,
+            p_mode: query.mode,
             p_range: query.range,
             p_page: page,
             p_as_of: anchor,
@@ -227,7 +234,8 @@ export function AnalyticsPage() {
     void (async () => {
       try {
         const api = getSupabaseBrowserClient();
-        const { data: response, error } = await api.rpc("get_my_test_analytics", {
+        const { data: response, error } = await api.rpc("get_my_activity_analytics", {
+          p_mode: query.mode,
           p_range: query.range,
           ...(query.range === "custom" ? { p_from: query.from, p_to: query.to } : {}),
         });
@@ -260,6 +268,17 @@ export function AnalyticsPage() {
             setQuery({ ...input });
           }}
         >
+          <label className="field-label">
+            Activity mode
+            <select
+              value={input.mode}
+              onChange={(event) => setInput({ ...input, mode: event.target.value })}
+            >
+              <option value="all">All (Tests + Quizzes)</option>
+              <option value="Test">Tests</option>
+              <option value="Quiz">Quizzes</option>
+            </select>
+          </label>
           <label className="field-label">
             Time range
             <select
@@ -328,7 +347,13 @@ export function AnalyticsPage() {
         <>
           <dl className="grid two-column">
             <div>
-              <dt>Tests taken</dt>
+              <dt>
+                {query.mode === "Test"
+                  ? "Completed tests"
+                  : query.mode === "Quiz"
+                    ? "Completed quizzes"
+                    : "Completed activities"}
+              </dt>
               <dd>{data.test_count}</dd>
             </div>
             <div>
@@ -339,7 +364,7 @@ export function AnalyticsPage() {
             </div>
           </dl>
           {data.premium && data.test_count > 0 && data.as_of && (
-            <>
+            <div className="page-stack" key={JSON.stringify(query)}>
               <section className="grid two-column" aria-label="Score extremes">
                 {(
                   [
@@ -353,9 +378,12 @@ export function AnalyticsPage() {
                         <h2>{label}</h2>
                         <Link to={`/results/${value.session_id}`}>{value.score}%</Link>
                         <p>
-                          {[value.category, ...value.difficulties, ...value.tags].join(
-                            " · ",
-                          )}
+                          {[
+                            value.mode,
+                            value.category,
+                            ...value.difficulties,
+                            ...value.tags,
+                          ].join(" · ")}
                         </p>
                       </div>
                     ),
@@ -369,8 +397,8 @@ export function AnalyticsPage() {
                 render={(score) => (
                   <li key={score.session_id}>
                     <Link to={`/results/${score.session_id}`}>
-                      {new Date(score.submitted_at).toLocaleDateString()} ·{" "}
-                      {score.percentage}%
+                      {score.mode} · {new Date(score.submitted_at).toLocaleDateString()}{" "}
+                      · {score.percentage}%
                     </Link>
                     <div
                       aria-hidden="true"
@@ -393,7 +421,7 @@ export function AnalyticsPage() {
                     <strong>{topic.tag}</strong> ·{" "}
                     {Math.round((100 * topic.correct) / topic.total)}% correct (
                     {topic.correct}/{topic.total}) · {topic.uncertain} I Don’t Know
-                    {!topic.eligible && (
+                    {query.mode === "Test" && !topic.eligible && (
                       <span>
                         {" "}
                         · Insufficient Data
@@ -406,13 +434,15 @@ export function AnalyticsPage() {
                 )}
               />
               <ConfidencePanel query={query} anchor={data.as_of} />
-              <DetailPage<string>
-                section="recommendations"
-                title="Recommended Topics"
-                query={query}
-                anchor={data.as_of}
-                render={(tag) => <li key={tag}>{tag}</li>}
-              />
+              {query.mode === "Test" && (
+                <DetailPage<string>
+                  section="recommendations"
+                  title="Recommended Topics"
+                  query={query}
+                  anchor={data.as_of}
+                  render={(tag) => <li key={tag}>{tag}</li>}
+                />
+              )}
               <DetailPage<UncertainItem>
                 section="uncertainty"
                 title="I Don’t Know Responses"
@@ -429,7 +459,7 @@ export function AnalyticsPage() {
                   </li>
                 )}
               />
-            </>
+            </div>
           )}
         </>
       )}

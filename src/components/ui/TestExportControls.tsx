@@ -129,7 +129,7 @@ export function TestExportControls({
           : kind === "analytics"
             ? dateFilter
               ? "Past 30 days of Test Mode analytics unless you choose dates below."
-              : "Test Mode analytics for the applied date range."
+              : "Tests only for the applied date range. Quizzes are excluded."
             : "Completed Test Mode results only."}
       </p>
       {dateFilter && (

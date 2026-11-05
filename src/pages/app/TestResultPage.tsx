@@ -67,7 +67,7 @@ export function TestResultPage() {
           questions appear first below.
         </p>
       </header>
-      {summary.mode !== "Quiz" && (
+      {summary.mode === "Test" && (
         <TestExportControls key={sessionId} kind="result" session={sessionId} />
       )}
 

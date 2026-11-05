@@ -58,7 +58,16 @@ test("paid Quiz launches 20 untimed questions and saves a resumable, owned resul
   await expect(page.getByRole("heading", { name: "Question 1 of 20" })).toBeVisible();
   const sessionId = new URL(page.url()).pathname.split("/").at(-1)!;
   await expect(page.getByText("Time remaining")).toHaveCount(0);
-  await page.getByRole("radio", { name: /^B / }).click();
+  const first = await api.rpc("get_test_session", { p_session_id: sessionId });
+  expect(first.error).toBeNull();
+  const key = await service
+    .from("questions")
+    .select("correct_option_id")
+    .eq("id", first.data![0].question_id)
+    .single();
+  expect(key.error).toBeNull();
+  const wrong = key.data?.correct_option_id === "B" ? "A" : "B";
+  await page.getByRole("radio", { name: new RegExp(`^${wrong} `) }).click();
   await expect(page.getByText("Answer saved.")).toBeVisible();
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("radio", { name: "I Don't Know" }).click();
@@ -88,7 +97,7 @@ test("paid Quiz launches 20 untimed questions and saves a resumable, owned resul
   const result = await api.rpc("get_test_result", { p_session_id: sessionId });
   expect(result.error).toBeNull();
   expect(result.data!.slice(0, 3).map((item) => item.selected_option_id)).toEqual([
-    "B",
+    wrong,
     "UNKNOWN",
     null,
   ]);
@@ -100,7 +109,7 @@ test("paid Quiz launches 20 untimed questions and saves a resumable, owned resul
     expect.arrayContaining([
       expect.objectContaining({
         id: result.data![0].question_id,
-        latest_option_id: "B",
+        latest_option_id: wrong,
         ever_incorrect: true,
       }),
       expect.objectContaining({
