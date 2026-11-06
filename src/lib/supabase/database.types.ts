@@ -317,6 +317,30 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_questions: {
+        Row: {
+          answer: string
+          choices: string[]
+          demo_id: string
+          position: number
+          prompt: string
+        }
+        Insert: {
+          answer: string
+          choices: string[]
+          demo_id: string
+          position: number
+          prompt: string
+        }
+        Update: {
+          answer?: string
+          choices?: string[]
+          demo_id?: string
+          position?: number
+          prompt?: string
+        }
+        Relationships: []
+      }
       duplicate_question_reviews: {
         Row: {
           candidate_hash: string
@@ -2656,6 +2680,7 @@ export type Database = {
         Args: { p_session_id: string }
         Returns: Json
       }
+      get_public_demo: { Args: { p_demo: string }; Returns: Json }
       get_question_report_detail: {
         Args: { p_report_id: string }
         Returns: {
@@ -2811,6 +2836,10 @@ export type Database = {
       }
       grade_my_bank_question: {
         Args: { p_id: string; p_option: string; p_request: string }
+        Returns: Json
+      }
+      grade_public_demo: {
+        Args: { p_answers: string[]; p_demo: string }
         Returns: Json
       }
       has_premium_explanation_access: {

@@ -17,6 +17,9 @@ const LandingPage = lazy(() =>
     default: module.LandingPage,
   })),
 );
+const DemoPage = lazy(() =>
+  import("../pages/public/DemoPage").then((module) => ({ default: module.DemoPage })),
+);
 const LoginPage = lazy(() =>
   import("../pages/auth/LoginPage").then((module) => ({ default: module.LoginPage })),
 );
@@ -183,6 +186,20 @@ const PlaceholderPage = lazy(() =>
 );
 
 export const routes = [
+  {
+    path: "/demo",
+    label: "Demo",
+    element: DemoPage,
+    navigation: "hidden",
+    auth: "public",
+  },
+  {
+    path: "/demo/:demoId",
+    label: "Demo Test",
+    element: DemoPage,
+    navigation: "hidden",
+    auth: "public",
+  },
   {
     path: paths.home,
     label: "Home",

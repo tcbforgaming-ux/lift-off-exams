@@ -10,7 +10,10 @@ export function LandingPage() {
           <p>Learn Smarter, Not Harder</p>
           <p>Practice for DECA, share tests by ID, and review your results.</p>
           <div className="button-row">
-            <ButtonLink to={paths.signup}>Create Account</ButtonLink>
+            <ButtonLink to="/demo">Try a Demo</ButtonLink>
+            <ButtonLink to={paths.signup} variant="secondary">
+              Create Account
+            </ButtonLink>
             <ButtonLink to={paths.login} variant="secondary">
               Log In
             </ButtonLink>
