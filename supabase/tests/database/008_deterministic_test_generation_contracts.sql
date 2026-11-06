@@ -553,6 +553,11 @@ select is(
   'most-constrained-first allocation reserves the overlapping narrow question'
 );
 
+-- Large-pool checks exercise the paid generation boundary.
+reset role;
+insert into public.subscriptions(user_id,status,current_period_end)
+values ('00000000-0000-0000-0000-000000008001','active',now()+interval '1 day');
+select tests.authenticate_as('00000000-0000-0000-0000-000000008001', 'generator-a@example.test');
 create temporary table insufficient_generation as
 select *
 from public.generate_test_from_blueprint(
