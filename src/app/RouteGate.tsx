@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 import { LoadingBoundary } from "./boundaries/LoadingBoundary";
+import { Button } from "../components/ui/Button";
 import { canAccessRole } from "../lib/auth/roles";
 import { useAuth } from "../lib/auth/useAuth";
 import { sanitizeRedirectPath } from "../lib/auth/redirects";
@@ -19,12 +20,26 @@ export function RouteGate({
   requiredRole,
 }: RouteGateProps) {
   const location = useLocation();
-  const { role, status } = useAuth();
+  const { role, status, error, retrySession } = useAuth();
 
   if (auth === "public") return <Component />;
 
   if (status === "loading") {
     return <LoadingBoundary label="Checking session" />;
+  }
+
+  if (status === "error") {
+    return (
+      <section className="page-stack">
+        <h1>Could not verify your session</h1>
+        <p role="alert">{error ?? "Please try again."}</p>
+        <div>
+          <Button type="button" onClick={retrySession}>
+            Retry
+          </Button>
+        </div>
+      </section>
+    );
   }
 
   if (status === "recovering") {

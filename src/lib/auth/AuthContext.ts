@@ -13,6 +13,7 @@ export type AuthContextValue = {
   profile: Profile | null;
   role: AppRole | null;
   error: string | null;
+  retrySession: () => void;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<{ error: AuthError | null }>;
 };

@@ -12,6 +12,7 @@ import { getSupabaseBrowserClient } from "../supabase/browserClient";
 import type { Profile } from "../supabase/types";
 import { AuthContext, type AuthContextValue, type AuthStatus } from "./AuthContext";
 import { isKnownAppRole } from "./roles";
+import { withSessionDeadline } from "./sessionDeadline";
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setProfile(null);
 
     try {
-      const nextProfile = await loadProfile(nextSession.user.id);
+      const nextProfile = await withSessionDeadline(loadProfile(nextSession.user.id));
       if (revision.current !== requestRevision) return;
       if (nextProfile === "recovering") {
         setStatus("recovering");
@@ -62,9 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       setProfile(nextProfile);
       setStatus(nextProfile ? "authenticated" : "error");
-      setError(
-        nextProfile ? null : "Your profile is still being prepared. Try refreshing.",
-      );
+      setError(nextProfile ? null : "Your profile is still being prepared.");
     } catch {
       if (revision.current !== requestRevision) return;
       setProfile(null);
@@ -73,28 +72,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
+  const retrySession = useCallback(() => {
+    const requestRevision = ++revision.current;
+    setStatus("loading");
+    setProfile(null);
+    setError(null);
+    void withSessionDeadline(getSupabaseBrowserClient().auth.getSession())
+      .then(({ data, error: sessionError }) => {
+        if (revision.current !== requestRevision) return;
+        if (sessionError) throw sessionError;
+        return applySession(data.session);
+      })
+      .catch(() => {
+        if (revision.current !== requestRevision) return;
+        setStatus("error");
+        setError("We could not verify your session.");
+      });
+  }, [applySession]);
+
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     let mounted = true;
     const requestEpoch = revision;
-    const initialRevision = requestEpoch.current;
-
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (!mounted || revision.current !== initialRevision) return;
-        void applySession(data.session);
-      })
-      .catch(() => {
-        if (!mounted || revision.current !== initialRevision) return;
-        setStatus("error");
-        setError("We could not read your session.");
-      });
+    retrySession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted) return;
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      // getSession owns bootstrap, including errors and the retry generation.
+      if (!mounted || event === "INITIAL_SESSION") return;
       void applySession(nextSession);
     });
 
@@ -103,12 +109,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       ++requestEpoch.current;
       subscription.unsubscribe();
     };
-  }, [applySession]);
+  }, [applySession, retrySession]);
 
   const refreshProfile = useCallback(async () => {
     if (!session?.user) return;
     const requestRevision = revision.current;
-    const nextProfile = await loadProfile(session.user.id);
+    const nextProfile = await withSessionDeadline(loadProfile(session.user.id));
     if (!nextProfile || revision.current !== requestRevision)
       throw new Error("Your profile could not be refreshed.");
     if (nextProfile === "recovering") {
@@ -159,10 +165,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       profile,
       role,
       error,
+      retrySession,
       refreshProfile,
       signOut,
     }),
-    [error, profile, refreshProfile, role, session, signOut, status],
+    [error, profile, refreshProfile, retrySession, role, session, signOut, status],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

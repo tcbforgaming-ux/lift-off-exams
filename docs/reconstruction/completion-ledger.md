@@ -123,3 +123,9 @@ and other activity modes remain separate.
 and Test/Quiz analytics overview are separate checkpoints. Unpaid Quiz launch
 still needs an approved allowance policy. Test-only exports and Generate
 recommendations remain on their existing contracts.
+
+## Version 1 Audit Follow-Up
+
+[Quota and session recovery evidence](version-1-quota-and-session-fixes.md):
+free size and tag caps and bounded auth recovery are implemented; weekly
+consumption rules and dashboard balances remain open.
