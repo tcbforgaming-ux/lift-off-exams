@@ -120,12 +120,18 @@ and other activity modes remain separate.
 
 [Quiz completion report](phase-f-quiz-completion.md) and
 [decision register addendum](decision-register.md). The playable paid Quiz
-and Test/Quiz analytics overview are separate checkpoints. Unpaid Quiz launch
-still needs an approved allowance policy. Test-only exports and Generate
-recommendations remain on their existing contracts.
+and Test/Quiz analytics overview are separate checkpoints. Free Quiz now
+uses the approved shared launch allowance in the V1 follow-up below.
+Test-only exports and Generate recommendations keep their existing contracts.
 
 ## Version 1 Audit Follow-Up
 
 [Quota and session recovery evidence](version-1-quota-and-session-fixes.md):
 free size and tag caps and bounded auth recovery are implemented; weekly
-consumption rules and dashboard balances remain open.
+consumption rules and dashboard balances were still open in that checkpoint.
+
+[Weekly Free Test Quotas and Quiz](weekly-free-test-quotas.md) records the
+follow-up: three generation slots, seven Test ID launch slots, and a
+ten-slot Test/Quiz/Hardcore launch allowance. The free Dashboard shows
+remaining balances with a Monday 00:00 UTC reset. The user can launch and
+complete a free 20-question untimed Quiz on the isolated backend.

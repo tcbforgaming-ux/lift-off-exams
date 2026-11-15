@@ -124,15 +124,21 @@ export function TestHistoryPage() {
             <p className="muted">
               Updated {new Date(entry.last_activity_at).toLocaleString()}
             </p>
-            <ButtonLink
-              to={
-                entry.session_status === "submitted"
-                  ? `/results/${entry.session_id}`
-                  : `/sessions/${entry.session_id}`
-              }
-            >
-              {entry.session_status === "submitted" ? "View Result" : "Resume Session"}
-            </ButtonLink>
+            {(entry.session_status === "submitted" ||
+              entry.session_status === "in_progress" ||
+              entry.session_status === "paused") && (
+              <ButtonLink
+                to={
+                  entry.session_status === "submitted"
+                    ? `/results/${entry.session_id}`
+                    : `/sessions/${entry.session_id}`
+                }
+              >
+                {entry.session_status === "submitted"
+                  ? "View Result"
+                  : "Resume Session"}
+              </ButtonLink>
+            )}
           </Card>
         ))}
       </div>

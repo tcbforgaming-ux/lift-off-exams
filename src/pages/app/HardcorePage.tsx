@@ -13,6 +13,7 @@ type Run = {
   committed: number;
   correct: number | null;
   finished_at: string | null;
+  closed_without_result?: "abandoned" | "expired" | null;
   created_at: string;
   question: Question | null;
 };
@@ -80,6 +81,7 @@ function HardcoreContent({
   const [selection, setSelection] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [confirmingAbandon, setConfirmingAbandon] = useState(false);
   const lock = useRef(false);
   const launchId = useRef<string | null>(null);
   const action = useRef<{ id: string; response: string } | null>(null);
@@ -196,9 +198,13 @@ function HardcoreContent({
             {entries.map((entry) => (
               <li key={entry.id}>
                 <Link to={`/hardcore?run=${entry.id}`}>
-                  {entry.finished_at
-                    ? `Finished: ${entry.correct}/${entry.committed} correct`
-                    : `Resume: ${entry.strikes}/${entry.cap} strikes`}
+                  {entry.closed_without_result
+                    ? entry.closed_without_result === "abandoned"
+                      ? "Abandoned run"
+                      : "Expired run"
+                    : entry.finished_at
+                      ? `Finished: ${entry.correct}/${entry.committed} correct`
+                      : `Resume: ${entry.strikes}/${entry.cap} strikes`}
                 </Link>
               </li>
             ))}
@@ -277,8 +283,43 @@ function HardcoreContent({
               {action.current && error ? "Retry Next" : "Next"}
             </Button>
             <Link to="/hardcore?history=1">Exit run</Link>
+            <Button
+              variant="ghost"
+              disabled={pending}
+              onClick={() => setConfirmingAbandon(true)}
+            >
+              Abandon Run
+            </Button>
           </div>
+          {confirmingAbandon && (
+            <div className="button-row">
+              <p>Abandon without a result and release any reserved shared slot?</p>
+              <Button
+                variant="secondary"
+                disabled={pending}
+                onClick={() => setConfirmingAbandon(false)}
+              >
+                Keep Run
+              </Button>
+              <Button
+                disabled={pending}
+                onClick={() =>
+                  void perform(async () => {
+                    setRun(await rpc<Run>("abandon_hardcore", { p_run: run.id }));
+                    setConfirmingAbandon(false);
+                  })
+                }
+              >
+                Confirm Abandon Run
+              </Button>
+            </div>
+          )}
         </>
+      )}
+      {run?.closed_without_result && (
+        <h2>
+          {run.closed_without_result === "abandoned" ? "Run abandoned" : "Run expired"}
+        </h2>
       )}
       {run?.finished_at && (
         <>

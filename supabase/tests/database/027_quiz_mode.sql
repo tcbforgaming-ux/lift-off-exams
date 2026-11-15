@@ -8,7 +8,8 @@ insert into public.subscriptions(user_id,status,current_period_end)
 values('00000000-0000-0000-0000-000000027001','active',now()+interval '1 day');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000027002',true);
-select throws_ok($$select public.start_quiz(gen_random_uuid())$$,'42501',null,'free launch fails closed');
+select throws_ok($$select public.start_quiz(gen_random_uuid())$$,'P0001',
+ 'There are not enough active questions to start a 20-question Quiz.','free short bank rejected without reserving');
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000027001',true);
 select throws_ok($$select public.start_quiz(gen_random_uuid(),19)$$,'P0001',null,'unsupported count denied');
 select throws_ok($$select public.start_quiz(gen_random_uuid())$$,'P0001',
@@ -24,8 +25,10 @@ select ok(public.get_practice_session_settings((current_setting('quiz.fixture'):
  @> '{"mode":"Quiz","timer_seconds":null,"show_answers":false,"show_explanations":false}','trusted Quiz is untimed');
 select is((select count(*)::int from public.get_test_session((current_setting('quiz.fixture')::jsonb->>'session_id')::uuid)),20,'all questions delivered');
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000027002',true);
-select throws_ok($$select public.start_test_session(current_setting('quiz.fixture')::jsonb->>'test_id','quiz-shared-free')$$,
- '42501',null,'shared ID cannot bypass launch entitlement');
+select lives_ok($$select public.start_test_session(current_setting('quiz.fixture')::jsonb->>'test_id','quiz-shared-free')$$,
+ 'free shared Quiz ID launch follows the same allowance');
+select ok((select shared_remaining=9 and test_id_remaining=7 and generated_remaining=3
+ from public.get_my_weekly_activity_allowance()),'shared Quiz uses only the shared balance');
 select throws_ok($$select public.get_test_result_explanations((current_setting('quiz.fixture')::jsonb->>'session_id')::uuid)$$,
  'P0001',null,'other user cannot retrieve explanations');
 reset role;

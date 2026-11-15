@@ -1,19 +1,12 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(5);
+select plan(4);
 insert into auth.users(id,email,aud,role)
 values('00000000-0000-0000-0000-000000031001','hardcore-quota@example.test','authenticated','authenticated');
 insert into private.hardcore_runs(user_id,request_id,cap,allow_unknown,strikes,committed,finished_at)
 select '00000000-0000-0000-0000-000000031001',gen_random_uuid(),1,true,1,1,
   date_trunc('week', now() at time zone 'UTC') at time zone 'UTC'
 from generate_series(1,10);
-select throws_ok($$select private.check_hardcore_weekly_allowance('00000000-0000-0000-0000-000000031001')$$,
-  '42501',null,'ten completions at or after UTC Monday exhaust the shared allowance');
-update private.hardcore_runs set finished_at=finished_at-interval '1 second'
-where id=(select id from private.hardcore_runs
-  where user_id='00000000-0000-0000-0000-000000031001' limit 1);
-select lives_ok($$select private.check_hardcore_weekly_allowance('00000000-0000-0000-0000-000000031001')$$,
-  'the previous UTC week does not consume the current allowance');
 insert into public.test_ids(id,definition_id,mode,category,question_count,pool_timestamp)
 values('QUOTATEST001','00000000-0000-0000-0000-000000031011','Test','Finance',1,now());
 insert into public.test_sessions(id,test_definition_id,user_id,status,mode,question_count,
@@ -28,8 +21,10 @@ select id,user_id,test_definition_id,1,1,0,1,0,1,100,
 from public.test_sessions where id='00000000-0000-0000-0000-000000031021';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000031001',true);
-select throws_ok($$select public.start_hardcore(gen_random_uuid())$$,'42501',
-  'Weekly Test and Hardcore completion limit reached.','nine Hardcore completions and one Test block a free launch');
+select is((select shared_remaining from public.get_my_weekly_activity_allowance()),10,
+  'legacy completions are not reclassified as launch reservations');
+select is((select count(*)::integer from public.get_test_history(10)),1,
+  'legacy Test remains available in history');
 select ok(public.get_my_activity_analytics() @> '{"test_count":1}',
   'Hardcore runs do not enter the combined analytics overview');
 select is(public.prepare_my_test_export('history','csv',gen_random_uuid())->>'count','1',

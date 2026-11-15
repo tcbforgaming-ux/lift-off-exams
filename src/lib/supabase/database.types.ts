@@ -2384,6 +2384,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      abandon_hardcore: { Args: { p_run: string }; Returns: Json }
+      abandon_test_session: { Args: { p_session_id: string }; Returns: string }
       accept_owner_invitation: { Args: { p_token: string }; Returns: undefined }
       accept_team_invite: {
         Args: { p_token_hash: string }
@@ -2648,6 +2650,16 @@ export type Database = {
           p_to?: string
         }
         Returns: Json
+      }
+      get_my_weekly_activity_allowance: {
+        Args: never
+        Returns: {
+          generated_remaining: number
+          paid: boolean
+          resets_at: string
+          shared_remaining: number
+          test_id_remaining: number
+        }[]
       }
       get_own_question_reports: {
         Args: {

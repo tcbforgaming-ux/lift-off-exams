@@ -31,6 +31,7 @@ export function QuizPage() {
     <div className="page-stack">
       <header className="page-header">
         <h1>Quiz</h1>
+        <p>Free Quiz attempts use the shared Test, Quiz and Hardcore allowance.</p>
       </header>
       <dl className="grid two-column">
         <div>

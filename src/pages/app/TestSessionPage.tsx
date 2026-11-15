@@ -6,6 +6,7 @@ import { Card } from "../../components/ui/Card";
 import { SessionSubmitDialog } from "../../components/ui/SessionSubmitDialog";
 import { ReportQuestionDialog } from "../../components/reports/ReportQuestionDialog";
 import {
+  abandonTestSession,
   fetchTestSession,
   fetchPracticeSessionSettings,
   fetchPracticeFeedback,
@@ -78,6 +79,7 @@ function TestSessionContent() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [confirmingAbandon, setConfirmingAbandon] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [settings, setSettings] = useState<PracticeSessionSettings | null>(null);
   const [clock, setClock] = useState({ seconds: 0, syncedAt: performance.now() });
@@ -390,6 +392,17 @@ function TestSessionContent() {
 
   if (loading) return <p role="status">Loading your saved session…</p>;
 
+  if (status === "abandoned" || status === "expired") {
+    return (
+      <Card>
+        <h1>{status === "expired" ? "Session expired" : "Session abandoned"}</h1>
+        <Button type="button" onClick={() => void navigate("/dashboard")}>
+          Back to Dashboard
+        </Button>
+      </Card>
+    );
+  }
+
   if (!current) {
     return (
       <Card>
@@ -627,6 +640,14 @@ function TestSessionContent() {
             ))}
           </div>
           <div className="session-actions">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmingAbandon(true)}
+              disabled={saving || expired}
+            >
+              Abandon Attempt
+            </Button>
             {status === "in_progress" && (
               <Button
                 type="button"
@@ -648,6 +669,48 @@ function TestSessionContent() {
         </aside>
       </div>
 
+      {confirmingAbandon && (
+        <SessionSubmitDialog busy={saving} onClose={() => setConfirmingAbandon(false)}>
+          <h2 id="submit-title">Abandon this attempt?</h2>
+          <p>
+            No result will be saved. Any shared slot reserved for this attempt will be
+            released.
+          </p>
+          <div className="button-row">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={saving}
+              onClick={() => setConfirmingAbandon(false)}
+            >
+              Keep Attempt
+            </Button>
+            <Button
+              type="button"
+              disabled={saving}
+              onClick={() => {
+                setSaving(true);
+                void abandonTestSession(sessionId)
+                  .then(
+                    (next) =>
+                      void navigate(
+                        next === "submitted" ? `/results/${sessionId}` : "/dashboard",
+                        { replace: true },
+                      ),
+                    (error: Error) => {
+                      setMessage(error.message);
+                      setConfirmingAbandon(false);
+                      void load();
+                    },
+                  )
+                  .finally(() => setSaving(false));
+              }}
+            >
+              Abandon Attempt
+            </Button>
+          </div>
+        </SessionSubmitDialog>
+      )}
       {confirmingSubmit && (
         <SessionSubmitDialog busy={saving} onClose={() => setConfirmingSubmit(false)}>
           <h2 id="submit-title">

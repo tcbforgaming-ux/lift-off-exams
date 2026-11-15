@@ -5,10 +5,13 @@ export type AnswerOption = {
   text: string;
 };
 
+export type SessionStatus =
+  "in_progress" | "paused" | "submitted" | "abandoned" | "expired";
+
 export type SessionQuestion = {
   session_id: string;
   test_id: string;
-  session_status: "in_progress" | "paused" | "submitted";
+  session_status: SessionStatus;
   session_version: number;
   total_questions: number;
   answered_questions: number;
@@ -30,7 +33,7 @@ export type SessionQuestion = {
 export type SessionStart = {
   session_id: string;
   test_id: string;
-  status: "in_progress" | "paused" | "submitted";
+  status: SessionStatus;
   session_version: number;
   question_count: number;
   current_position: number;
@@ -67,7 +70,7 @@ export type HistoryEntry = {
   session_id: string;
   test_id: string;
   mode: string;
-  session_status: "in_progress" | "paused" | "submitted";
+  session_status: SessionStatus;
   started_at: string;
   last_activity_at: string;
   submitted_at: string | null;
@@ -106,6 +109,14 @@ export async function startQuiz(request: string) {
   const { data, error } = await rpcClient().rpc("start_quiz", { p_request: request });
   if (error) throw new Error(error.message);
   return data as SessionStart;
+}
+
+export async function abandonTestSession(sessionId: string) {
+  const { data, error } = await rpcClient().rpc("abandon_test_session", {
+    p_session_id: sessionId,
+  });
+  if (error) throw new Error(error.message);
+  return data as SessionStatus;
 }
 
 export async function fetchPracticeSessionSettings(sessionId: string) {
