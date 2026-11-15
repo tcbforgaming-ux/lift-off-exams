@@ -2614,6 +2614,7 @@ export type Database = {
         }[]
       }
       get_hardcore: { Args: { p_run: string }; Returns: Json }
+      get_infinite_focus_setup: { Args: never; Returns: Json }
       get_infinite_run: { Args: { p_run: string }; Returns: Json }
       get_my_activity_analytics: {
         Args: {
@@ -3288,6 +3289,15 @@ export type Database = {
         Returns: Json
       }
       start_infinite_run: {
+        Args: {
+          p_category?: string
+          p_difficulty?: string
+          p_request: string
+          p_tags?: string[]
+        }
+        Returns: Json
+      }
+      start_infinite_run_focused: {
         Args: {
           p_category?: string
           p_difficulty?: string

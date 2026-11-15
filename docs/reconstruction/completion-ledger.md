@@ -135,3 +135,11 @@ follow-up: three generation slots, seven Test ID launch slots, and a
 ten-slot Test/Quiz/Hardcore launch allowance. The free Dashboard shows
 remaining balances with a Monday 00:00 UTC reset. The user can launch and
 complete a free 20-question untimed Quiz on the isolated backend.
+
+## Phase F Infinite Run Weak Area Focus
+
+[Completion and evidence](phase-f-infinite-run-weak-area-focus-completion.md)
+verifies PRD §§47.3–47.4 and 47.7 locally: ranked owned cross-mode evidence,
+explicit setup eligibility, frozen focus and unseen-first question selection,
+resumption, and visible fallback and recovery. The existing Standard flow,
+Test recommendations, combined analytics, and exports remain separate.

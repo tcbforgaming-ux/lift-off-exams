@@ -5,6 +5,10 @@ import { parseAnswerOptions } from "../../lib/sessions/session";
 import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 
 type Question = { text: string; options: unknown };
+type FocusSetup = {
+  eligible: boolean;
+  topics: { topic: string; answered: number; correct: number }[];
+};
 type Run = {
   id: string;
   paid: boolean;
@@ -17,6 +21,9 @@ type Run = {
   last_correct?: boolean;
   finished_at: string | null;
   created_at: string;
+  mode?: "standard" | "weak";
+  focus_topics?: string[];
+  selection_mode?: "standard" | "weak" | null;
 };
 type Review = {
   position: number;
@@ -80,6 +87,9 @@ function RunContent({
   const [category, setCategory] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [tags, setTags] = useState("");
+  const [mode, setMode] = useState<"standard" | "weak">("standard");
+  const [focus, setFocus] = useState<FocusSetup>();
+  const [focusError, setFocusError] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const lock = useRef(false);
@@ -99,9 +109,13 @@ function RunContent({
             setEntries(rows);
             setMore(rows.length === 12);
           }
+        } else {
+          const setup = await rpc<FocusSetup>("get_infinite_focus_setup", {});
+          if (live) setFocus(setup);
         }
       } catch (cause) {
-        if (live)
+        if (live && !id && !history) setFocusError(true);
+        else if (live)
           setError(
             cause instanceof Error ? cause.message : "Could not load Infinite Run.",
           );
@@ -146,6 +160,68 @@ function RunContent({
       {error && <p role="alert">{error}</p>}
       {!id && !history && (
         <>
+          <fieldset className="form-stack" disabled={pending}>
+            <legend>Question selection</legend>
+            <label>
+              <input
+                type="radio"
+                name="infinite-mode"
+                checked={mode === "standard"}
+                onChange={() => {
+                  setMode("standard");
+                  request.current = null;
+                }}
+              />{" "}
+              Standard Infinite Run
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="infinite-mode"
+                checked={mode === "weak"}
+                disabled={!focus?.eligible || focus.topics.length === 0}
+                aria-describedby="infinite-focus-detail"
+                onChange={() => {
+                  setMode("weak");
+                  request.current = null;
+                }}
+              />{" "}
+              Weak Area Focus
+            </label>
+            <div id="infinite-focus-detail">
+              {focusError ? (
+                <p role="status">
+                  Weak Area Focus is unavailable. Standard Infinite Run is still an
+                  option.
+                </p>
+              ) : !focus ? (
+                <p role="status">Checking Weak Area Focus…</p>
+              ) : !focus.eligible ? (
+                <p>Premium access is required for Infinite Run.</p>
+              ) : (
+                <>
+                  <p>
+                    Uses your latest graded answer per question across activity. A topic
+                    needs at least eight distinct answers and below 70% accuracy.
+                  </p>
+                  {focus.topics.length === 0 ? (
+                    <p role="status">
+                      <strong>Insufficient Data.</strong> Choose Standard Infinite Run
+                      or answer more questions.
+                    </p>
+                  ) : mode === "weak" ? (
+                    <ul aria-label="Ranked weak topics">
+                      {focus.topics.map((t) => (
+                        <li key={t.topic}>
+                          {t.topic}: {t.correct}/{t.answered} correct
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </>
+              )}
+            </div>
+          </fieldset>
           <label>
             Category{" "}
             <select
@@ -205,19 +281,22 @@ function RunContent({
             onClick={() =>
               void perform(async () => {
                 request.current ??= crypto.randomUUID();
-                const row = await rpc<Run>("start_infinite_run", {
-                  p_request: request.current,
-                  p_category: category || null,
-                  p_difficulty: difficulty || null,
-                  p_tags: [
-                    ...new Set(
-                      tags
-                        .split(",")
-                        .map((tag) => tag.trim())
-                        .filter(Boolean),
-                    ),
-                  ],
-                });
+                const row = await rpc<Run>(
+                  mode === "weak" ? "start_infinite_run_focused" : "start_infinite_run",
+                  {
+                    p_request: request.current,
+                    p_category: category || null,
+                    p_difficulty: difficulty || null,
+                    p_tags: [
+                      ...new Set(
+                        tags
+                          .split(",")
+                          .map((tag) => tag.trim())
+                          .filter(Boolean),
+                      ),
+                    ],
+                  },
+                );
                 open(row.id);
               })
             }
@@ -268,6 +347,18 @@ function RunContent({
       {run && (
         <>
           {run.finished_at && <h2>Infinite Run finished</h2>}
+          {run.mode === "weak" && (
+            <section aria-label="Weak Area Focus">
+              <strong>Weak Area Focus</strong>
+              <p>{run.focus_topics?.join(", ")}</p>
+              {run.paid && !run.finished_at && run.selection_mode === "standard" && (
+                <p role="status">
+                  No active questions match your weak topics right now. Using Standard
+                  selection until focused questions become available.
+                </p>
+              )}
+            </section>
+          )}
           <p role="status">
             {run.correct}/{run.answered} correct ·{" "}
             {run.answered - run.correct - run.uncertain} wrong · {run.uncertain} unsure

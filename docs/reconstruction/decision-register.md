@@ -22,3 +22,20 @@ approvals.
 - Release only the shared slot on explicit abandonment or a terminal no-result
   expiry. Pauses and disconnects do not release it. A scored timer auto-submit
   retains the slot. Finishing after reset does not create another charge.
+
+## November 15: Infinite Run Weak Area Focus
+
+- Use owned graded Test, Quiz, Hardcore, Infinite Run, and Question Search
+  evidence. Count the latest graded attempt once per question and once per
+  distinct attached topic. A wrong answer and I Don't Know both count as
+  incorrect; skips and unrecoverable legacy status do not count.
+- A weak topic needs at least eight distinct answered questions and strictly
+  less than 70% accuracy. All modes have equal weight. Rank lowest accuracy
+  first, with deterministic topic-name ties. This does not change Test's
+  fixed-blueprint recommendation rule.
+- Freeze ranked topics at successful launch. Favor unseen focused questions
+  before seen focused questions, then prefer the weaker topic in each tier;
+  avoid immediately repeating the current question when possible.
+- With insufficient data, show that state and leave Standard as an explicit
+  option. A running focus session uses visible Standard fallback if the
+  active focused pool empties, then returns to focus on replenishment.
