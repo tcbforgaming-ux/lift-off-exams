@@ -151,3 +151,9 @@ records the 15 approved PRD §19.3 exam definitions, the Generate preset and cus
 paths, and retirement-safe generation from saved rules. The
 [local inventory report](version-1-deca-blueprint-catalog-inventory.csv) records
 availability separately from definition correctness. No hosted changes were made.
+
+## V1 Staff Reporting and Moderation
+
+[Admin reporting checkpoint](version-1-admin-reporting-and-moderation-completion.md)
+documents staff aggregate and question-quality metrics, report filters, and
+the approved policies for duplicate review, suspensions, appeals, and names.

@@ -15,35 +15,10 @@ export function ReportQueuePage() {
   const [params, setParams] = useSearchParams();
   const status = params.get("status") ?? "";
   const category = params.get("category") ?? "";
-  const [reports, setReports] = useState<ReportQueueRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [cursors, setCursors] = useState<ReportCursor[]>([]);
-  const cursor = cursors.at(-1);
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setMessage("");
-    fetchReportQueue({ status, category, cursor })
-      .then((rows) => {
-        if (active) setReports(rows);
-      })
-      .catch(
-        (error: unknown) =>
-          active &&
-          setMessage(error instanceof Error ? error.message : "Queue could not load."),
-      )
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [category, status, cursor]);
+  const lifecycleState = params.get("questionState") ?? "";
+  const difficulty = params.get("difficulty") ?? "";
 
   function setFilter(key: string, value: string) {
-    setCursors([]);
     const next = new URLSearchParams(params);
     if (value) next.set(key, value);
     else next.delete(key);
@@ -90,8 +65,82 @@ export function ReportQueuePage() {
               ))}
             </select>
           </label>
+          <label className="field-label">
+            Question state
+            <select
+              value={lifecycleState}
+              onChange={(event) => setFilter("questionState", event.target.value)}
+            >
+              <option value="">All</option>
+              <option value="Active">Active</option>
+              <option value="Retired">Retired</option>
+            </select>
+          </label>
+          <label className="field-label">
+            Difficulty
+            <select
+              value={difficulty}
+              onChange={(event) => setFilter("difficulty", event.target.value)}
+            >
+              <option value="">All</option>
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </label>
         </div>
       </Card>
+      <ReportQueueResults
+        key={JSON.stringify([status, category, lifecycleState, difficulty])}
+        status={status}
+        category={category}
+        lifecycleState={lifecycleState}
+        difficulty={difficulty}
+      />
+    </div>
+  );
+}
+
+function ReportQueueResults({
+  status,
+  category,
+  lifecycleState,
+  difficulty,
+}: {
+  status: string;
+  category: string;
+  lifecycleState: string;
+  difficulty: string;
+}) {
+  const [reports, setReports] = useState<ReportQueueRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [cursors, setCursors] = useState<ReportCursor[]>([]);
+  const cursor = cursors.at(-1);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setMessage("");
+    fetchReportQueue({ status, category, lifecycleState, difficulty, cursor })
+      .then((rows) => {
+        if (active) setReports(rows);
+      })
+      .catch(
+        (error: unknown) =>
+          active &&
+          setMessage(error instanceof Error ? error.message : "Queue could not load."),
+      )
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [category, status, lifecycleState, difficulty, cursor]);
+
+  return (
+    <>
       {loading && <p role="status">Loading report queue…</p>}
       {message && (
         <p className="form-message form-message-error" role="alert">
@@ -165,6 +214,6 @@ export function ReportQueuePage() {
             ]);
         }}
       />
-    </div>
+    </>
   );
 }

@@ -154,6 +154,7 @@ export async function fetchReportQueue(
     status?: string;
     category?: string;
     lifecycleState?: string;
+    difficulty?: string;
     cursor?: ReportCursor;
   } = {},
 ) {
@@ -166,7 +167,7 @@ export async function fetchReportQueue(
     p_lifecycle_state: input.lifecycleState || null,
     p_performance_indicator: null,
     p_question_type: null,
-    p_difficulty: null,
+    p_difficulty: input.difficulty || null,
     p_created_from: null,
     p_created_to: null,
   });

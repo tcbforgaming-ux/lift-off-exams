@@ -2729,6 +2729,10 @@ export type Database = {
       get_repository_question: { Args: { p_id: string }; Returns: Json }
       get_review_candidate: { Args: { p_id: string }; Returns: Json }
       get_staff_blueprint: { Args: { p_id: string }; Returns: Json }
+      get_staff_reporting_summary: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       get_staff_tag_dependencies: { Args: { p_label: string }; Returns: Json }
       get_test_history: {
         Args: {
@@ -2927,6 +2931,31 @@ export type Database = {
       list_staff_blueprints: {
         Args: { p_before?: string; p_before_id?: string; p_search?: string }
         Returns: Json
+      }
+      list_staff_question_quality: {
+        Args: {
+          p_after_id?: string
+          p_after_rank?: number
+          p_flagged_only?: boolean
+          p_from: string
+          p_limit?: number
+          p_order?: string
+          p_to: string
+        }
+        Returns: {
+          answered: number
+          correct: number
+          flags: string[]
+          has_next_page: boolean
+          incorrect: number
+          lifecycle_state: string
+          open_reports: number
+          prompt: string
+          question_id: string
+          rank: number
+          reports: number
+          unknown: number
+        }[]
       }
       list_staff_tags: {
         Args: { p_after?: string; p_search?: string }

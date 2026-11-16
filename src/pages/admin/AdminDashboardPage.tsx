@@ -1,6 +1,7 @@
 import { paths } from "../../app/urlPaths";
 import { ButtonLink } from "../../components/ui/ButtonLink";
 import { Card } from "../../components/ui/Card";
+import { StaffReporting } from "./StaffReporting";
 
 const areas = [
   {
@@ -47,6 +48,7 @@ export function AdminDashboardPage() {
           </Card>
         ))}
       </section>
+      <StaffReporting />
     </div>
   );
 }
