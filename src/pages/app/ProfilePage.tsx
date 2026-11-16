@@ -11,7 +11,9 @@ export function ProfilePage() {
   const { profile, refreshProfile, role, user } = useAuth();
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "saving" | "saved" | "error" | "restricted-name"
+  >("idle");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,8 +35,15 @@ export function ProfilePage() {
       }
       await refreshProfile();
       setStatus("saved");
-    } catch {
-      setStatus("error");
+    } catch (cause) {
+      setStatus(
+        typeof cause === "object" &&
+          cause !== null &&
+          "code" in cause &&
+          cause.code === "22023"
+          ? "restricted-name"
+          : "error",
+      );
     }
   }
 
@@ -84,9 +93,11 @@ export function ProfilePage() {
                 Profile updated.
               </p>
             )}
-            {status === "error" && (
+            {(status === "error" || status === "restricted-name") && (
               <p className="form-message form-message-error" role="alert">
-                We could not update your profile.
+                {status === "restricted-name"
+                  ? "Choose a display name without a restricted word or phrase."
+                  : "We could not update your profile."}
               </p>
             )}
 

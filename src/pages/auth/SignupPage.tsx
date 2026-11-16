@@ -32,7 +32,20 @@ export function SignupPage() {
     }
 
     setStatus("loading");
-    const { error } = await signUpWithEmail(getSupabaseBrowserClient(), {
+    const client = getSupabaseBrowserClient();
+    const nameCheck = await client.rpc("check_display_name_allowed", {
+      p_name: displayName.trim(),
+    });
+    if (nameCheck.error || nameCheck.data !== true) {
+      setMessage(
+        nameCheck.error
+          ? "We could not check your display name. Try again."
+          : "Choose a display name without a restricted word or phrase.",
+      );
+      setStatus("idle");
+      return;
+    }
+    const { error } = await signUpWithEmail(client, {
       displayName,
       email,
       password,
@@ -75,6 +88,7 @@ export function SignupPage() {
           <input
             id="signup-display-name"
             autoComplete="name"
+            maxLength={120}
             required
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}

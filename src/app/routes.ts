@@ -124,6 +124,11 @@ const AdminDashboardPage = lazy(() =>
     default: module.AdminDashboardPage,
   })),
 );
+const BannedNamesPage = lazy(() =>
+  import("../pages/admin/BannedNamesPage").then((module) => ({
+    default: module.BannedNamesPage,
+  })),
+);
 const OwnerGovernancePage = lazy(() =>
   import("../pages/admin/OwnerGovernancePage").then((module) => ({
     default: module.OwnerGovernancePage,
@@ -401,6 +406,14 @@ export const routes = [
     path: paths.adminAudit,
     label: "Audit Log",
     element: AuditLogPage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: "/admin/name-rules",
+    label: "Name Rules",
+    element: BannedNamesPage,
     navigation: "admin",
     auth: "protected",
     requiredRole: "admin",

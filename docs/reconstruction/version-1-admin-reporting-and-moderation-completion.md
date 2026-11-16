@@ -100,9 +100,50 @@ substitute for local role and RLS checks in this milestone.
 - `pnpm test:hosted-grants`: exit 0, 1,013 database and 8 grant assertions,
   all local. `pnpm verify`: exit 0, 89 unit tests and application checks.
 
+## Milestone C: Display-Name Enforcement
+
+- `20261115001000_banned_display_names.sql` replaces the old write-and-flag
+  trigger with a server-side rejection. The rule applies to direct profile
+  renames and Auth-created profiles. Email signup preflights the rule for
+  useful feedback, but skipping that check does not bypass enforcement.
+  Name matching folds case and treats runs of punctuation or whitespace as
+  word separators. Existing profiles and historical review rows are retained.
+- `/admin/name-rules` paginates current and retired rules. An Admin or
+  Owner can activate or retire a rule with a reason; unchanged requests
+  do not duplicate audits. Term changes and audit entries commit together.
+  Existing owner governance and question/tag records were not rewritten.
+- Account suspension, reinstatement, appeals, moderation email, and
+  enforcement for already-signed-in students are not implemented in this
+  slice. The next checkpoint needs a shared server-side account-access
+  guard for owned reads and writes before adding an appeal-only route,
+  transactional decisions and email delivery. UI redirects alone are not
+  sufficient to enforce a suspension.
+
+### Acceptance Evidence
+
+- `pnpm test:backend`: exit 0, 1,026 assertions across 41 SQL files.
+  DB 041 verifies Admin and Owner rule management, regular-account
+  denial, phrase normalization, rejection in the Auth transaction, and
+  preserving the old name on rejected rename. Public schema and types
+  match.
+- `pnpm test:backend:e2e tests/e2e/banned-names.spec.ts tests/e2e/auth-redirects.spec.ts`:
+  exit 0, 6 passed. Chrome activates a real rule, rejects the signup,
+  confirms the raw Auth endpoint also creates no account, and verifies
+  name persistence and regular-user denial on the admin route.
+- `pnpm test:hosted-grants`: exit 0, 1,026 database assertions and 8
+  grant assertions, all against the disposable local database.
+- `pnpm verify`: exit 0, 89 unit tests and application checks.
+
 ## Open Scope
 
 No general broadcasts, notification preferences, or hosted mutations belong
-to this checkpoint. Report-status vocabulary, configurable thresholds and
-report-queue prioritization require their own acceptance evidence; do not
-infer them from the new dashboard ranking.
+to this checkpoint.
+
+| Milestone | Status  | Next acceptance work                                                                                                                                                                                                                                                        |
+| --------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A         | Partial | Add report-queue prioritization and configurable thresholds; reconcile the legacy Valid, Invalid, Spam, Fixed, and Work In Progress vocabulary with existing report states, and test the resulting actions and notices. The question-quality list is not the report queue.  |
+| B         | Partial | Add a paginated near-match queue and expose advisory findings earlier in manual and bulk authoring; keep the publication rule authoritative.                                                                                                                                |
+| C         | Partial | Implement and verify student suspension, expiry, reinstatement, appeal access, audit, and moderation email. Audit protected backend paths for stale sessions, preserve staff governance, and exercise reversible tag retirement when a tag is referenced by active content. |
+
+Billing analytics and Demo conversion remain open under the approved initial
+analytics scope; neither is estimated from missing data.

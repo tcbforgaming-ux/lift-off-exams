@@ -2460,6 +2460,7 @@ export type Database = {
         Args: { p_decision?: string; p_vote_id: string }
         Returns: string
       }
+      check_display_name_allowed: { Args: { p_name: string }; Returns: boolean }
       clear_test_session_answer: {
         Args: {
           p_expected_session_version: number
@@ -3307,6 +3308,10 @@ export type Database = {
           question_id: string
           updated_at: string
         }[]
+      }
+      set_staff_banned_term: {
+        Args: { p_active: boolean; p_reason: string; p_term: string }
+        Returns: string
       }
       set_test_session_position: {
         Args: {
