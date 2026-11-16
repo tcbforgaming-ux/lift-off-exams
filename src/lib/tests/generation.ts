@@ -123,7 +123,32 @@ export async function fetchActiveBlueprints() {
   return (data ?? []) as TestBlueprintSummary[];
 }
 
+export function blueprintStrata(blueprint: TestBlueprintSummary | null) {
+  if (!blueprint?.distribution || typeof blueprint.distribution !== "object") return [];
+  const strata = (blueprint.distribution as { strata?: unknown }).strata;
+  if (!Array.isArray(strata)) return [];
+  return strata.flatMap((item: unknown) => {
+    if (!item || typeof item !== "object") return [];
+    const { id, count, tags } = item as {
+      id?: unknown;
+      count?: unknown;
+      tags?: unknown;
+    };
+    if (typeof id !== "string" || typeof count !== "number") return [];
+    return [
+      {
+        id,
+        count,
+        tags: Array.isArray(tags)
+          ? tags.filter((tag): tag is string => typeof tag === "string")
+          : [],
+      },
+    ];
+  });
+}
+
 export function blueprintTopics(blueprint: TestBlueprintSummary | null) {
+  // Some older summaries only carry tag metadata. Keep their picker usable.
   if (!blueprint?.distribution || typeof blueprint.distribution !== "object") return [];
   const strata = (blueprint.distribution as { strata?: unknown }).strata;
   if (!Array.isArray(strata)) return [];

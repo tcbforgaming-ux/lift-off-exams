@@ -39,3 +39,16 @@ approvals.
 - With insufficient data, show that state and leave Standard as an explicit
   option. A running focus session uses visible Standard fallback if the
   active focused pool empties, then returns to focus on replenishment.
+
+## November 15: V1 DECA Blueprint Catalog
+
+- Use the 15 exams and exact counts in the original PRD §19.3, not an
+  externally revised allocation. Record source spellings and zero counts
+  separately from normalized names and selectable strata.
+- Custom practice matches any selected topic across strata, while each
+  question must meet all requirements of its assigned stratum. For example,
+  Promotion-only, Pricing-only, and dual-tag questions can qualify when both
+  topics are selected, but a saved stratum requiring both still requires both.
+- Keep the approved strict scarcity rule: do not substitute other categories,
+  relax filters, shorten presets, or charge quota when generation fails.
+  Generate Updated Test uses the original saved rules against the current bank.

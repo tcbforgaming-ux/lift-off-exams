@@ -7,6 +7,8 @@ import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 import {
   fetchActiveBlueprints,
   generateCustomPractice,
+  generateTestFromBlueprint,
+  blueprintStrata,
   blueprintTopics,
   parseRequestedQuestionCount,
   validateSeed,
@@ -21,6 +23,9 @@ function newIdempotencyKey() {
 export function PracticeSetupPage() {
   const [blueprints, setBlueprints] = useState<TestBlueprintSummary[]>([]);
   const [blueprintId, setBlueprintId] = useState("");
+  const [generationMode, setGenerationMode] = useState<"custom" | "blueprint">(
+    "custom",
+  );
   const [questionCount, setQuestionCount] = useState("");
   const [seed, setSeed] = useState("");
   const [category, setCategory] = useState("");
@@ -45,6 +50,8 @@ export function PracticeSetupPage() {
     () => blueprintTopics(selectedBlueprint),
     [selectedBlueprint],
   );
+  const allocations = blueprintStrata(selectedBlueprint);
+  const preset = generationMode === "blueprint";
   const rankedTopics = useMemo(() => {
     const priority = new Map(weakTopics.map((tag, index) => [tag, index]));
     return [...availableTopics].sort(
@@ -146,8 +153,25 @@ export function PracticeSetupPage() {
     }
 
     try {
-      const requestedCount = parseRequestedQuestionCount(questionCount);
       validateSeed(seed);
+      if (preset) {
+        setSubmitting(true);
+        const generated = await generateTestFromBlueprint({
+          blueprintId: selectedBlueprint.id,
+          expectedVersion: selectedBlueprint.version,
+          requestedCount: selectedBlueprint.total_questions,
+          seed,
+          idempotencyKey: idempotencyKey.current,
+        });
+        setResult(generated);
+        setMessage(
+          generated.success
+            ? "Your test is ready."
+            : "The active question bank cannot fill every blueprint allocation. Choose another blueprint or switch to Custom practice.",
+        );
+        return;
+      }
+      const requestedCount = parseRequestedQuestionCount(questionCount);
       if (difficulties.length === 0) throw new Error("Select at least one difficulty.");
       if (availableTopics.length > 0 && topics.length === 0)
         throw new Error("Select at least one topic.");
@@ -177,7 +201,9 @@ export function PracticeSetupPage() {
       if (generated.success) {
         setMessage("Your test is ready.");
       } else {
-        setMessage("The approved blueprint cannot be satisfied by the active pool.");
+        setMessage(
+          "Not enough eligible questions. Reduce the question count or adjust your topics and difficulty.",
+        );
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Test generation failed.");
@@ -200,6 +226,27 @@ export function PracticeSetupPage() {
             onChange={resetRequest}
             onSubmit={(event) => void handleSubmit(event)}
           >
+            <fieldset className="practice-options" disabled={submitting}>
+              <legend>Generation mode</legend>
+              <label>
+                <input
+                  type="radio"
+                  name="generation-mode"
+                  checked={!preset}
+                  onChange={() => setGenerationMode("custom")}
+                />{" "}
+                Custom practice
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="generation-mode"
+                  checked={preset}
+                  onChange={() => setGenerationMode("blueprint")}
+                />{" "}
+                Blueprint exam
+              </label>
+            </fieldset>
             <label className="field-label" htmlFor="category">
               Category
             </label>
@@ -244,105 +291,109 @@ export function PracticeSetupPage() {
                 ))}
             </select>
 
-            <fieldset className="practice-options" disabled={submitting}>
-              <legend>Difficulty</legend>
-              {(["Easy", "Medium", "Hard"] as const).map((value) => (
-                <label key={value}>
-                  <input
-                    type="checkbox"
-                    checked={difficulties.includes(value)}
-                    onChange={() => toggle(value, difficulties, setDifficulties)}
-                  />
-                  {value}
-                </label>
-              ))}
-            </fieldset>
-            <fieldset className="practice-options" disabled={submitting}>
-              <legend>Topic Tags</legend>
-              {rankedTopics.map((value) => (
-                <label key={value}>
-                  <input
-                    type="checkbox"
-                    checked={topics.includes(value)}
-                    onChange={() => toggle(value, topics, setTopics)}
-                  />
-                  {value}
-                  {weakTopics.includes(value) && <small> · Needs practice</small>}
-                </label>
-              ))}
-              {availableTopics.length === 0 && (
-                <span className="muted">All topics in this blueprint</span>
-              )}
-            </fieldset>
-
-            <label className="field-label" htmlFor="question-count">
-              Questions
-            </label>
-            <input
-              id="question-count"
-              type="number"
-              min="1"
-              max="250"
-              step="1"
-              inputMode="numeric"
-              value={questionCount}
-              disabled={submitting}
-              onChange={(event) => setQuestionCount(event.target.value)}
-            />
-            <p className="field-help">
-              Approved blueprint total: {selectedBlueprint?.total_questions ?? "-"}
-            </p>
-
-            <label className="field-label" htmlFor="timer">
-              Timer
-            </label>
-            <select
-              id="timer"
-              value={timer}
-              disabled={submitting}
-              onChange={(event) => setTimer(event.target.value)}
-            >
-              <option value="60">60 minutes</option>
-              <option value="none">No timer</option>
-              <option value="custom">Custom</option>
-            </select>
-            {timer === "custom" && (
+            {!preset && (
               <>
-                <label className="field-label" htmlFor="timer-minutes">
-                  Minutes
+                <fieldset className="practice-options" disabled={submitting}>
+                  <legend>Difficulty</legend>
+                  {(["Easy", "Medium", "Hard"] as const).map((value) => (
+                    <label key={value}>
+                      <input
+                        type="checkbox"
+                        checked={difficulties.includes(value)}
+                        onChange={() => toggle(value, difficulties, setDifficulties)}
+                      />
+                      {value}
+                    </label>
+                  ))}
+                </fieldset>
+                <fieldset className="practice-options" disabled={submitting}>
+                  <legend>Topic Tags</legend>
+                  {rankedTopics.map((value) => (
+                    <label key={value}>
+                      <input
+                        type="checkbox"
+                        checked={topics.includes(value)}
+                        onChange={() => toggle(value, topics, setTopics)}
+                      />
+                      {value}
+                      {weakTopics.includes(value) && <small> · Needs practice</small>}
+                    </label>
+                  ))}
+                  {availableTopics.length === 0 && (
+                    <span className="muted">All topics in this blueprint</span>
+                  )}
+                </fieldset>
+
+                <label className="field-label" htmlFor="question-count">
+                  Questions
                 </label>
                 <input
-                  id="timer-minutes"
+                  id="question-count"
                   type="number"
                   min="1"
-                  max="999"
+                  max="250"
                   step="1"
-                  value={customMinutes}
+                  inputMode="numeric"
+                  value={questionCount}
                   disabled={submitting}
-                  onChange={(event) => setCustomMinutes(event.target.value)}
+                  onChange={(event) => setQuestionCount(event.target.value)}
                 />
+                <p className="field-help">
+                  Approved blueprint total: {selectedBlueprint?.total_questions ?? "-"}
+                </p>
+
+                <label className="field-label" htmlFor="timer">
+                  Timer
+                </label>
+                <select
+                  id="timer"
+                  value={timer}
+                  disabled={submitting}
+                  onChange={(event) => setTimer(event.target.value)}
+                >
+                  <option value="60">60 minutes</option>
+                  <option value="none">No timer</option>
+                  <option value="custom">Custom</option>
+                </select>
+                {timer === "custom" && (
+                  <>
+                    <label className="field-label" htmlFor="timer-minutes">
+                      Minutes
+                    </label>
+                    <input
+                      id="timer-minutes"
+                      type="number"
+                      min="1"
+                      max="999"
+                      step="1"
+                      value={customMinutes}
+                      disabled={submitting}
+                      onChange={(event) => setCustomMinutes(event.target.value)}
+                    />
+                  </>
+                )}
+                <fieldset className="practice-options" disabled={submitting}>
+                  <legend>Study Mode</legend>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={showAnswers}
+                      onChange={(event) => setShowAnswers(event.target.checked)}
+                    />
+                    Show answers after answering
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={showExplanations}
+                      onChange={(event) => setShowExplanations(event.target.checked)}
+                    />
+                    Show explanations after answering
+                  </label>
+                </fieldset>
+                <p className="field-help">Study mode requires premium access.</p>
               </>
             )}
-            <fieldset className="practice-options" disabled={submitting}>
-              <legend>Study Mode</legend>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={showAnswers}
-                  onChange={(event) => setShowAnswers(event.target.checked)}
-                />
-                Show answers after answering
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={showExplanations}
-                  onChange={(event) => setShowExplanations(event.target.checked)}
-                />
-                Show explanations after answering
-              </label>
-            </fieldset>
-            <p className="field-help">Study mode requires premium access.</p>
 
             <label className="field-label" htmlFor="seed">
               Seed
@@ -371,18 +422,24 @@ export function PracticeSetupPage() {
           <dl className="detail-list">
             <div>
               <dt>Questions</dt>
-              <dd>{questionCount || "-"}</dd>
+              <dd>
+                {preset
+                  ? (selectedBlueprint?.total_questions ?? "-")
+                  : questionCount || "-"}
+              </dd>
             </div>
             <div>
               <dt>Topics</dt>
-              <dd>{topics.length || "All"}</dd>
+              <dd>{(preset ? allocations.length : topics.length) || "All"}</dd>
             </div>
             <div>
               <dt>Timer</dt>
               <dd>
-                {timer === "none"
-                  ? "None"
-                  : `${timer === "custom" ? customMinutes : timer} minutes`}
+                {preset
+                  ? "60 minutes"
+                  : timer === "none"
+                    ? "None"
+                    : `${timer === "custom" ? customMinutes : timer} minutes`}
               </dd>
             </div>
             <div>
@@ -398,6 +455,24 @@ export function PracticeSetupPage() {
               <dd>{selectedBlueprint?.version ?? "-"}</dd>
             </div>
           </dl>
+          {preset && allocations.length > 0 && (
+            <table className="detail-list" aria-label="Blueprint allocations">
+              <thead>
+                <tr>
+                  <th scope="col">Topic</th>
+                  <th scope="col">Questions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allocations.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.tags.join(" + ") || row.id}</td>
+                    <td>{row.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </aside>
       </div>
 
@@ -433,7 +508,11 @@ export function PracticeSetupPage() {
           <div className="shortage-list">
             {(result.shortage.unsatisfied_strata ?? []).map((item) => (
               <div key={item.stratum_id}>
-                <strong>{item.stratum_id}</strong>
+                <strong>
+                  {allocations
+                    .find((row) => row.id === item.stratum_id)
+                    ?.tags.join(" + ") || item.stratum_id}
+                </strong>
                 <span>
                   {item.available} of {item.requested} available
                 </span>

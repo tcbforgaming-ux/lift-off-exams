@@ -11,6 +11,10 @@ test("custom practice generates, launches, and fits desktop and mobile", async (
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.getByRole("link", { name: "Generate", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Generate Test" })).toBeVisible();
+  await page.getByLabel("Category", { exact: true }).selectOption("Finance");
+  await page
+    .getByLabel("Blueprint", { exact: true })
+    .selectOption({ label: "Browser Practice Blueprint - 1.0.0" });
   await expect(page.getByLabel("Milestone 7")).toBeChecked();
   await page.getByLabel("Questions", { exact: true }).fill("41");
   await page.getByRole("button", { name: "Generate Test" }).click();

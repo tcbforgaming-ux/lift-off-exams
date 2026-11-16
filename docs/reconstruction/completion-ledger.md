@@ -143,3 +143,11 @@ verifies PRD §§47.3–47.4 and 47.7 locally: ranked owned cross-mode evidence,
 explicit setup eligibility, frozen focus and unseen-first question selection,
 resumption, and visible fallback and recovery. The existing Standard flow,
 Test recommendations, combined analytics, and exports remain separate.
+
+## V1 DECA Blueprint Catalog
+
+[Completion and verification](version-1-deca-blueprint-catalog-completion.md)
+records the 15 approved PRD §19.3 exam definitions, the Generate preset and custom
+paths, and retirement-safe generation from saved rules. The
+[local inventory report](version-1-deca-blueprint-catalog-inventory.csv) records
+availability separately from definition correctness. No hosted changes were made.

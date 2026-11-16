@@ -103,9 +103,14 @@ test("landing actions are real and owned analytics reflect a persisted test", as
     await page.locator("main").evaluate((el) => el.scrollWidth <= el.clientWidth),
   ).toBe(true);
   await page.goto("/generate");
-  await expect(
-    page.getByRole("checkbox", { name: /Milestone 7.*Needs practice/ }),
-  ).toBeChecked();
+  await page.getByLabel("Category", { exact: true }).selectOption("Finance");
+  await page
+    .getByLabel("Blueprint", { exact: true })
+    .selectOption({ label: "Browser Practice Blueprint - 1.0.0" });
+  const suggested = page.getByRole("checkbox", { name: /Milestone 7.*Needs practice/ });
+  await expect(suggested).toBeChecked();
+  await suggested.uncheck();
+  await expect(suggested).not.toBeChecked();
   await expect(page.getByLabel("Questions", { exact: true })).toHaveValue("4");
   const repeated = await api.rpc("generate_test_from_blueprint", {
     ...generation,
