@@ -62,6 +62,44 @@ substitute for local role and RLS checks in this milestone.
 - `pnpm verify`: exit 0, 89 unit tests; typecheck, lint, format, and build.
 - `git diff --check`: exit 0.
 
+## Milestone B: Implementation
+
+- `20261115000900_staff_near_duplicates.sql` adds a GIN trigram index and
+  scans existing repository prompts for scores of at least 0.80 on
+  case-folded, whitespace-normalized text. Exact trimmed/case-folded
+  matches cannot be overridden. Only the top ten matches are reviewable;
+  a larger set requires editing or cancellation.
+- Candidate Detail shows both texts, creation times, and similarity.
+  Admins and Owners can keep, request an edit, or cancel with an audit
+  reason. The saved decision binds the evidence and candidate content.
+  Reloads and retried requests cannot apply it twice. A changed
+  candidate or changed matching evidence needs a new review.
+- Publication keeps its original RPC contract and recorded approval
+  requirement; it checks the live repository again under a lock without
+  modifying a matched question, older Test ID, or result. The generation
+  importer is untouched. A built-in index expression preserves direct
+  service-role writes. The Candidate Detail URL is accepted by the
+  existing restricted redirect allowlist; access still requires staff.
+- Open: a cross-candidate near-match queue and early similarity findings
+  in the authoring/JSON preview are not added here. Authored and imported
+  candidates are guarded before publication.
+
+### Acceptance Evidence
+
+- `pnpm test:backend`: exit 0, 1,013 assertions across 40 SQL files.
+  DB 040 covers service-role writes, student denials, exact/near/unrelated
+  cases, no publication without review, edit/cancel transitions and an
+  identical retry. Public schema drift and generated types matched.
+- `pnpm test:backend:e2e tests/e2e/candidate-review.spec.ts tests/e2e/staff-reporting.spec.ts`:
+  exit 0, all 3 passed. The browser followed the staff deep link, compared
+  both prompts, hit the publication guard, saved a keep with an audit
+  reason, and published without mutating the existing question.
+- Earlier browser attempts exposed an index-function privilege, a
+  missing safe redirect path for Candidate Review, and an unstable
+  action-reason label after reload. The final rerun includes all fixes.
+- `pnpm test:hosted-grants`: exit 0, 1,013 database and 8 grant assertions,
+  all local. `pnpm verify`: exit 0, 89 unit tests and application checks.
+
 ## Open Scope
 
 No general broadcasts, notification preferences, or hosted mutations belong

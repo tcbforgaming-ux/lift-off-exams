@@ -4,6 +4,7 @@ import { Button } from "../../components/ui/Button";
 import { CursorNavigation } from "../../components/ui/CursorNavigation";
 import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 import { parseAnswerOptions } from "../../lib/sessions/session";
+import { CandidateSimilarityPanel } from "./CandidateSimilarityPanel";
 
 type Candidate = {
   id: string;
@@ -494,14 +495,15 @@ function CandidateDetail({ id, back }: { id: string; back: () => void }) {
                 }
               />
             </label>
-            <label className="field-label">
-              Reason
+            <div className="field-label">
+              <label htmlFor="candidate-action-reason">Reason</label>
               <textarea
+                id="candidate-action-reason"
                 maxLength={1000}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
-            </label>
+            </div>
             <div className="button-row">
               {[
                 "edit",
@@ -530,6 +532,19 @@ function CandidateDetail({ id, back }: { id: string; back: () => void }) {
               ))}
             </div>
           </fieldset>
+          <CandidateSimilarityPanel
+            key={`${id}:${reload}`}
+            id={id}
+            revision={row.review_revision}
+            prompt={row.question_text}
+            createdAt={row.created_at}
+            reviewable={pending || row.review_status === "Approved"}
+            onDecision={() => {
+              setReason("");
+              setError("");
+              setReload((value) => value + 1);
+            }}
+          />
           <section>
             <h2>Review History</h2>
             {history.length === 0 ? (

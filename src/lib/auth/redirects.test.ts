@@ -22,6 +22,7 @@ describe("auth redirects", () => {
   it("preserves safe queries, fragments and authorized-route patterns", () => {
     for (const path of [
       "/admin/reports?status=open#queue",
+      "/admin/candidates?candidate=f0210000-0000-4000-8000-000000000001",
       "/generate?count=50#topics",
       "/history?mode=Test",
       "/admin/reports/f0210000-0000-4000-8000-000000000001?view=review#question",

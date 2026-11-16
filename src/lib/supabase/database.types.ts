@@ -2534,6 +2534,17 @@ export type Database = {
       }
       current_team_role: { Args: { p_team_id: string }; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      decide_candidate_similarity: {
+        Args: {
+          p_basis: string
+          p_decision: string
+          p_id: string
+          p_key: string
+          p_reason: string
+          p_revision: number
+        }
+        Returns: string
+      }
       edit_repository_question: {
         Args: {
           p_content: Json
@@ -2597,6 +2608,7 @@ export type Database = {
       get_active_owner_count: { Args: never; Returns: number }
       get_candidate_review_history: { Args: { p_id: string }; Returns: Json }
       get_candidate_review_revision: { Args: { p_id: string }; Returns: number }
+      get_candidate_similarity: { Args: { p_id: string }; Returns: Json }
       get_generated_test_manifest: {
         Args: { p_test_id: string }
         Returns: {

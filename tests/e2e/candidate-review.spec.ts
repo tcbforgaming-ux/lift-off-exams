@@ -2,6 +2,84 @@ import { expect, test } from "@playwright/test";
 import { fixture } from "./global-setup";
 import { localService } from "./local-session-fixtures";
 
+test("near-duplicate review presents evidence and requires an audited override before publishing", async ({
+  page,
+}) => {
+  const api = localService();
+  const incident = crypto.randomUUID();
+  const prefix = `Case ${incident}: Which inventory procedure should a regional retailer use to reconcile monthly stock records before submitting the financial`;
+  const existing = `${prefix} report?`;
+  const proposal = `${prefix} statement?`;
+  const question = await api
+    .from("questions")
+    .insert({
+      partition_key: "Finance",
+      question_type: "Scenario",
+      question_text: existing,
+      options: ["First", "Second", "Third", "Fourth"],
+      correct_option_id: "A",
+      difficulty: "Easy",
+    })
+    .select("id")
+    .single();
+  expect(question.error).toBeNull();
+  const candidate = await api
+    .from("generated_question_candidates")
+    .insert({
+      category: "Finance",
+      partition_keys: ["Finance"],
+      performance_indicator: "FI:001",
+      question_type: "Scenario",
+      question_text: proposal,
+      options: ["First", "Second", "Third", "Fourth"],
+      correct_option_id: "A",
+      explanation: "A synthetic example.",
+      difficulty: "Easy",
+      tags: ["Financial Analysis"],
+    })
+    .select("id")
+    .single();
+  expect(candidate.error).toBeNull();
+  await page.goto(`/admin/candidates?candidate=${candidate.data!.id}`);
+  await page.getByLabel("Email").fill(fixture.adminEmail);
+  await page.getByLabel("Password", { exact: true }).fill(fixture.password);
+  await page.getByRole("button", { name: "Log In" }).click();
+  const panel = page.getByRole("region", { name: "Near-Duplicate Review" });
+  await expect(panel.getByText(proposal, { exact: true })).toBeVisible();
+  await expect(panel.getByRole("link", { name: existing })).toHaveAttribute(
+    "href",
+    `/admin/questions?question=${question.data!.id}`,
+  );
+  await expect(panel.getByText(/% similarity/).first()).toBeVisible();
+  const reason = page.getByRole("textbox", { name: "Reason", exact: true });
+  await reason.fill("Approved synthetic content.");
+  await page.getByRole("button", { name: "Approve", exact: true }).click();
+  await expect(page.getByText(/Approved \/ Valid/)).toBeVisible();
+  await reason.fill("Attempt before duplicate review.");
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Review the current near-duplicate matches before publication.",
+  );
+  await panel
+    .getByRole("textbox", { name: "Duplicate decision reason" })
+    .fill("Intentional variation for training.");
+  await panel.getByRole("button", { name: "Keep Candidate" }).click();
+  await expect(panel.getByText("Recorded decision: keep")).toBeVisible();
+  await reason.fill("Publish reviewed candidate.");
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(page.getByText(/Published \/ Valid/)).toBeVisible();
+  await expect(page.getByText(/candidate.similarity_keep/)).toBeVisible();
+  expect(
+    (
+      await api
+        .from("questions")
+        .select("question_text")
+        .eq("id", question.data!.id)
+        .single()
+    ).data?.question_text,
+  ).toBe(existing);
+});
+
 test("staff can paginate, revise, approve and publish a generated candidate", async ({
   page,
 }) => {
