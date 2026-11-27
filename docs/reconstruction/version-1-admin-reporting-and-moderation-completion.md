@@ -347,3 +347,94 @@ disposable project before reset; it does not reset the interactive database.
   assertions are included in the final integration checkpoint; final evidence
   applies to their combined tree. The preserved dirty baseline remains
   necessary verification input and is not silently included in the commits.
+
+## November 27 Local Release Candidate
+
+The integration baseline was `codex/local-reconstruction` at
+`d2cc43744340b99ccb35172da24b99e195021168`. Its entry status was 28
+modified tracked files, 11 untracked files, and nothing staged. The
+original checkout and its working files were left unchanged.
+
+| Admin follow-up, in Git order    | SHA                                        |
+| -------------------------------- | ------------------------------------------ |
+| Student moderation and appeals   | `8055ad1754722cb8a513034b03326e2384b3a92d` |
+| Near-duplicate discovery         | `e783495240a5cfe393b59376bf465fb449f5a889` |
+| Referenced-tag retirement        | `8d2922baf95bb2319929c43ec3799192844e912b` |
+| Report priority and dispositions | `d2cc43744340b99ccb35172da24b99e195021168` |
+
+### Reconcile the Integrated Run
+
+The saved baseline logs `.tmp/admin-final-integrated-{database,grants,browser}.log`
+and `.tmp/admin-final-verify.log` show 1,081 SQL assertions with no public
+drift and type parity, 8 separate local grant assertions, 60 browser cases
+and 93 units. The browser log names the navigation, auth redirect, five-set
+Demo, and student moderation cases; the unit log names four reset tests.
+These were run with dirty inputs, not solely the four admin commits.
+
+- Runner inputs: configurable ports and marker-safe target, pinned CLI
+  override, Chrome selection, setup/fixture checks, direct container
+  fixtures, importer target and TypeScript inclusion. The standalone local
+  erasure helper was not invoked in the original integrated run, but is
+  retargeted with the other tooling so the documented command stays coherent.
+- Product inputs: `AppShell.tsx` hides the admin link from signed-out users,
+  without changing server roles. `ResetPasswordPage.tsx` distinguishes
+  retryable update failures from a missing/expired recovery session.
+  Their unit/browser expectations are included with each fix.
+- Demo inputs: `demo.spec.ts` asserts the public grading payload and
+  `034_public_demo.sql` checks weekly quota isolation. No Demo application
+  source, catalog content, hosted data or schema changed. The local check
+  seeds synthetic content; it does not prove any hosted Demo catalog.
+- Not carried: CI artifact paths, earlier ledger and matrix changes,
+  prior audit and preview notes, the local smoke overlay, and hosted Demo
+  provisioning/preflight scripts. No deploy configuration was added.
+
+### Candidate and Local Setup
+
+The local tag `liftoff-v1-local-rc-20261127` pins tested SHA
+`051ca6e74b3c2eb81b6b3e967a0e557882df6f1e` in the separate
+`codex/local-release-candidate` worktree. This record is a later docs-only
+commit. The added commits are:
+
+| Release change                     | SHA                                        |
+| ---------------------------------- | ------------------------------------------ |
+| Isolated runner and fixtures       | `f45d678f6db4a114473853b4268c7ff2e81100c3` |
+| Signed-in staff navigation         | `a8dcce8bec9459f452db0a04d790ced3f7773d25` |
+| Password recovery failure handling | `9f177015251708a6d0e3dbdf4c89b76d9a566ce4` |
+| Demo payload/quota assertions      | `051ca6e74b3c2eb81b6b3e967a0e557882df6f1e` |
+
+Use Node 24, pnpm, Docker, and Supabase CLI 2.109.1 for this setup. The
+repository/CI pins pnpm 11.9.0; this run used the available bundled pnpm
+11.25.0 with the unchanged frozen lockfile and no policy override. Use
+installed Chrome with `LIFTOFF_VERIFY_CHROME=1` or the bundled Chromium
+setup in the README. Set `LIFTOFF_VERIFY_SUPABASE_CLI` to the path to the
+selected CLI executable. Do not set hosted keys or copy a linked config.
+
+The candidate used the new marker-owned project `liftoff-verification-59571`:
+set `LIFTOFF_VERIFY_API_PORT=59571` and
+`LIFTOFF_VERIFY_BROWSER_PORT=4177` (DB 59572, shadow 59579). The runner
+creates `.tmp/isolated-verification-59571/disposable.json`, checks its
+ownership, and injects local-only browser credentials. Do not rename markers
+or reset either the interactive backend or the older 59471 stack. Leave
+`LIFTOFF_VERIFY_PROVISIONED_DEMO` unset so the browser test uses fixtures.
+
+### Results on the Candidate
+
+**Ready for staging.** The candidate was clean immediately before and after
+the checks (`git status --short --branch` showed only
+`## codex/local-release-candidate`). Each command below exited 0. Logs are
+in ignored `.tmp/rc-evidence/` in the release worktree.
+
+| Command (PowerShell)                                                                                                                                      | Result                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm.cmd install --frozen-lockfile`                                                                                                                      | Fresh install in the release worktree; 306 packages from the local store, no dependency junction.                                                                                                                             |
+| `pnpm.cmd verify`                                                                                                                                         | Type check, lint, formatting, 93 units in 26 files, build.                                                                                                                                                                    |
+| `pnpm.cmd test:backend:prepare`                                                                                                                           | Marker validation, local reset, and committed migrations applied.                                                                                                                                                             |
+| `& $env:LIFTOFF_VERIFY_SUPABASE_CLI --workdir .tmp/isolated-verification-59571 test db (Resolve-Path 'supabase/tests/database/034_public_demo.sql').Path` | 13 Demo database assertions passed. Run after guarded preparation only, on the same unlinked workdir.                                                                                                                         |
+| `pnpm.cmd test:backend:e2e student-moderation.spec.ts test-session.spec.ts auth-redirects.spec.ts dashboard-shells.spec.ts demo.spec.ts`                  | 10 passed in 33.5 seconds. Real sign-in, protected redirects, ordinary Test launch/submission/reopen, ownership denial, suspension from an existing session, appeal/approval, staff navigation, and all five synthetic Demos. |
+| `pnpm.cmd test src/pages/auth/ResetPasswordPage.test.tsx`                                                                                                 | All 4 focused unit checks passed (also included in the 93). No real reset email was sent.                                                                                                                                     |
+| `git diff --check`                                                                                                                                        | No whitespace errors.                                                                                                                                                                                                         |
+
+No hosted provider mail, production catalog, or hosted deployment was
+verified. The full database, grants, pipeline, and full browser results
+above are historical; the checks in this section are the ones actually
+run against the clean release candidate.
