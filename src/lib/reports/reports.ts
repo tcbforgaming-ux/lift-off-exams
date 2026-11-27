@@ -1,4 +1,5 @@
 import { getSupabaseBrowserClient } from "../supabase/browserClient";
+import { moderationRpc } from "../auth/moderation";
 
 export const reportCategories = [
   "incorrect_answer",
@@ -35,6 +36,9 @@ export type OwnQuestionReport = {
 };
 
 export type ReportQueueRow = {
+  priority_rank?: number;
+  high_priority?: boolean;
+  moderation_disposition?: string | null;
   report_id: string;
   question_id: string;
   test_id: string;
@@ -137,7 +141,7 @@ export async function submitQuestionReport(input: {
   );
 }
 
-export type ReportCursor = { at: string; id: string };
+export type ReportCursor = { at: string; id: string; rank?: number };
 
 export async function fetchOwnReports(cursor?: ReportCursor) {
   const { data, error } = await client().rpc("get_own_question_reports", {
@@ -158,21 +162,16 @@ export async function fetchReportQueue(
     cursor?: ReportCursor;
   } = {},
 ) {
-  const { data, error } = await client().rpc("search_question_report_queue", {
-    p_page_size: 100,
-    p_cursor_updated_at: input.cursor?.at ?? null,
-    p_cursor_id: input.cursor?.id ?? null,
+  return moderationRpc<ReportQueueRow[]>("list_priority_reports", {
+    p_limit: 100,
+    p_before: input.cursor?.at ?? null,
+    p_id: input.cursor?.id ?? null,
+    p_rank: input.cursor?.rank ?? null,
     p_status: input.status || null,
     p_category: input.category || null,
-    p_lifecycle_state: input.lifecycleState || null,
-    p_performance_indicator: null,
-    p_question_type: null,
+    p_lifecycle: input.lifecycleState || null,
     p_difficulty: input.difficulty || null,
-    p_created_from: null,
-    p_created_to: null,
   });
-  if (error) throw new Error(error.message);
-  return rows<ReportQueueRow>(data);
 }
 
 export async function fetchReportDetail(reportId: string) {

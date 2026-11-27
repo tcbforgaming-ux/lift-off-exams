@@ -1,9 +1,81 @@
 import { expect, test } from "@playwright/test";
 import { fixture } from "./global-setup";
-import { localService } from "./local-session-fixtures";
+import { localService, createSessionUser } from "./local-session-fixtures";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../src/lib/supabase/database.types";
-
+test("report disposition and priority settings use the real queue", async ({
+  page,
+}) => {
+  const service = localService();
+  const user = await createSessionUser("report-action");
+  const marker = crypto.randomUUID();
+  const report = await service
+    .from("question_reports")
+    .insert({
+      entity_type: "question",
+      question_id: fixture.questionIds[0],
+      test_id: fixture.testId,
+      reporter_id: user.id,
+      category: "unclear_wording",
+      reason: "other",
+      status: "open",
+      description: `Synthetic new disposition ${marker}`,
+      idempotency_key: crypto.randomUUID(),
+    })
+    .select("id")
+    .single();
+  expect(report.error).toBeNull();
+  await page.goto("/admin/reports");
+  await page.getByLabel("Email").fill(fixture.adminEmail);
+  await page.getByLabel("Password", { exact: true }).fill(fixture.password);
+  await page.getByRole("button", { name: "Log In" }).click();
+  await page.getByLabel("High-priority report threshold").fill("1");
+  await page
+    .getByLabel("Priority change reason")
+    .fill("Synthetic threshold validation");
+  await page.getByRole("button", { name: "Save Priority" }).click();
+  await expect(page.getByText("High Priority", { exact: true }).first()).toBeVisible();
+  await page.goto(`/admin/reports/${report.data!.id}`);
+  await page.getByLabel("Internal reason").fill("Verified correction queue concern");
+  await page.getByLabel("Message to reporter").fill("We are reviewing your question.");
+  await page.route(
+    "**/rest/v1/rpc/act_on_question_report",
+    async (route) => {
+      const [first, second] = await Promise.all([route.fetch(), route.fetch()]);
+      expect(first.ok()).toBe(true);
+      expect(second.ok()).toBe(true);
+      expect(await first.text()).toBe(await second.text());
+      await route.abort();
+    },
+    { times: 1 },
+  );
+  await page.getByRole("button", { name: "Valid", exact: true }).click();
+  await expect(page.getByText(/Failed to fetch|NetworkError/i)).toBeVisible();
+  await page.getByRole("button", { name: "Valid", exact: true }).click();
+  await expect(page.getByText("Report disposition saved.")).toBeVisible();
+  expect(
+    (
+      await service
+        .from("question_reports")
+        .select("moderation_disposition,status")
+        .eq("id", report.data!.id)
+        .single()
+    ).data,
+  ).toEqual({ moderation_disposition: "valid", status: "in_review" });
+  await page.getByLabel("Internal reason").fill("The issue has been corrected");
+  await page.getByLabel("Message to reporter").fill("Thank you for your report.");
+  await page.getByRole("button", { name: "Fixed", exact: true }).click();
+  await expect(page.getByText("Report disposition saved.")).toBeVisible();
+  expect(
+    (
+      await service
+        .from("question_reports")
+        .select("status")
+        .eq("id", report.data!.id)
+        .single()
+    ).data?.status,
+  ).toBe("resolved");
+});
 test("staff can retire and restore a tag while its question reference stays intact", async ({
   page,
 }) => {

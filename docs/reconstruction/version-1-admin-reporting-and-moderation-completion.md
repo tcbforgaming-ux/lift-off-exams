@@ -266,6 +266,10 @@ production delivery result is claimed.
 
 Commands ran from this worktree with the pinned CLI and documented Chrome:
 
+The desktop runtime's bundled fallback `pnpm.cmd` ran these package scripts
+(and was first on PATH for nested script calls). The workstation's unrelated
+global pnpm shim was not used for the passing integrated run.
+
 ```powershell
 $env:LIFTOFF_VERIFY_SUPABASE_CLI = (Resolve-Path '.tmp/verification-cli-2.109.1/supabase.exe').Path
 $env:LIFTOFF_VERIFY_CHROME = '1'
@@ -294,6 +298,8 @@ Final integrated logs are local ignored `.tmp/admin-final-integrated-*.log`;
 application verification is `.tmp/admin-final-verify.log`; mail adapter evidence
 is `.tmp/admin-moderation-mail.log`. Earlier failed exploratory runs were fixed,
 then these final commands reran against the same completed implementation.
+After checkpoint review and documentation, `pnpm verify` passed again with
+exit 0 and the same 93/93 assertions; log `.tmp/admin-checkpoint-verify.log`.
 One real defect found during verification was ordering successive indefinite
 suspensions in a transaction: use `clock_timestamp()` and prefer the active
 record rather than an arbitrary equal-`now()` history row. The added assertion
@@ -309,7 +315,7 @@ disposable project before reset; it does not reset the interactive database.
 
 - Forward migrations: the five `20261127000100` through `20261127000500`
   files listed above. Public types regenerated in
-  `src/lib/supabase/database.types.ts`; no applied migration was edited.
+  `src/lib/supabase/database.types.ts`; no historical migration was edited.
 - Student client/server surface: `src/lib/auth/{AuthContext,AuthProvider,moderation,redirects}`,
   `src/app/{RouteGate,routes}`, `src/components/layout/AppShell.tsx`,
   `src/lib/supabase/browserClient.ts`, `StudentModerationPage.tsx`,

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { Card } from "../../components/ui/Card";
 import { CursorNavigation } from "../../components/ui/CursorNavigation";
+import { ReportPrioritySettings } from "./ReportPrioritySettings";
 import {
   fetchReportQueue,
   reportCategories,
@@ -17,6 +18,12 @@ export function ReportQueuePage() {
   const category = params.get("category") ?? "";
   const lifecycleState = params.get("questionState") ?? "";
   const difficulty = params.get("difficulty") ?? "";
+  const [priorityRevision, setPriorityRevision] = useState(0);
+  useEffect(() => {
+    const update = () => setPriorityRevision((x) => x + 1);
+    window.addEventListener("report-priority-changed", update);
+    return () => window.removeEventListener("report-priority-changed", update);
+  }, []);
 
   function setFilter(key: string, value: string) {
     const next = new URLSearchParams(params);
@@ -90,8 +97,15 @@ export function ReportQueuePage() {
           </label>
         </div>
       </Card>
+      <ReportPrioritySettings />
       <ReportQueueResults
-        key={JSON.stringify([status, category, lifecycleState, difficulty])}
+        key={JSON.stringify([
+          status,
+          category,
+          lifecycleState,
+          difficulty,
+          priorityRevision,
+        ])}
         status={status}
         category={category}
         lifecycleState={lifecycleState}
@@ -174,6 +188,13 @@ function ReportQueueResults({
                       <span className={`status-pill status-${report.report_status}`}>
                         {report.report_status.replace("_", " ")}
                       </span>
+                      <span>{report.moderation_disposition?.replaceAll("_", " ")}</span>
+                      {report.high_priority && <strong>High Priority</strong>}
+                      {report.priority_rank !== undefined && (
+                        <span>
+                          {report.priority_rank} open reports on this question
+                        </span>
+                      )}
                     </td>
                     <td>{reportCategoryLabels[report.category]}</td>
                     <td>
@@ -210,7 +231,13 @@ function ReportQueueResults({
           if (last)
             setCursors((items) => [
               ...items,
-              { at: last.updated_at, id: last.report_id },
+              {
+                at: last.updated_at,
+                id: last.report_id,
+                ...(last.priority_rank !== undefined
+                  ? { rank: last.priority_rank }
+                  : {}),
+              },
             ]);
         }}
       />

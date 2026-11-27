@@ -31,13 +31,14 @@ describe("question report RPC boundary", () => {
         p_cursor_id: cursor.id,
       }),
     );
-    await fetchReportQueue({ cursor });
+    await fetchReportQueue({ cursor: { ...cursor, rank: 4 } });
     expect(rpc).toHaveBeenLastCalledWith(
-      "search_question_report_queue",
+      "list_priority_reports",
       expect.objectContaining({
-        p_page_size: 100,
-        p_cursor_updated_at: cursor.at,
-        p_cursor_id: cursor.id,
+        p_limit: 100,
+        p_before: cursor.at,
+        p_id: cursor.id,
+        p_rank: 4,
       }),
     );
     await fetchAuditLogs(undefined, {
@@ -83,9 +84,9 @@ describe("question report RPC boundary", () => {
     rpc.mockResolvedValue({ data: [], error: null });
     await fetchReportQueue({ status: "open", category: "unclear_wording" });
     expect(rpc).toHaveBeenCalledWith(
-      "search_question_report_queue",
+      "list_priority_reports",
       expect.objectContaining({
-        p_page_size: 100,
+        p_limit: 100,
         p_status: "open",
         p_category: "unclear_wording",
       }),

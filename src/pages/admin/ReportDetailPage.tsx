@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { moderationRpc } from "../../lib/auth/moderation";
 import { useParams } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
@@ -54,6 +55,25 @@ export function ReportDetailPage() {
   const [questionType, setQuestionType] = useState("S");
   const [difficulty, setDifficulty] = useState("E");
   const [tags, setTags] = useState("");
+  const actionKey = useRef<{ signature: string; key: string } | null>(null);
+  function disposition(value: string) {
+    if (!detail) return;
+    const args = {
+      p_id: detail.report_id,
+      p_version: detail.report_version,
+      p_disposition: value,
+      p_reason: reason,
+      p_message: resolution,
+    };
+    const signature = JSON.stringify(args);
+    if (actionKey.current?.signature !== signature)
+      actionKey.current = { signature, key: crypto.randomUUID() };
+    const key = actionKey.current.key;
+    void run(
+      () => moderationRpc("act_on_question_report", { ...args, p_key: key }),
+      "Report disposition saved.",
+    );
+  }
 
   const terminal = detail
     ? ["resolved", "rejected", "duplicate"].includes(detail.report_status)
@@ -225,6 +245,30 @@ export function ReportDetailPage() {
           </label>
           {!terminal && (
             <div className="button-row report-action-row">
+              {["valid", "work_in_progress", "fixed", "invalid", "spam"].map(
+                (value) => (
+                  <Button
+                    key={value}
+                    variant="secondary"
+                    disabled={
+                      busy || reason.trim().length < 5 || resolution.trim().length < 5
+                    }
+                    onClick={() => disposition(value)}
+                  >
+                    {
+                      (
+                        {
+                          valid: "Valid",
+                          work_in_progress: "Work In Progress",
+                          fixed: "Fixed",
+                          invalid: "Invalid",
+                          spam: "Spam",
+                        } as Record<string, string>
+                      )[value]
+                    }
+                  </Button>
+                ),
+              )}
               {detail.report_status === "open" && (
                 <Button
                   type="button"

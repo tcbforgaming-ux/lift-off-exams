@@ -162,3 +162,19 @@ The November 27 follow-up in that report covers student suspension/appeals,
 durable moderation notices, report dispositions and priority settings,
 near-match discovery, and referenced-tag retirement. Hosted delivery and
 scheduling remain separate from isolated local verification.
+
+### November 27 Verified Local Checkpoint
+
+| Remaining admin milestone        | Local status | Evidence                                                                                                         |
+| -------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Student suspension and appeals   | COMPLETE     | SQL 042, old-session browser restriction/appeal flow, durable mail adapters; deletion recovery regressions pass. |
+| Report priority and dispositions | COMPLETE     | SQL 043, reporter-only notices, concurrent/lost-response retry browser checks and existing cursor tests.         |
+| Near-duplicate discovery         | COMPLETE     | Published-repository queue, 27-row pagination, manual/JSON previews and changed-review publication denial.       |
+| Referenced-tag retirement        | COMPLETE     | UI retirement/restoration preserves active questions, frozen blueprints, saved membership and completed results. |
+
+Final combined verification: 1,081 database assertions, 8 additional local
+grant assertions, 60 backend browser tests, 93 unit tests, 2 mail adapter
+tests, pipeline fixtures and 16 persisted importer cases pass. Drift and
+generated types match. Full commands, preserved dirty baseline inputs and
+hosted limitations are in
+[the admin completion report](version-1-admin-reporting-and-moderation-completion.md#final-local-acceptance-evidence).

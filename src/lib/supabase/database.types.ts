@@ -999,6 +999,7 @@ export type Database = {
           id: string
           idempotency_key: string | null
           lifecycle_event_id: string | null
+          moderation_disposition: string | null
           question_id: string | null
           reason: string
           report_snapshot: Json
@@ -1027,6 +1028,7 @@ export type Database = {
           id?: string
           idempotency_key?: string | null
           lifecycle_event_id?: string | null
+          moderation_disposition?: string | null
           question_id?: string | null
           reason?: string
           report_snapshot?: Json
@@ -1055,6 +1057,7 @@ export type Database = {
           id?: string
           idempotency_key?: string | null
           lifecycle_event_id?: string | null
+          moderation_disposition?: string | null
           question_id?: string | null
           reason?: string
           report_snapshot?: Json
@@ -2404,6 +2407,17 @@ export type Database = {
         Args: { p_action: string; p_id: string }
         Returns: Json
       }
+      act_on_question_report: {
+        Args: {
+          p_disposition: string
+          p_id: string
+          p_key: string
+          p_message: string
+          p_reason: string
+          p_version: number
+        }
+        Returns: Json
+      }
       activate_staff_blueprint: {
         Args: { p_id: string; p_reason: string }
         Returns: string
@@ -2746,6 +2760,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_report_priority_config: { Args: never; Returns: Json }
       get_repository_question: { Args: { p_id: string }; Returns: Json }
       get_review_candidate: { Args: { p_id: string }; Returns: Json }
       get_selectable_topic_tags: {
@@ -2944,6 +2959,19 @@ export type Database = {
       }
       list_owner_governance: {
         Args: { p_before?: string; p_before_id?: string; p_view: string }
+        Returns: Json
+      }
+      list_priority_reports: {
+        Args: {
+          p_before?: string
+          p_category?: string
+          p_difficulty?: string
+          p_id?: string
+          p_lifecycle?: string
+          p_limit?: number
+          p_rank?: number
+          p_status?: string
+        }
         Returns: Json
       }
       list_review_candidates: {
@@ -3326,6 +3354,10 @@ export type Database = {
           question_id: string
           updated_at: string
         }[]
+      }
+      set_report_priority_config: {
+        Args: { p_reason: string; p_threshold: number; p_version: number }
+        Returns: Json
       }
       set_repository_question_lifecycle: {
         Args: {
