@@ -4,7 +4,7 @@ import { Button } from "../../components/ui/Button";
 import { CursorNavigation } from "../../components/ui/CursorNavigation";
 import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 
-type Tag = { label: string; description: string; revision: number };
+type Tag = { label: string; description: string; revision: number; retired?: boolean };
 type Blueprint = {
   id: string;
   blueprint_name: string;
@@ -197,6 +197,31 @@ function TagManager() {
       setBusy(false);
     }
   }
+  async function toggleRetired() {
+    if (!selected || busy || reason.trim().length < 5) return;
+    setBusy(true);
+    setError("");
+    try {
+      const tag = await call<Tag>("set_staff_tag_retired", {
+        p_label: selected.label,
+        p_revision: selected.revision,
+        p_retired: !selected.retired,
+        p_reason: reason,
+      });
+      setSelected(tag);
+      setReason("");
+      setRevision((x) => x + 1);
+      setStatus(
+        tag.retired
+          ? "Tag retired. Existing references are unchanged."
+          : "Tag restored.",
+      );
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <section className="page-stack" aria-label="Tag management">
       <label className="field-label">
@@ -317,6 +342,16 @@ function TagManager() {
           >
             Save Tag
           </Button>
+          {selected && (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={busy || reason.trim().length < 5}
+              onClick={() => void toggleRetired()}
+            >
+              {selected.retired ? "Restore Tag" : "Retire Tag"}
+            </Button>
+          )}
         </fieldset>
       </form>
       {busy && <p role="status">Working...</p>}

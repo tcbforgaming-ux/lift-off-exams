@@ -2748,6 +2748,10 @@ export type Database = {
       }
       get_repository_question: { Args: { p_id: string }; Returns: Json }
       get_review_candidate: { Args: { p_id: string }; Returns: Json }
+      get_selectable_topic_tags: {
+        Args: { p_labels: string[] }
+        Returns: string[]
+      }
       get_staff_blueprint: { Args: { p_id: string }; Returns: Json }
       get_staff_reporting_summary: {
         Args: { p_from: string; p_to: string }
@@ -3339,6 +3343,15 @@ export type Database = {
       set_staff_banned_term: {
         Args: { p_active: boolean; p_reason: string; p_term: string }
         Returns: string
+      }
+      set_staff_tag_retired: {
+        Args: {
+          p_label: string
+          p_reason: string
+          p_retired: boolean
+          p_revision: number
+        }
+        Returns: Json
       }
       set_test_session_position: {
         Args: {

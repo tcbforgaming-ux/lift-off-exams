@@ -6,6 +6,7 @@ const localPaths = new Set([
   "/teams",
   "/admin",
   "/admin/questions",
+  "/admin/catalog",
   "/admin/reports",
   "/admin/audit",
   "/admin/generation",

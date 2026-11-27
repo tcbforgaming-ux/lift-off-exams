@@ -51,13 +51,36 @@ export function PracticeSetupPage() {
     [selectedBlueprint],
   );
   const allocations = blueprintStrata(selectedBlueprint);
+  const [inactiveTopics, setInactiveTopics] = useState<string[]>([]);
+  useEffect(() => {
+    let live = true;
+    const labels = blueprintTopics(selectedBlueprint);
+    void (async () => {
+      try {
+        const response = await getSupabaseBrowserClient().rpc(
+          "get_selectable_topic_tags",
+          { p_labels: labels },
+        );
+        if (live && !response.error && Array.isArray(response.data)) {
+          const retired = labels.filter((x) => !response.data.includes(x));
+          setInactiveTopics(retired);
+          setTopics((current) => current.filter((x) => !retired.includes(x)));
+        }
+      } catch {
+        /* server-side generation still rejects retired choices */
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [selectedBlueprint]);
   const preset = generationMode === "blueprint";
   const rankedTopics = useMemo(() => {
     const priority = new Map(weakTopics.map((tag, index) => [tag, index]));
-    return [...availableTopics].sort(
-      (a, b) => (priority.get(a) ?? Infinity) - (priority.get(b) ?? Infinity),
-    );
-  }, [availableTopics, weakTopics]);
+    return availableTopics
+      .filter((x) => !inactiveTopics.includes(x))
+      .sort((a, b) => (priority.get(a) ?? Infinity) - (priority.get(b) ?? Infinity));
+  }, [availableTopics, weakTopics, inactiveTopics]);
   const categories = [
     ...new Set(blueprints.map((blueprint) => blueprint.category)),
   ].sort();
