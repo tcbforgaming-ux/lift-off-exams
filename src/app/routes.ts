@@ -129,6 +129,11 @@ const StudentModerationPage = lazy(() =>
     default: m.StudentModerationPage,
   })),
 );
+const NearDuplicateQueuePage = lazy(() =>
+  import("../pages/admin/NearDuplicateQueuePage").then((m) => ({
+    default: m.NearDuplicateQueuePage,
+  })),
+);
 const SuspensionPage = lazy(() =>
   import("../pages/app/SuspensionPage").then((m) => ({ default: m.SuspensionPage })),
 );
@@ -430,6 +435,14 @@ export const routes = [
     path: "/admin/moderation",
     label: "Student Moderation",
     element: StudentModerationPage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: "/admin/duplicates",
+    label: "Near Duplicates",
+    element: NearDuplicateQueuePage,
     navigation: "admin",
     auth: "protected",
     requiredRole: "admin",

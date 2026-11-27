@@ -46,7 +46,14 @@ type Row = {
     tags: string[];
   };
 };
-type Preview = { rows: Row[]; token: string };
+type Preview = {
+  rows: Row[];
+  token: string;
+  near_matches?: {
+    prompt: string;
+    evidence: { matches: { id: string; question_text: string; score: number }[] };
+  }[];
+};
 type Outcome = {
   import_id: string;
   rows: Row[];
@@ -381,6 +388,29 @@ export function QuestionAuthoringPage() {
       </form>
       {busy && !reviewed && <p role="status">Preparing preview...</p>}
       {error && <p role="alert">{error}</p>}
+      {reviewed?.preview.near_matches
+        ?.filter((row) => row.evidence.matches.length > 0)
+        .map((row) => (
+          <section
+            key={row.prompt}
+            className="page-stack"
+            aria-label="Advisory near matches"
+          >
+            <h2>Possible duplicate</h2>
+            <p>{row.prompt}</p>
+            <ul>
+              {row.evidence.matches.slice(0, 10).map((match) => (
+                <li key={match.id}>
+                  <Link to={`/admin/questions?question=${match.id}`}>
+                    {match.question_text}
+                  </Link>
+                  <span> · {(match.score * 100).toFixed(1)}% similarity</span>
+                </li>
+              ))}
+            </ul>
+            <p>This candidate requires duplicate review before publication.</p>
+          </section>
+        ))}
       {reviewed && (
         <section className="page-stack" aria-label="Import results">
           <h2>{result ? "Import Results" : "Import Preview"}</h2>

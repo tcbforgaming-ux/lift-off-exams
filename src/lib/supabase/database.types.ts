@@ -2925,6 +2925,10 @@ export type Database = {
         Args: { p_question_id: string }
         Returns: boolean
       }
+      list_candidate_near_matches: {
+        Args: { p_before?: string; p_id?: string }
+        Returns: Json
+      }
       list_due_account_erasure_jobs: { Args: never; Returns: string[] }
       list_hardcore: {
         Args: { p_before?: string; p_before_id?: string }
