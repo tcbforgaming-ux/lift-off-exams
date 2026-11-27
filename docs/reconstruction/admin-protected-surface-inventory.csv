@@ -1,0 +1,130 @@
+function_name,identity_arguments,security_definer,authenticated_execute,anonymous_execute
+abandon_hardcore,p_run uuid,t,t,f
+abandon_test_session,p_session_id uuid,t,t,f
+accept_owner_invitation,p_token text,t,t,f
+accept_team_invite,p_token_hash text,t,t,f
+act_on_owner_proposal,"p_id uuid, p_action text",t,t,f
+act_on_question_report,"p_id uuid, p_version bigint, p_disposition text, p_reason text, p_message text, p_key uuid",t,t,f
+activate_staff_blueprint,"p_id uuid, p_reason text",t,t,f
+advance_hardcore,"p_run uuid, p_position integer, p_request uuid, p_response text",t,t,f
+advance_infinite_run,"p_run uuid, p_position integer, p_request uuid, p_response text",t,t,f
+backfill_legacy_test_membership,"p_legacy_test_id text, p_ordered_question_ids uuid[], p_reason text",t,t,f
+can_admin_team,p_team_id uuid,t,t,f
+can_manage_team,p_team_id uuid,t,t,f
+canonicalize_test_blueprint,"p_blueprint_id uuid, p_expected_version text",t,t,f
+cast_owner_removal_vote,"p_vote_id uuid, p_decision text",t,t,f
+check_display_name_allowed,p_name text,t,t,t
+clear_test_session_answer,"p_session_id uuid, p_question_id uuid, p_expected_session_version bigint",t,t,f
+commit_staff_questions,"p_rows jsonb, p_token text, p_key uuid, p_source text, p_reason text",t,t,f
+correct_reported_question,"p_report_id uuid, p_expected_report_version bigint, p_expected_question_updated_at timestamp with time zone, p_question_text text, p_options jsonb, p_correct_option_id text, p_explanation text, p_performance_indicator text, p_partition_key text, p_question_type text, p_difficulty text, p_tags text[], p_reason text, p_resolution_message text, p_idempotency_key text",t,t,f
+create_staff_blueprint_draft,"p_name text, p_category text, p_level text, p_version text, p_total integer, p_distribution jsonb, p_reason text, p_source uuid, p_expected_active uuid[]",t,t,f
+current_team_role,p_team_id uuid,t,t,f
+current_user_role,"",t,t,t
+decide_candidate_similarity,"p_id uuid, p_revision bigint, p_basis text, p_decision text, p_reason text, p_key uuid",t,t,f
+edit_repository_question,"p_id uuid, p_expected timestamp with time zone, p_content jsonb, p_reason text",t,t,f
+enforce_account_lifecycle,"",t,t,t
+expire_owner_removal_votes,"",t,t,f
+finish_infinite_run,p_run uuid,t,t,f
+generate_custom_practice,"p_blueprint_id uuid, p_expected_version text, p_question_count integer, p_difficulties text[], p_topic_tags text[], p_timer_minutes integer, p_show_answers boolean, p_show_explanations boolean, p_seed text, p_idempotency_key text",t,t,f
+generate_test_from_blueprint,"p_blueprint_id uuid, p_expected_blueprint_version text, p_requested_count integer, p_seed text, p_idempotency_key text",t,t,f
+generate_updated_test,"p_test_id text, p_idempotency_key text",t,t,f
+get_account_deletion_status,"",t,t,f
+get_active_owner_count,"",t,t,f
+get_candidate_review_history,p_id uuid,t,t,f
+get_candidate_review_revision,p_id uuid,t,t,f
+get_candidate_similarity,p_id uuid,t,t,f
+get_generated_test_manifest,p_test_id text,t,t,f
+get_hardcore,p_run uuid,t,t,f
+get_infinite_focus_setup,"",t,t,f
+get_infinite_run,p_run uuid,t,t,f
+get_my_activity_analytics,"p_mode text, p_range text, p_from date, p_to date",t,t,f
+get_my_activity_analytics_detail,"p_section text, p_mode text, p_range text, p_from date, p_to date, p_page integer, p_as_of timestamp with time zone",t,t,f
+get_my_suspension,"",t,t,f
+get_my_test_analytics,"p_range text, p_from date, p_to date",t,t,f
+get_my_test_analytics_detail,"p_section text, p_range text, p_from date, p_to date, p_page integer, p_as_of timestamp with time zone",t,t,f
+get_my_weekly_activity_allowance,"",t,t,f
+get_own_question_reports,"p_page_size integer, p_cursor_created_at timestamp with time zone, p_cursor_id uuid",t,t,f
+get_owner_removal_required_approvals,p_target_user_id uuid,t,t,f
+get_practice_feedback,"p_session_id uuid, p_question_id uuid",t,t,f
+get_practice_session_settings,p_session_id uuid,t,t,f
+get_public_demo,p_demo text,t,t,t
+get_question_report_detail,p_report_id uuid,t,t,f
+get_report_priority_config,"",t,t,f
+get_repository_question,p_id uuid,t,t,f
+get_review_candidate,p_id uuid,t,t,f
+get_selectable_topic_tags,p_labels text[],t,t,f
+get_staff_blueprint,p_id uuid,t,t,f
+get_staff_reporting_summary,"p_from date, p_to date",t,t,f
+get_staff_tag_dependencies,p_label text,t,t,f
+get_test_history,"p_page_size integer, p_cursor_activity_at timestamp with time zone, p_cursor_session_id uuid, p_status text",t,t,f
+get_test_history_metadata,"p_page_size integer, p_cursor_activity_at timestamp with time zone, p_cursor_session_id uuid, p_status text",t,t,f
+get_test_id_preview,p_test_id text,t,t,t
+get_test_launch_options,p_test_id text,t,t,f
+get_test_question_explanation,"p_test_id text, p_question_id uuid",t,t,f
+get_test_result,p_session_id uuid,t,t,f
+get_test_result_explanations,p_session_id uuid,t,t,f
+get_test_session,p_session_id uuid,t,t,f
+grade_my_bank_question,"p_id uuid, p_option text, p_request uuid",t,t,f
+grade_public_demo,"p_demo text, p_answers text[]",t,t,t
+heartbeat_test_session,"p_session_id uuid, p_client_id uuid",t,t,f
+heartbeat_test_session,"p_session_id uuid, p_client_id uuid, p_generation bigint",t,t,f
+initiate_owner_removal_vote,"p_target_user_id uuid, p_reason text, p_expires_at timestamp with time zone",t,t,f
+is_admin,"",t,t,t
+is_eligible_owner,p_user_id uuid,t,t,f
+is_owner,"",t,t,t
+is_question_eligible_for_test_generation,p_question_id uuid,t,t,f
+list_candidate_near_matches,"p_before timestamp with time zone, p_id uuid",t,t,f
+list_hardcore,"p_before timestamp with time zone, p_before_id uuid",t,t,f
+list_infinite_runs,"p_before timestamp with time zone, p_before_id uuid",t,t,f
+list_owner_governance,"p_view text, p_before timestamp with time zone, p_before_id uuid",t,t,f
+list_priority_reports,"p_status text, p_category text, p_lifecycle text, p_difficulty text, p_rank bigint, p_before timestamp with time zone, p_id uuid, p_limit integer",t,t,f
+list_review_candidates,"p_search text, p_status text, p_validation text, p_before timestamp with time zone, p_before_id uuid",t,t,f
+list_staff_blueprints,"p_search text, p_before timestamp with time zone, p_before_id uuid",t,t,f
+list_staff_question_quality,"p_from date, p_to date, p_order text, p_flagged_only boolean, p_after_rank bigint, p_after_id uuid, p_limit integer",t,t,f
+list_staff_tags,"p_search text, p_after text",t,t,f
+list_student_moderation,"p_before timestamp with time zone, p_id uuid",t,t,f
+moderate_student,"p_user uuid, p_action text, p_reason text, p_key uuid, p_id uuid, p_version bigint, p_days integer",t,t,f
+pause_test_session,"p_session_id uuid, p_expected_session_version bigint",t,t,f
+prepare_my_test_export,"p_kind text, p_format text, p_request uuid, p_session uuid, p_range text, p_from date, p_to date",t,t,f
+preview_staff_questions,p_rows jsonb,t,t,f
+publish_generated_question,p_candidate_id uuid,t,t,f
+publish_review_candidate,"p_id uuid, p_revision bigint, p_reason text",t,t,f
+record_owner_activity,"",t,t,f
+recover_account_from_deletion,"",t,t,f
+release_test_session,"p_session_id uuid, p_client_id uuid",t,t,f
+release_test_session,"p_session_id uuid, p_client_id uuid, p_generation bigint",t,t,f
+request_account_deletion,p_confirmation text,t,t,f
+request_owner_action,"p_kind text, p_target uuid, p_email text, p_reason text",t,t,f
+resolve_legacy_test_id,"p_legacy_test_id text, p_resolution_status text, p_replacement_test_id text, p_reason text",t,t,f
+resolve_report_with_question_lifecycle,"p_report_id uuid, p_expected_report_version bigint, p_expected_question_updated_at timestamp with time zone, p_new_lifecycle_state text, p_reason text, p_resolution_message text, p_idempotency_key text",t,t,f
+resume_test_session,"p_session_id uuid, p_expected_session_version bigint",t,t,f
+review_candidate,"p_id uuid, p_revision bigint, p_action text, p_reason text, p_key text, p_content jsonb",t,t,f
+review_hardcore,"p_run uuid, p_after integer, p_explanations boolean",t,t,f
+review_infinite_run,"p_run uuid, p_after integer, p_explanations boolean",t,t,f
+review_my_bank_question,"p_id uuid, p_action text, p_acknowledge boolean, p_option text",t,t,f
+save_staff_tag,"p_label text, p_description text, p_expected bigint, p_reason text",t,t,f
+save_test_session_answer,"p_session_id uuid, p_question_id uuid, p_selected_option_id text, p_expected_session_version bigint",t,t,f
+search_admin_audit_logs,"p_page_size integer, p_cursor_created_at timestamp with time zone, p_cursor_id uuid, p_actor_user_id uuid, p_action text, p_resource_type text, p_resource_id text, p_report_id uuid, p_created_from timestamp with time zone, p_created_to timestamp with time zone",t,t,f
+search_generation_pipeline,"p_page_size integer, p_cursor_updated_at timestamp with time zone, p_cursor_id uuid, p_status text, p_category text, p_search text, p_batch_job_id uuid, p_has_errors boolean",t,t,f
+search_my_question_bank,"p_keyword text, p_category text, p_tag text, p_difficulty text, p_status text, p_after uuid",t,t,f
+search_question_report_queue,"p_page_size integer, p_cursor_updated_at timestamp with time zone, p_cursor_id uuid, p_status text, p_category text, p_lifecycle_state text, p_performance_indicator text, p_question_type text, p_difficulty text, p_created_from timestamp with time zone, p_created_to timestamp with time zone",t,t,f
+search_question_repository,"p_page_size integer, p_cursor_updated_at timestamp with time zone, p_cursor_id uuid, p_search text, p_lifecycle_state text, p_partition_keys text[], p_performance_indicators text[], p_difficulties text[], p_question_types text[], p_tags text[], p_created_from timestamp with time zone, p_created_to timestamp with time zone",t,t,f
+set_own_owner_privileges_suspended,suspend_value boolean,t,t,f
+set_question_lifecycle_state,"p_question_id uuid, p_new_state text, p_reason text",t,t,f
+set_report_priority_config,"p_threshold integer, p_version bigint, p_reason text",t,t,f
+set_repository_question_lifecycle,"p_question_id uuid, p_new_state text, p_reason text, p_expected timestamp with time zone",t,t,f
+set_staff_banned_term,"p_term text, p_active boolean, p_reason text",t,t,f
+set_staff_tag_retired,"p_label text, p_revision bigint, p_retired boolean, p_reason text",t,t,f
+set_test_session_position,"p_session_id uuid, p_position integer, p_expected_session_version bigint",t,t,f
+set_user_platform_role,"p_target_user_id uuid, p_new_role text, p_reason text, p_governance_vote_id uuid",t,t,f
+start_hardcore,"p_request uuid, p_cap integer, p_allow_unknown boolean",t,t,f
+start_infinite_run,"p_request uuid, p_category text, p_difficulty text, p_tags text[]",t,t,f
+start_infinite_run_focused,"p_request uuid, p_category text, p_difficulty text, p_tags text[]",t,t,f
+start_quiz,"p_request uuid, p_question_count integer",t,t,f
+start_test_session,"p_test_id text, p_idempotency_key text",t,t,f
+start_test_session_configured,"p_test_id text, p_idempotency_key text, p_options jsonb",t,t,f
+submit_question_report,"p_session_id uuid, p_question_id uuid, p_category text, p_description text, p_idempotency_key text",t,t,f
+submit_suspension_appeal,"p_id uuid, p_text text",t,t,f
+submit_test_session,"p_session_id uuid, p_expected_session_version bigint",t,t,f
+transition_question_report,"p_report_id uuid, p_expected_version bigint, p_new_status text, p_resolution_category text, p_resolution_message text, p_duplicate_of uuid, p_reason text, p_idempotency_key text",t,t,f
+withdraw_owner_removal_vote,p_vote_id uuid,t,t,f

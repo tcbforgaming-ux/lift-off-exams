@@ -95,6 +95,13 @@ Deno.serve(async (request) => {
       );
     }
 
+    const { data: active, error: lifecycleError } = await supabaseAdmin.rpc(
+      "account_lifecycle_allows_actor", { p_actor: actor.id },
+    );
+    if (lifecycleError || active !== true) {
+      return jsonResponse({ error: "Team access is unavailable for this account." }, 403);
+    }
+
     const { data: invite, error: inviteError } = await supabaseAdmin
       .from("team_invites")
       .select("id,team_id,email,role,role_label,status,expires_at,send_count,teams(name,created_by)")

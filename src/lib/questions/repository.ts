@@ -188,17 +188,28 @@ export async function setQuestionLifecycleState(
   questionId: string,
   newState: QuestionLifecycleState,
   reason: string,
+  expected?: string,
 ) {
   const { data, error } = await getRepositoryClient().rpc(
-    "set_question_lifecycle_state",
+    expected ? "set_repository_question_lifecycle" : "set_question_lifecycle_state",
     {
       p_question_id: questionId,
       p_new_state: newState,
       p_reason: reason,
+      ...(expected ? { p_expected: expected } : {}),
     },
   );
 
   if (error) throw new Error(error.message);
 
   return (Array.isArray(data) ? data.at(0) : data) as QuestionLifecycleResult | null;
+}
+
+export async function repositoryQuestionRequest<T>(
+  name: "get_repository_question" | "edit_repository_question",
+  args: Record<string, unknown>,
+) {
+  const { data, error } = await getRepositoryClient().rpc(name, args);
+  if (error) throw new Error(error.message);
+  return data as T;
 }

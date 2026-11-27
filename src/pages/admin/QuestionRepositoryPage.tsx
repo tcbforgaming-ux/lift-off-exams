@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { RepositoryQuestionEditor } from "./RepositoryQuestionEditor";
 import {
   QUESTION_REPOSITORY_SEARCH_DELAY_MS,
   fetchQuestionRepositoryPage,
@@ -60,6 +61,7 @@ function statusClassName(state: QuestionLifecycleState) {
 
 export function QuestionRepositoryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const detailId = searchParams.get("question");
   const filters = useMemo(
     () => parseQuestionRepositoryFilters(searchParams),
     [searchParams],
@@ -186,8 +188,10 @@ export function QuestionRepositoryPage() {
         pendingAction.question.question_id,
         pendingAction.newState,
         reason,
+        pendingAction.question.updated_at,
       );
-      const nextState = result?.lifecycle_state ?? pendingAction.newState;
+      if (!result) throw new Error("The lifecycle change was not confirmed.");
+      const nextState = result.lifecycle_state;
 
       setRows((currentRows) =>
         currentRows.map((row) =>
@@ -195,7 +199,7 @@ export function QuestionRepositoryPage() {
             ? {
                 ...row,
                 lifecycle_state: nextState,
-                updated_at: result?.updated_at ?? row.updated_at,
+                updated_at: result.updated_at,
               }
             : row,
         ),
@@ -214,11 +218,24 @@ export function QuestionRepositoryPage() {
     }
   }
 
+  if (detailId)
+    return (
+      <RepositoryQuestionEditor
+        key={detailId}
+        id={detailId}
+        onBack={() => {
+          const next = new URLSearchParams(searchParams);
+          next.delete("question");
+          setSearchParams(next);
+        }}
+      />
+    );
   return (
     <div className="page-stack">
       <header className="page-header">
         <p className="eyebrow">Administration</p>
         <h1>Question Repository</h1>
+        <Link to="/admin/questions/author">Author or Import Questions</Link>
         <p>
           Search, filter, retire, and restore questions through bounded staff-only
           Supabase queries.
@@ -407,6 +424,17 @@ export function QuestionRepositoryPage() {
                     <td>
                       <strong>{row.question_text}</strong>
                       <span className="repository-id">{row.question_id}</span>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          const next = new URLSearchParams(searchParams);
+                          next.set("question", row.question_id);
+                          setSearchParams(next);
+                        }}
+                      >
+                        Open Question
+                      </Button>
                     </td>
                     <td>
                       <span>{row.partition_key}</span>

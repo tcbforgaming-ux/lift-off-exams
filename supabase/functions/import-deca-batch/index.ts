@@ -1,355 +1,264 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-
 import {
   authorizeBatchRequest,
-  boundedError,
   createPipelineClients,
   extractResponseText,
   jsonResponse,
   parseBatchOutputJsonl,
   parseGeneratedQuestions,
-  type BatchOutputRecord,
   type PipelineClients,
+  type BatchOutputLine,
 } from "../_shared/deca-pipeline.ts";
 
-type ImportRequestBody = {
-  batch_job_id?: string;
-  chunk_size?: number;
-};
-
-type DecaBatchJob = {
+type ImportRequestBody = { batch_job_id?: string; chunk_size?: number };
+type Job = {
   id: string;
-  openai_batch_id: string | null;
+  openai_batch_id: string;
   output_file_id: string | null;
-  status: string;
-  import_offset: number;
-  imported_count: number;
-  failed_count: number;
+  metadata: Record<string, unknown>;
 };
 
-type OpenAiBatchStatus = {
-  id?: string;
-  status?: string;
-  output_file_id?: string | null;
-  error_file_id?: string | null;
-  errors?: unknown;
-};
-
-type ImportSummary = {
-  batch_job_id: string;
-  openai_batch_id: string | null;
-  status: string;
-  imported_count: number;
-  failed_count: number;
-  skipped_count: number;
-  processed_count: number;
-  remaining_count: number;
-  errors: string[];
-};
-
-function getChunkSize(requestBody: ImportRequestBody | null) {
-  const candidate = Number(requestBody?.chunk_size ?? 25);
-  if (!Number.isFinite(candidate)) return 25;
-  return Math.min(Math.max(Math.trunc(candidate), 1), 100);
-}
-
-async function parseBody(request: Request) {
-  if (!request.headers.get("content-type")?.includes("application/json")) {
-    return null;
-  }
-
-  return (await request.json()) as ImportRequestBody;
-}
-
-function mapOpenAiStatus(status: string | undefined) {
-  if (status === "completed") return "completed";
-  if (status === "failed" || status === "expired" || status === "cancelled") {
-    return "failed";
-  }
-  if (status === "validating") return "validating";
-  if (status === "finalizing") return "finalizing";
-  return "in_progress";
-}
-
-function isUuid(value: string | undefined): value is string {
-  return Boolean(
-    value?.match(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    ),
-  );
-}
-
-async function recordImportFailure(
+async function rpc(
   clients: PipelineClients,
-  job: DecaBatchJob,
-  record: BatchOutputRecord | null,
-  importIdentity: string,
-  message: string,
+  name: string,
+  args: Record<string, unknown>,
 ) {
-  if (!isUuid(record?.custom_id)) return;
-
-  await clients.supabase.from("generation_import_receipts").upsert(
-    {
-      batch_job_id: job.id,
-      queue_id: record?.custom_id,
-      import_identity: importIdentity,
-      source_custom_id: record?.custom_id ?? "unknown",
-      imported_count: 0,
-      failed_count: 1,
-      skipped_count: 0,
-      status: "Failed",
-      error_summary: message,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "import_identity" },
-  );
+  const { data, error } = await clients.supabase.rpc(name, args);
+  // Validation errors can embed full question content. Do not persist or return
+  // provider/SQL messages. Durable outcomes contain fixed codes only.
+  if (error)
+    throw new Error(
+      name === "reconcile_generation_output"
+        ? "Generation checkpoint failure; retry safely."
+        : "Generation outcome persistence failure; retry safely.",
+    );
+  return Array.isArray(data) ? data[0] : data;
 }
 
-async function fetchOpenAiBatchStatus(clients: PipelineClients, openAiBatchId: string) {
-  const response = await clients.fetch(
-    `https://api.openai.com/v1/batches/${openAiBatchId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${clients.env.openAiApiKey}`,
+function questionsFor(line: BatchOutputLine) {
+  if (line.parse_error) return { failure: line.parse_error, questions: null };
+  if (!line.custom_id) return { failure: "missing_custom_id", questions: null };
+  if (
+    typeof line.custom_id !== "string" ||
+    !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(line.custom_id)
+  ) {
+    return { failure: "invalid_custom_id", questions: null };
+  }
+  if (
+    line.error != null ||
+    (line.response?.status_code && line.response.status_code !== 200)
+  )
+    return { failure: "record_error", questions: null };
+  const text = extractResponseText(line.response?.body);
+  if (!text) return { failure: "missing_model_text", questions: null };
+  try {
+    return { failure: null, questions: parseGeneratedQuestions(text) };
+  } catch {
+    return { failure: "invalid_model_json", questions: null };
+  }
+}
+
+async function outputText(response: Response, budget: number) {
+  if (!response.ok || !response.body) throw new Error("Output file unavailable.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let output = "";
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > budget) {
+        await reader.cancel();
+        throw new Error("Output exceeds bounded file limit.");
+      }
+      output += decoder.decode(value, { stream: true });
+    }
+    return { text: output + decoder.decode(), bytes: size };
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+async function importJob(clients: PipelineClients, job: Job, chunkSize: number) {
+  let files = Array.isArray(job.metadata?.output_sources)
+    ? job.metadata.output_sources.map((source: { file_id: string }) => source.file_id)
+    : job.output_file_id
+      ? [job.output_file_id]
+      : [];
+  if (job.metadata?.output_ledger_version !== 1) {
+    const response = await clients.fetch(
+      `https://api.openai.com/v1/batches/${job.openai_batch_id}`,
+      {
+        headers: { Authorization: `Bearer ${clients.env.openAiApiKey}` },
       },
-    },
-  );
-  const body = (await response.json()) as OpenAiBatchStatus;
-
-  if (!response.ok) {
-    throw new Error(boundedError(body));
+    );
+    if (!response.ok) throw new Error("Batch status unavailable.");
+    const status = await response.json();
+    if (status.status !== "completed") {
+      const state = [
+        "failed",
+        "expired",
+        "cancelled",
+        "validating",
+        "finalizing",
+      ].includes(status.status)
+        ? status.status
+        : "in_progress";
+      const { error } = await clients.supabase
+        .from("deca_batch_jobs")
+        .update({ status: state })
+        .eq("id", job.id);
+      if (error) throw new Error("Batch status persistence failed.");
+      return { batch_job_id: job.id, status: state, processed_count: 0 };
+    }
+    files = [
+      ...new Set(
+        [status.output_file_id ?? job.output_file_id, status.error_file_id].filter(
+          (id): id is string => typeof id === "string" && id.length > 0,
+        ),
+      ),
+    ];
   }
-
-  return body;
-}
-
-async function fetchOutputFile(clients: PipelineClients, outputFileId: string) {
-  const response = await clients.fetch(
-    `https://api.openai.com/v1/files/${outputFileId}/content`,
-    {
-      headers: {
-        Authorization: `Bearer ${clients.env.openAiApiKey}`,
-      },
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error(await response.text());
+  if (
+    files.length < 1 ||
+    files.length > 2 ||
+    files.some((id) => typeof id !== "string" || id.length > 256)
+  )
+    throw new Error("Completed batch lacks bounded output sources.");
+  const lines: BatchOutputLine[] = [];
+  const sources: { file_id: string; record_count: number }[] = [];
+  let budget = 32 * 1024 * 1024;
+  for (const file of files) {
+    const response = await clients.fetch(
+      `https://api.openai.com/v1/files/${encodeURIComponent(file)}/content`,
+      { headers: { Authorization: `Bearer ${clients.env.openAiApiKey}` } },
+    );
+    const output = await outputText(response, budget);
+    budget -= output.bytes;
+    const parsed = parseBatchOutputJsonl(output.text);
+    sources.push({ file_id: file, record_count: parsed.length });
+    for (const line of parsed) lines.push({ ...line, position: lines.length });
+    if (lines.length > 10000) throw new Error("Output exceeds bounded record limit.");
   }
-
-  return response.text();
-}
-
-async function getImportJobs(
-  clients: PipelineClients,
-  requestBody: ImportRequestBody | null,
-) {
-  let query = clients.supabase
-    .from("deca_batch_jobs")
-    .select(
-      "id, openai_batch_id, output_file_id, status, import_offset, imported_count, failed_count",
-    )
-    .not("openai_batch_id", "is", null)
-    .in("status", ["validating", "in_progress", "finalizing", "completed"])
-    .order("created_at", { ascending: true })
-    .limit(3);
-
-  if (requestBody?.batch_job_id) {
-    query = query.eq("id", requestBody.batch_job_id);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data ?? []) as DecaBatchJob[];
-}
-
-async function updateJobStatus(
-  clients: PipelineClients,
-  jobId: string,
-  values: Record<string, unknown>,
-) {
-  const { error } = await clients.supabase
-    .from("deca_batch_jobs")
-    .update({
-      ...values,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", jobId);
-
-  if (error) throw new Error(error.message);
-}
-
-async function importRecord(
-  clients: PipelineClients,
-  job: DecaBatchJob,
-  record: BatchOutputRecord,
-) {
-  if (!record.custom_id) {
-    throw new Error("Batch output record is missing custom_id.");
-  }
-
-  if (record.error) {
-    throw new Error(boundedError(record.error));
-  }
-
-  const responseText = extractResponseText(record.response?.body);
-  if (!responseText) {
-    throw new Error("Batch output record is missing model response text.");
-  }
-
-  const questions = parseGeneratedQuestions(responseText);
-  const importIdentity = `${job.id}:${record.custom_id}`;
-  const { data, error } = await clients.supabase.rpc("insert_generated_questions", {
-    p_queue_id: record.custom_id,
-    p_questions: questions,
-    p_import_identity: importIdentity,
+  const file = files[0];
+  await rpc(clients, "register_generation_output_sources", {
+    p_batch_job_id: job.id,
+    p_sources: sources,
   });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const result = Array.isArray(data) ? data[0] : data;
-  return {
-    importIdentity,
-    importedCount: Number(result?.imported_count ?? 0),
-    failedCount: Number(result?.failed_count ?? 0),
-    skippedCount: Number(result?.skipped_count ?? 0),
+  const manifest = {
+    p_batch_job_id: job.id,
+    p_output_file_id: file,
+    p_record_count: lines.length,
   };
-}
-
-async function importJob(
-  clients: PipelineClients,
-  job: DecaBatchJob,
-  chunkSize: number,
-): Promise<ImportSummary> {
-  const summary: ImportSummary = {
+  // Reconcile before processing, even when no new lines remain. Never add
+  // invocation deltas to stale job counters after an ambiguous prior commit.
+  const before = await rpc(clients, "reconcile_generation_output", manifest);
+  const chunk = lines.slice(before.import_offset, before.import_offset + chunkSize);
+  const errors: string[] = [];
+  const invocation = { imported_count: 0, failed_count: 0, skipped_count: 0 };
+  for (const line of chunk) {
+    const parsed = questionsFor(line);
+    const hash = [
+      ...new Uint8Array(
+        await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(line.source_text),
+        ),
+      ),
+    ]
+      .map((n) => n.toString(16).padStart(2, "0"))
+      .join("");
+    const customId =
+      typeof line.custom_id === "string" &&
+      /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(line.custom_id)
+        ? line.custom_id
+        : null;
+    const result = await rpc(clients, "commit_generation_output_line", {
+      p_batch_job_id: job.id,
+      p_output_file_id: file,
+      p_position: line.position,
+      p_source_line: line.source_line,
+      p_content_hash: hash,
+      p_custom_id: customId,
+      p_questions: parsed.questions,
+      p_failure_code: parsed.failure,
+    });
+    if (!result.replayed && result.failure_code === "duplicate_conflict") {
+      invocation.failed_count += result.failed_count;
+    } else if (result.replayed || result.receipt_replayed) {
+      invocation.skipped_count += parsed.questions?.length ?? 0;
+    } else {
+      invocation.imported_count += result.imported_count;
+      invocation.failed_count += result.failed_count;
+      invocation.skipped_count += result.skipped_count;
+    }
+    if (result.failure_code && errors.length < 5)
+      errors.push(`Source line ${line.source_line}: ${result.failure_code}`);
+  }
+  const after = await rpc(clients, "reconcile_generation_output", manifest);
+  return {
     batch_job_id: job.id,
     openai_batch_id: job.openai_batch_id,
-    status: job.status,
-    imported_count: 0,
-    failed_count: 0,
-    skipped_count: 0,
-    processed_count: 0,
-    remaining_count: 0,
-    errors: [],
+    ...after,
+    ...invocation,
+    batch_totals: {
+      imported_count: after.imported_count,
+      failed_count: after.failed_count,
+      skipped_count: after.skipped_count,
+    },
+    processed_count: chunk.length,
+    total_processed_count: after.processed_count,
+    errors,
   };
-
-  if (!job.openai_batch_id) {
-    summary.status = "failed";
-    summary.errors.push("Batch job is missing openai_batch_id.");
-    await updateJobStatus(clients, job.id, {
-      status: "failed",
-      error: "Batch job is missing openai_batch_id.",
-    });
-    return summary;
-  }
-
-  const openAiStatus = await fetchOpenAiBatchStatus(clients, job.openai_batch_id);
-  const mappedStatus = mapOpenAiStatus(openAiStatus.status);
-
-  if (mappedStatus !== "completed") {
-    summary.status = mappedStatus;
-    await updateJobStatus(clients, job.id, {
-      status: mappedStatus,
-      output_file_id: openAiStatus.output_file_id ?? job.output_file_id,
-      error: openAiStatus.errors ? boundedError(openAiStatus.errors, 5000) : null,
-    });
-    return summary;
-  }
-
-  const outputFileId = openAiStatus.output_file_id ?? job.output_file_id;
-  if (!outputFileId) {
-    summary.status = "failed";
-    summary.errors.push("Completed OpenAI batch is missing output_file_id.");
-    await updateJobStatus(clients, job.id, {
-      status: "failed",
-      error: "Completed OpenAI batch is missing output_file_id.",
-    });
-    return summary;
-  }
-
-  const output = await fetchOutputFile(clients, outputFileId);
-  const records = parseBatchOutputJsonl(output);
-  const start = Math.max(job.import_offset, 0);
-  const chunk = records.slice(start, start + chunkSize);
-
-  for (let index = 0; index < chunk.length; index += 1) {
-    const record = chunk[index];
-    const importIdentity = `${job.id}:${record.custom_id ?? `offset-${start + index}`}`;
-
-    try {
-      const result = await importRecord(clients, job, record);
-      summary.imported_count += result.importedCount;
-      summary.failed_count += result.failedCount;
-      summary.skipped_count += result.skippedCount;
-    } catch (error) {
-      const message = boundedError(error);
-      summary.failed_count += 1;
-      summary.errors.push(message);
-      await recordImportFailure(clients, job, record, importIdentity, message);
-    }
-
-    summary.processed_count += 1;
-  }
-
-  const nextOffset = start + summary.processed_count;
-  summary.remaining_count = Math.max(records.length - nextOffset, 0);
-  summary.status = summary.remaining_count === 0 ? "imported" : "completed";
-
-  await updateJobStatus(clients, job.id, {
-    status: summary.status,
-    output_file_id: outputFileId,
-    import_offset: nextOffset,
-    imported_count: job.imported_count + summary.imported_count,
-    failed_count: job.failed_count + summary.failed_count,
-    error: summary.errors.length > 0 ? summary.errors.slice(0, 5).join("\n") : null,
-    completed_at:
-      summary.remaining_count === 0 ? new Date().toISOString() : undefined,
-  });
-
-  return summary;
 }
 
 export async function handleImportDecaBatch(
   request: Request,
   clients = createPipelineClients(),
 ) {
-  const authError = authorizeBatchRequest(request, clients.env.batchSecret);
-  if (authError) return authError;
-
-  if (request.method !== "POST") {
+  const denied = authorizeBatchRequest(request, clients.env.batchSecret);
+  if (denied) return denied;
+  if (request.method !== "POST")
     return jsonResponse({ error: "Method not allowed" }, 405);
-  }
-
-  let requestBody: ImportRequestBody | null = null;
+  let body: ImportRequestBody | null = null;
   try {
-    requestBody = await parseBody(request);
+    if (request.headers.get("content-type")?.includes("application/json"))
+      body = await request.json();
   } catch {
     return jsonResponse({ error: "Request body must be valid JSON." }, 400);
   }
-
-  const chunkSize = getChunkSize(requestBody);
-  const jobs = await getImportJobs(clients, requestBody);
-
-  if (jobs.length === 0) {
-    return jsonResponse({ message: "No importable batches found.", batches: [] });
-  }
-
+  const value = Number(body?.chunk_size ?? 25);
+  const chunkSize = Number.isFinite(value)
+    ? Math.min(100, Math.max(1, Math.trunc(value)))
+    : 25;
+  let query = clients.supabase
+    .from("deca_batch_jobs")
+    .select("id,openai_batch_id,output_file_id,status,metadata")
+    .not("openai_batch_id", "is", null)
+    .in("status", ["validating", "in_progress", "finalizing", "completed"])
+    .order("created_at", { ascending: true })
+    .limit(3);
+  if (body?.batch_job_id) query = query.eq("id", body.batch_job_id);
+  const { data, error } = await query;
+  if (error) throw new Error("Import job lookup failed.");
   const batches = [];
-  for (const job of jobs) {
+  for (const job of (data ?? []) as Job[])
     batches.push(await importJob(clients, job, chunkSize));
-  }
-
   return jsonResponse({
-    message: "Import check completed.",
+    message: batches.length
+      ? "Import check completed."
+      : "No importable batches found.",
     chunk_size: chunkSize,
     batches,
   });
 }
-
-serve((request) => handleImportDecaBatch(request));
+serve((request) =>
+  handleImportDecaBatch(request).catch(() =>
+    jsonResponse(
+      { error: "Import persistence or upstream read failed; retry safely." },
+      500,
+    ),
+  ),
+);

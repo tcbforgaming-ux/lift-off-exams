@@ -1,24 +1,18 @@
 import { useState, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { paths } from "../../app/urlPaths";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { signInWithEmail, signInWithGoogle } from "../../lib/auth/authActions";
-import { sanitizeRedirectPath } from "../../lib/auth/redirects";
 import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 
 export function LoginPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "google">("idle");
   const [message, setMessage] = useState<string | null>(null);
-
-  const redirectTo = sanitizeRedirectPath(
-    (location.state as { from?: string } | null)?.from,
-  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,13 +30,16 @@ export function LoginPage() {
       return;
     }
 
-    void navigate(redirectTo, { replace: true });
+    // RouteGate alone navigates once AuthProvider resolves the trusted profile.
   }
 
   async function handleGoogleSignIn() {
     setStatus("google");
     setMessage(null);
-    const { error } = await signInWithGoogle(getSupabaseBrowserClient());
+    const { error } = await signInWithGoogle(
+      getSupabaseBrowserClient(),
+      (location.state as { from?: unknown } | null)?.from,
+    );
     if (error) {
       setMessage("Google sign-in could not be started. Please try again.");
       setStatus("idle");

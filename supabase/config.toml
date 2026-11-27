@@ -63,3 +63,6 @@ verify_jwt = false
 
 [functions.import-deca-batch]
 verify_jwt = false
+
+[functions.deliver-moderation-mail]
+verify_jwt = false

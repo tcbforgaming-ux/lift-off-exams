@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { getAuthRedirectTo } from "./redirects";
+import { getAuthRedirectTo, sanitizeRedirectPath } from "./redirects";
 
 type EmailPasswordInput = {
   email: string;
@@ -34,11 +34,18 @@ export async function signInWithEmail(
   return supabase.auth.signInWithPassword({ email, password });
 }
 
-export async function signInWithGoogle(supabase: SupabaseClient) {
+export async function signInWithGoogle(
+  supabase: SupabaseClient,
+  destination?: unknown,
+) {
   return supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: getAuthRedirectTo("/auth/callback"),
+      redirectTo: getAuthRedirectTo(
+        destination === undefined
+          ? "/auth/callback"
+          : `/auth/callback?next=${encodeURIComponent(sanitizeRedirectPath(destination))}`,
+      ),
       queryParams: {
         access_type: "offline",
         prompt: "consent",

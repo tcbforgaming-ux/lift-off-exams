@@ -12,6 +12,7 @@ export default defineConfig({
     port: 4174,
   },
   test: {
+    include: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     globals: true,
     setupFiles: "./vitest.setup.ts",

@@ -21,6 +21,9 @@ export default tseslint.config(
     ],
   },
   js.configs.recommended,
+  {
+    ignores: [".tmp/**"],
+  },
   ...tseslint.configs.recommendedTypeChecked,
   {
     languageOptions: {
@@ -45,4 +48,9 @@ export default tseslint.config(
     },
   },
   prettier,
+  {
+    files: ["scripts/*.mjs"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: { globals: globals.node, parserOptions: { project: false } },
+  },
 );

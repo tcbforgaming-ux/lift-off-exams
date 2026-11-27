@@ -91,6 +91,7 @@ describe("QuestionRepositoryPage", () => {
         repositoryRows[0].question_id,
         "Retired",
         "Retire after review",
+        repositoryRows[0].updated_at,
       );
     });
     expect(await screen.findAllByText("Retired")).not.toHaveLength(0);

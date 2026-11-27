@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 import { primaryNavigationRoutes } from "../../app/routes";
 import { paths } from "../../app/urlPaths";
-import { displayRole } from "../../lib/auth/roles";
+import { canAccessRole, displayRole } from "../../lib/auth/roles";
 import { useAuth } from "../../lib/auth/useAuth";
 import { ButtonLink } from "../ui/ButtonLink";
 import { Button } from "../ui/Button";
+import { ThemeToggle } from "../ui/ThemeToggle";
 
 type AppShellProps = {
   children: ReactNode;
@@ -15,14 +16,97 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const { profile, role, signOut, status } = useAuth();
   const authenticated = status === "authenticated";
+  const staff = authenticated && canAccessRole(role, "admin");
+  const { pathname } = useLocation();
   const visibleRoutes = primaryNavigationRoutes.filter(
-    (route) => route.navigation !== "admin" || role === "admin" || role === "owner",
+    (route) => route.navigation !== "admin",
   );
+
+  if (status === "recovering" || status === "suspended") {
+    return (
+      <div className="app-shell">
+        <header className="topbar">
+          <NavLink
+            to={status === "suspended" ? "/account/suspension" : "/account/deletion"}
+            className="brand"
+          >
+            Lift Off Exams
+          </NavLink>
+          <Button type="button" variant="ghost" onClick={() => void signOut()}>
+            Log Out
+          </Button>
+        </header>
+        <main className="app-main">{children}</main>
+      </div>
+    );
+  }
+
+  if (staff && (pathname === paths.admin || pathname.startsWith(`${paths.admin}/`))) {
+    return (
+      <div className="app-shell admin-shell">
+        <aside className="admin-sidebar" aria-label="Administration sidebar">
+          <NavLink
+            to={paths.admin}
+            className="brand"
+            aria-label="Lift Off Exams administration"
+          >
+            <img src="/logo.svg" alt="" className="brand-mark" />
+            <span>Lift Off Exams</span>
+          </NavLink>
+          <p className="sidebar-label">Administration</p>
+          <nav className="admin-nav" aria-label="Admin navigation">
+            {primaryNavigationRoutes
+              .filter(
+                (route) =>
+                  route.navigation === "admin" &&
+                  canAccessRole(role, route.requiredRole),
+              )
+              .map((route) => (
+                <NavLink
+                  key={route.path}
+                  to={route.path}
+                  end={route.path === paths.admin}
+                >
+                  {route.label}
+                </NavLink>
+              ))}
+          </nav>
+          <div className="admin-account">
+            <strong>{profile?.display_name?.trim() || displayRole(role)}</strong>
+            <span className="muted">{displayRole(role)}</span>
+            <ButtonLink to={paths.dashboard} variant="secondary">
+              User Dashboard
+            </ButtonLink>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                void signOut();
+              }}
+            >
+              Log Out
+            </Button>
+          </div>
+        </aside>
+        <div className="admin-content">
+          <header className="admin-topbar">
+            <span>Admin Workspace</span>
+            <ThemeToggle />
+          </header>
+          <main className="app-main admin-main">{children}</main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">
       <header className="topbar">
-        <NavLink to={paths.home} className="brand" aria-label="Lift Off Exams">
+        <NavLink
+          to={authenticated ? paths.dashboard : paths.home}
+          className="brand"
+          aria-label="Lift Off Exams"
+        >
           <img src="/logo.svg" alt="" className="brand-mark" />
           <span>Lift Off Exams</span>
         </NavLink>
@@ -33,14 +117,16 @@ export function AppShell({ children }: AppShellProps) {
                 {route.label}
               </NavLink>
             ))}
-          {authenticated && (
-            <NavLink to={paths.profile}>
-              {profile?.display_name?.trim() || displayRole(role)}
-            </NavLink>
-          )}
+          <NavLink to={paths.testId}>Test ID</NavLink>
           {!authenticated && <NavLink to={paths.home}>Home</NavLink>}
         </nav>
         <div className="topbar-actions">
+          <ThemeToggle />
+          {staff && (
+            <ButtonLink to={paths.admin} variant="secondary">
+              Admin Dashboard
+            </ButtonLink>
+          )}
           {authenticated ? (
             <Button
               type="button"

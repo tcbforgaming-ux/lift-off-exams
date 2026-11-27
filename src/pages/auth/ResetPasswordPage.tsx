@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { isAuthError } from "@supabase/supabase-js";
 
 import { paths } from "../../app/urlPaths";
 import { Button } from "../../components/ui/Button";
@@ -8,6 +9,52 @@ import { updatePassword } from "../../lib/auth/authActions";
 import { getSupabaseBrowserClient } from "../../lib/supabase/browserClient";
 
 const minimumPasswordLength = 8;
+
+function passwordUpdateFailure(error: unknown) {
+  const code = isAuthError(error) ? error.code : undefined;
+  switch (code) {
+    case "same_password":
+      return {
+        status: "ready",
+        message: "Choose a password different from your current password.",
+      } as const;
+    case "weak_password":
+    case "validation_failed":
+      return {
+        status: "ready",
+        message:
+          "That password does not meet the account's requirements. Try a longer, unique password.",
+      } as const;
+    case "session_expired":
+    case "session_not_found":
+    case "otp_expired":
+    case "bad_jwt":
+    case "no_authorization":
+      return {
+        status: "invalid",
+        message:
+          "Your recovery session is no longer valid. Request a new recovery link.",
+      } as const;
+    case "reauthentication_needed":
+      return {
+        status: "invalid",
+        message:
+          "This account needs a fresh recovery session. Request a new link and open it in a signed-out window.",
+      } as const;
+    default:
+      if (isAuthError(error) && error.name === "AuthSessionMissingError") {
+        return {
+          status: "invalid",
+          message: "Your recovery session is missing. Request a new recovery link.",
+        } as const;
+      }
+      return {
+        status: "ready",
+        message:
+          "We couldn't update your password. Try again or contact support if the problem continues.",
+      } as const;
+  }
+}
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -43,10 +90,13 @@ export function ResetPasswordPage() {
     }
 
     setStatus("loading");
-    const { error } = await updatePassword(getSupabaseBrowserClient(), password);
-    if (error) {
-      setMessage("This recovery link is invalid or has expired.");
-      setStatus("invalid");
+    try {
+      const { error } = await updatePassword(getSupabaseBrowserClient(), password);
+      if (error) throw error;
+    } catch (error) {
+      const failure = passwordUpdateFailure(error);
+      setMessage(failure.message);
+      setStatus(failure.status);
       return;
     }
 
@@ -65,7 +115,7 @@ export function ResetPasswordPage() {
         {status === "invalid" && (
           <>
             <p className="form-message form-message-error" role="alert">
-              This recovery link is invalid, expired, or already used.
+              {message ?? "This recovery link is invalid, expired, or already used."}
             </p>
             <Link to={paths.forgotPassword}>Request a new recovery link</Link>
           </>

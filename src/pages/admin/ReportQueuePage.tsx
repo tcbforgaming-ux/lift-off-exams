@@ -1,0 +1,246 @@
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+
+import { Card } from "../../components/ui/Card";
+import { CursorNavigation } from "../../components/ui/CursorNavigation";
+import { ReportPrioritySettings } from "./ReportPrioritySettings";
+import {
+  fetchReportQueue,
+  reportCategories,
+  reportCategoryLabels,
+  type ReportQueueRow,
+  type ReportCursor,
+} from "../../lib/reports/reports";
+
+export function ReportQueuePage() {
+  const [params, setParams] = useSearchParams();
+  const status = params.get("status") ?? "";
+  const category = params.get("category") ?? "";
+  const lifecycleState = params.get("questionState") ?? "";
+  const difficulty = params.get("difficulty") ?? "";
+  const [priorityRevision, setPriorityRevision] = useState(0);
+  useEffect(() => {
+    const update = () => setPriorityRevision((x) => x + 1);
+    window.addEventListener("report-priority-changed", update);
+    return () => window.removeEventListener("report-priority-changed", update);
+  }, []);
+
+  function setFilter(key: string, value: string) {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setParams(next);
+  }
+
+  return (
+    <div className="page-stack">
+      <header className="page-header">
+        <p className="eyebrow">Administration</p>
+        <h1>Question Report Queue</h1>
+        <p>
+          Review user-submitted question concerns without exposing reports to other
+          users.
+        </p>
+      </header>
+      <Card>
+        <div className="repository-filters">
+          <label className="field-label">
+            Status
+            <select
+              value={status}
+              onChange={(event) => setFilter("status", event.target.value)}
+            >
+              <option value="">All</option>
+              <option value="open">Open</option>
+              <option value="in_review">In review</option>
+              <option value="resolved">Resolved</option>
+              <option value="rejected">Rejected</option>
+              <option value="duplicate">Duplicate</option>
+            </select>
+          </label>
+          <label className="field-label">
+            Category
+            <select
+              value={category}
+              onChange={(event) => setFilter("category", event.target.value)}
+            >
+              <option value="">All</option>
+              {reportCategories.map((value) => (
+                <option key={value} value={value}>
+                  {reportCategoryLabels[value]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field-label">
+            Question state
+            <select
+              value={lifecycleState}
+              onChange={(event) => setFilter("questionState", event.target.value)}
+            >
+              <option value="">All</option>
+              <option value="Active">Active</option>
+              <option value="Retired">Retired</option>
+            </select>
+          </label>
+          <label className="field-label">
+            Difficulty
+            <select
+              value={difficulty}
+              onChange={(event) => setFilter("difficulty", event.target.value)}
+            >
+              <option value="">All</option>
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </label>
+        </div>
+      </Card>
+      <ReportPrioritySettings />
+      <ReportQueueResults
+        key={JSON.stringify([
+          status,
+          category,
+          lifecycleState,
+          difficulty,
+          priorityRevision,
+        ])}
+        status={status}
+        category={category}
+        lifecycleState={lifecycleState}
+        difficulty={difficulty}
+      />
+    </div>
+  );
+}
+
+function ReportQueueResults({
+  status,
+  category,
+  lifecycleState,
+  difficulty,
+}: {
+  status: string;
+  category: string;
+  lifecycleState: string;
+  difficulty: string;
+}) {
+  const [reports, setReports] = useState<ReportQueueRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [cursors, setCursors] = useState<ReportCursor[]>([]);
+  const cursor = cursors.at(-1);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setMessage("");
+    fetchReportQueue({ status, category, lifecycleState, difficulty, cursor })
+      .then((rows) => {
+        if (active) setReports(rows);
+      })
+      .catch(
+        (error: unknown) =>
+          active &&
+          setMessage(error instanceof Error ? error.message : "Queue could not load."),
+      )
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [category, status, lifecycleState, difficulty, cursor]);
+
+  return (
+    <>
+      {loading && <p role="status">Loading report queue…</p>}
+      {message && (
+        <p className="form-message form-message-error" role="alert">
+          {message}
+        </p>
+      )}
+      {!loading && !message && reports.length === 0 && (
+        <Card className="empty-state">
+          <h2>Queue is clear</h2>
+        </Card>
+      )}
+      {reports.length > 0 && (
+        <Card className="repository-panel">
+          <div className="repository-table-wrap">
+            <table className="repository-table">
+              <caption>Question reports awaiting or completing review</caption>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Category</th>
+                  <th>Question metadata</th>
+                  <th>Reporter</th>
+                  <th>Updated</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.map((report) => (
+                  <tr key={report.report_id}>
+                    <td>
+                      <span className={`status-pill status-${report.report_status}`}>
+                        {report.report_status.replace("_", " ")}
+                      </span>
+                      <span>{report.moderation_disposition?.replaceAll("_", " ")}</span>
+                      {report.high_priority && <strong>High Priority</strong>}
+                      {report.priority_rank !== undefined && (
+                        <span>
+                          {report.priority_rank} open reports on this question
+                        </span>
+                      )}
+                    </td>
+                    <td>{reportCategoryLabels[report.category]}</td>
+                    <td>
+                      <span>{report.performance_indicator}</span>
+                      <span>
+                        {report.difficulty} · {report.question_type}
+                      </span>
+                      <span>{report.lifecycle_state}</span>
+                    </td>
+                    <td>{report.reporter_email ?? "Unavailable"}</td>
+                    <td>{new Date(report.updated_at).toLocaleString()}</td>
+                    <td>
+                      <Link
+                        className="button button-secondary"
+                        to={`/admin/reports/${report.report_id}`}
+                      >
+                        Review
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+      <CursorNavigation
+        page={cursors.length}
+        loading={loading}
+        hasNext={!message && Boolean(reports.at(-1)?.has_next_page)}
+        onPrevious={() => setCursors((items) => items.slice(0, -1))}
+        onNext={() => {
+          const last = reports.at(-1);
+          if (last)
+            setCursors((items) => [
+              ...items,
+              {
+                at: last.updated_at,
+                id: last.report_id,
+                ...(last.priority_rank !== undefined
+                  ? { rank: last.priority_rank }
+                  : {}),
+              },
+            ]);
+        }}
+      />
+    </>
+  );
+}

@@ -193,11 +193,11 @@ select ok(
 );
 
 select ok(
-  tests.expect_lives($sql$
+  tests.expect_denied($sql$
     insert into public.user_active_sessions(user_id, session_type, session_state)
     values ('00000000-0000-0000-0000-000000000101', 'paused_test', '{}')
   $sql$),
-  'student can save own paused session'
+  'legacy paused-session storage is no longer client writable'
 );
 
 select ok(
@@ -231,7 +231,7 @@ select ok(
 );
 
 select ok(
-  tests.expect_lives($sql$
+  tests.expect_denied($sql$
     insert into public.question_reports(question_id, reporter_id, reason)
     values (
       '10000000-0000-0000-0000-000000000001',
@@ -239,7 +239,7 @@ select ok(
       'Typo'
     )
   $sql$),
-  'student can report a question as self'
+  'student cannot bypass the trusted report RPC'
 );
 
 select ok(
@@ -258,10 +258,10 @@ reset role;
 select tests.authenticate_anon();
 
 select ok(
-  tests.expect_lives($sql$
+  tests.expect_denied($sql$
     select count(*) from public.questions
   $sql$),
-  'anonymous users can read public questions'
+  'anonymous users cannot read protected question rows directly'
 );
 
 select ok(
@@ -280,7 +280,7 @@ reset role;
 select tests.authenticate_as('00000000-0000-0000-0000-000000000201', 'admin@example.test');
 
 select ok(
-  tests.expect_lives($sql$
+  tests.expect_denied($sql$
     insert into public.questions(
       partition_key,
       question_text,
@@ -298,7 +298,7 @@ select ok(
       array['Marketing']
     )
   $sql$),
-  'admin can insert questions'
+  'admin cannot bypass trusted question publication'
 );
 
 select ok(

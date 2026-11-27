@@ -24,10 +24,17 @@ function parseAppEnvironment(value: string): AppEnvironment {
   return "local";
 }
 
-function validateSupabaseUrl(value: string) {
+function validateSupabaseUrl(value: string, appEnv: AppEnvironment) {
   try {
     const parsed = new URL(value);
-    return parsed.protocol === "https:" && parsed.hostname.includes("supabase");
+    if (parsed.protocol === "https:" && parsed.hostname.includes("supabase")) {
+      return true;
+    }
+    return (
+      appEnv === "local" &&
+      parsed.protocol === "http:" &&
+      (parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost")
+    );
   } catch {
     return false;
   }
@@ -48,8 +55,10 @@ export function getClientEnv(): ClientEnv {
     throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
-  if (!validateSupabaseUrl(supabaseUrl)) {
-    throw new Error("VITE_SUPABASE_URL must be a valid Supabase HTTPS URL.");
+  if (!validateSupabaseUrl(supabaseUrl, appEnv)) {
+    throw new Error(
+      "VITE_SUPABASE_URL must be Supabase HTTPS, or loopback HTTP in local development.",
+    );
   }
 
   return {

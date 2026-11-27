@@ -170,23 +170,23 @@ select ok(
 );
 
 select ok(
-  exists (
+  not exists (
     select 1 from pg_policies
     where schemaname = 'public'
       and tablename = 'question_reports'
       and policyname = 'question_reports_staff_update'
   ),
-  'report queue staff update policy exists'
+  'report writes are restricted to trusted RPCs'
 );
 
 select ok(
-  exists (
+  not exists (
     select 1 from pg_policies
     where schemaname = 'public'
       and tablename = 'generated_question_candidates'
       and policyname = 'generated_question_candidates_staff_update'
   ),
-  'generated candidate staff update policy exists'
+  'candidate writes cannot bypass trusted review operations'
 );
 
 select ok(

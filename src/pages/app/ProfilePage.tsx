@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -10,28 +11,40 @@ export function ProfilePage() {
   const { profile, refreshProfile, role, user } = useAuth();
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "saving" | "saved" | "error" | "restricted-name"
+  >("idle");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) return;
 
     setStatus("saving");
-    const { error } = await getSupabaseBrowserClient()
-      .from("profiles")
-      .update({
-        display_name: displayName.trim() || null,
-        phone: phone.trim() || null,
-      })
-      .eq("user_id", user.id);
-
-    if (error) {
-      setStatus("error");
-      return;
+    try {
+      const { data, error } = await getSupabaseBrowserClient()
+        .from("profiles")
+        .update({
+          display_name: displayName.trim() || null,
+          phone: phone.trim() || null,
+        })
+        .eq("user_id", user.id)
+        .select("user_id, display_name, phone")
+        .maybeSingle();
+      if (error || data?.user_id !== user.id) {
+        throw error ?? new Error("The profile update did not return your row.");
+      }
+      await refreshProfile();
+      setStatus("saved");
+    } catch (cause) {
+      setStatus(
+        typeof cause === "object" &&
+          cause !== null &&
+          "code" in cause &&
+          cause.code === "22023"
+          ? "restricted-name"
+          : "error",
+      );
     }
-
-    await refreshProfile();
-    setStatus("saved");
   }
 
   return (
@@ -39,6 +52,11 @@ export function ProfilePage() {
       <div className="page-header">
         <p className="eyebrow">Account</p>
         <h1>Profile</h1>
+        <Link to="/account/deletion">Account Deletion</Link>
+        {(role === "owner" ||
+          (profile?.owner_state && profile.owner_state !== "active")) && (
+          <Link to="/owner-access">Owner Access</Link>
+        )}
         <p>Basic account details and trusted role information.</p>
       </div>
 
@@ -75,9 +93,11 @@ export function ProfilePage() {
                 Profile updated.
               </p>
             )}
-            {status === "error" && (
+            {(status === "error" || status === "restricted-name") && (
               <p className="form-message form-message-error" role="alert">
-                We could not update your profile.
+                {status === "restricted-name"
+                  ? "Choose a display name without a restricted word or phrase."
+                  : "We could not update your profile."}
               </p>
             )}
 

@@ -130,7 +130,7 @@ export function extractResponseText(responseBody: unknown): string | null {
   return textParts.length > 0 ? textParts.join("\n") : null;
 }
 
-export function parseGeneratedQuestions(text: string) {
+export function parseGeneratedQuestions(text: string): unknown[] {
   const trimmed = text.trim();
   if (!trimmed) throw new Error("Generated question text was empty.");
 
@@ -139,12 +139,9 @@ export function parseGeneratedQuestions(text: string) {
   const parsed = JSON.parse(jsonText) as unknown;
 
   if (Array.isArray(parsed)) return parsed;
-  if (
-    parsed &&
-    typeof parsed === "object" &&
-    Array.isArray((parsed as JsonRecord).questions)
-  ) {
-    return (parsed as JsonRecord).questions;
+  if (parsed && typeof parsed === "object") {
+    const questions = (parsed as JsonRecord).questions;
+    if (Array.isArray(questions)) return questions;
   }
 
   throw new Error("Generated question payload must be an array or { questions }.");
@@ -153,15 +150,65 @@ export function parseGeneratedQuestions(text: string) {
 export type BatchOutputRecord = {
   custom_id?: string;
   response?: {
+    status_code?: number;
     body?: unknown;
   };
   error?: unknown;
 };
 
+export type BatchOutputLine = BatchOutputRecord & {
+  position: number;
+  source_line: number;
+  source_text: string;
+  parse_error: "invalid_json" | "invalid_envelope" | null;
+};
+
 export function parseBatchOutputJsonl(output: string) {
-  return output
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => JSON.parse(line) as BatchOutputRecord);
+  if (output.length > 32 * 1024 * 1024)
+    throw new Error("Output exceeds bounded file limit.");
+  const records: BatchOutputLine[] = [];
+  for (const [physicalIndex, source] of output.split("\n").entries()) {
+    const line = source.trim();
+    if (!line) continue;
+    if (records.length >= 10000)
+      throw new Error("Output exceeds bounded record limit.");
+    const base = {
+      position: records.length,
+      source_line: physicalIndex + 1,
+      source_text: line,
+    };
+    let parsed: unknown;
+    try {
+      parsed = line.length <= 512 * 1024 ? JSON.parse(line) : null;
+    } catch {
+      records.push({ ...base, parse_error: "invalid_json" });
+      continue;
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      records.push({ ...base, parse_error: "invalid_envelope" });
+      continue;
+    }
+    const envelope = parsed as JsonRecord;
+    if (
+      (!envelope.response ||
+        typeof envelope.response !== "object" ||
+        Array.isArray(envelope.response)) &&
+      envelope.error == null
+    ) {
+      records.push({ ...base, parse_error: "invalid_envelope" });
+      continue;
+    }
+    const response = envelope.response as JsonRecord | undefined;
+    if (
+      envelope.error == null &&
+      (!response?.body ||
+        typeof response.body !== "object" ||
+        Array.isArray(response.body))
+    ) {
+      records.push({ ...base, parse_error: "invalid_envelope" });
+      continue;
+    }
+    records.push({ ...(envelope as BatchOutputRecord), ...base, parse_error: null });
+  }
+  return records;
 }

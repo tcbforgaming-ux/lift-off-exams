@@ -6,6 +6,10 @@ on:
     branches:
       - main
       - production-rebuild
+      - "codex/stabilization-phase3-*"
+
+permissions:
+  contents: read
 
 jobs:
   verify:
@@ -26,7 +30,90 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --frozen-lockfile
 
       - name: Verify
         run: pnpm verify
+
+  database-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.110.0
+      - run: pnpm install --frozen-lockfile
+      - name: Clean migrations, RLS, governance, sessions, reports and local drift
+        run: pnpm test:backend
+      - name: Hosted-style explicit and default grant regression
+        run: pnpm test:hosted-grants
+      - name: Actual importer transactions and concurrent requests
+        run: pnpm test:pipeline:db
+      - name: Preserve safe failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-failure-types
+          path: |
+            .tmp/isolated-verification-backend/database.types.ts
+            .tmp/isolated-verification-backend/schema-diff.sql
+            test-results/pipeline-db-results.json
+          if-no-files-found: ignore
+      - name: Stop only disposable services
+        if: always()
+        run: pnpm test:backend:stop
+
+  pipeline-fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Original F13/F14 regressions remain required and must pass.
+      - run: pnpm test:pipeline
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pipeline-fixture-results
+          path: test-results/pipeline-results.json
+
+  backend-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.110.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:backend:prepare
+      - name: Real local auth, profiles, sessions, results and reports
+        run: pnpm test:backend:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: backend-browser-failures
+          path: test-results/
+      - name: Stop only disposable services
+        if: always()
+        run: pnpm test:backend:stop
