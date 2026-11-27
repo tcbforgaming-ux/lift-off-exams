@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { project as verificationProject } from "../../scripts/verification-target.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
@@ -145,7 +146,7 @@ async function seedResult(paid: boolean) {
     [
       "exec",
       "-i",
-      "supabase_db_liftoff-verification-isolated",
+      `supabase_db_${verificationProject}`,
       "psql",
       "-U",
       "postgres",

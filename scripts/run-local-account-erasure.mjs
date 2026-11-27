@@ -1,16 +1,21 @@
 import fs from "node:fs";
+import {
+  workDirectory,
+  api as verificationApi,
+  project as verificationProject,
+} from "./verification-target.mjs";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
 const api = process.env.ACCOUNT_ERASURE_LOCAL_API;
 const key = process.env.ACCOUNT_ERASURE_LOCAL_SERVICE_KEY;
-const work = path.join(process.cwd(), ".tmp", "isolated-verification-backend");
+const work = path.join(process.cwd(), ".tmp", workDirectory);
 const marker = JSON.parse(fs.readFileSync(path.join(work, "disposable.json"), "utf8"));
 if (
-  api !== "http://127.0.0.1:58431" ||
+  api !== verificationApi ||
   !key ||
   marker.root !== process.cwd() ||
-  marker.project !== "liftoff-verification-isolated" ||
+  marker.project !== verificationProject ||
   fs.existsSync(path.join(work, "supabase", ".temp", "project-ref"))
 ) {
   throw new Error("Account erasure only runs on the marked local verification stack.");

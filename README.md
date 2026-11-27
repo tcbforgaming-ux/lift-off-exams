@@ -60,9 +60,23 @@ pnpm test:hosted-grants
 pnpm test:pipeline
 pnpm test:pipeline:db
 pnpm exec playwright install chromium
-pnpm test:e2e
+pnpm test:backend:e2e
 pnpm test:backend:stop
 ```
+
+The isolated defaults are API `59471`, database `59472`, shadow database
+`59479`, and browser app `4176`, all accessed through loopback. Leave the
+interactive backend on `58421` alone. If Windows or Docker reserves these ports,
+set `LIFTOFF_VERIFY_API_PORT` to a free base (database: base + 1; shadow:
+base + 8) and, if needed, set `LIFTOFF_VERIFY_BROWSER_PORT`. Keep the same
+settings for all verification commands, including stop.
+
+On Windows, if CLI 2.110.0 fails to start Postgres with a read-only pgSodium
+key mount, use the [official 2.109.1 release](https://github.com/supabase/cli/releases/tag/v2.109.1)
+side by side and set `LIFTOFF_VERIFY_SUPABASE_CLI` to its absolute executable
+path. If bundled Chromium is unavailable and Google Chrome is installed, set
+`LIFTOFF_VERIFY_CHROME=1` for the backend browser command. This still runs
+against the marked backend with synthetic accounts.
 
 The backend check verifies schema drift and generated public types. On type
 drift it leaves the generated artifact under the marked verification directory

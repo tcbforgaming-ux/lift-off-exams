@@ -1,4 +1,8 @@
 import assert from "node:assert/strict";
+import {
+  api as verificationApi,
+  project as verificationProject,
+} from "./verification-target.mjs";
 import fs from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
@@ -6,8 +10,8 @@ import { loadPipeline, request } from "./pipeline-test-runtime.mjs";
 
 const url = process.env.VITE_SUPABASE_URL;
 if (
-  url !== "http://127.0.0.1:58431" ||
-  process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-verification-isolated"
+  url !== verificationApi ||
+  process.env.E2E_DISPOSABLE_PROJECT !== verificationProject
 )
   throw new Error("Marked disposable backend required");
 const api = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, {

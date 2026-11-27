@@ -1,4 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  project as verificationProject,
+  api as verificationApi,
+} from "../../scripts/verification-target.mjs";
 
 import type { Database } from "../../src/lib/supabase/database.types";
 
@@ -23,8 +27,8 @@ async function globalSetup() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (
     process.env.E2E_LOCAL_ONLY !== "true" ||
-    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-verification-isolated" ||
-    url !== "http://127.0.0.1:58431"
+    process.env.E2E_DISPOSABLE_PROJECT !== verificationProject ||
+    url !== verificationApi
   ) {
     throw new Error(
       "Playwright fixtures require the marked disposable Supabase stack.",

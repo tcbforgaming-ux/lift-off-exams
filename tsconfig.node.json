@@ -17,6 +17,7 @@
   "include": [
     "eslint.config.js",
     "scripts/pipeline-runtime.d.ts",
+    "scripts/verification-target.mjs",
     "vite.config.ts",
     "vitest.setup.ts",
     "playwright.config.ts",

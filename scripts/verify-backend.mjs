@@ -5,14 +5,22 @@ import {
   assertNoSchemaDrift,
   assertGeneratedTypesMatch,
 } from "./verification-contracts.mjs";
+import {
+  api,
+  apiPort,
+  browser,
+  dbPort,
+  project,
+  shadowPort,
+  workDirectory,
+} from "./verification-target.mjs";
 
 const root = process.cwd();
-const work = path.join(root, ".tmp", "isolated-verification-backend");
-const project = "liftoff-verification-isolated";
+const work = path.join(root, ".tmp", workDirectory);
 const marker = path.join(work, "disposable.json");
 const mode = process.argv[2] ?? "database";
 const repair = "20261018000100_stabilize_permission_boundaries.sql";
-const api = "http://127.0.0.1:58431";
+const supabase = process.env.LIFTOFF_VERIFY_SUPABASE_CLI || "supabase";
 const executable = (name) =>
   process.platform === "win32" && name === "pnpm" ? "pnpm.cmd" : name;
 
@@ -34,7 +42,7 @@ function run(name, args, { capture = false, input, env = process.env } = {}) {
   }
   return result.stdout ?? "";
 }
-const cli = (...args) => run("supabase", ["--workdir", work, ...args]);
+const cli = (...args) => run(supabase, ["--workdir", work, ...args]);
 function checkMarker() {
   if (
     !fs.existsSync(marker) ||
@@ -93,12 +101,12 @@ function prepare(includeRepair) {
     `project_id = "${project}"
 [api]
 enabled = true
-port = 58431
+port = ${apiPort}
 schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 [db]
-port = 58432
-shadow_port = 58439
+port = ${dbPort}
+shadow_port = ${shadowPort}
 major_version = 15
 [studio]
 enabled = false
@@ -112,8 +120,8 @@ enabled = false
 enabled = false
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:4175"
-additional_redirect_urls = ["http://127.0.0.1:4175/**"]
+site_url = "${browser}"
+additional_redirect_urls = ["${browser}/**"]
 [auth.email]
 enable_signup = true
 enable_confirmations = false
@@ -123,7 +131,7 @@ enable_confirmations = false
 }
 function status() {
   checkMarker();
-  const output = run("supabase", ["--workdir", work, "status", "-o", "env"], {
+  const output = run(supabase, ["--workdir", work, "status", "-o", "env"], {
     capture: true,
   });
   const values = Object.fromEntries(
@@ -134,7 +142,7 @@ function status() {
   const db = new URL(values.DB_URL);
   if (
     db.hostname !== "127.0.0.1" ||
-    db.port !== "58432" ||
+    db.port !== String(dbPort) ||
     db.pathname !== "/postgres"
   ) {
     throw new Error("Unexpected database target; refusing mutation.");
@@ -144,7 +152,7 @@ function status() {
 function start() {
   checkMarker();
   // CLI start prints local credentials on success. Consume, never log them.
-  run("supabase", ["--workdir", work, "start"], { capture: true });
+  run(supabase, ["--workdir", work, "start"], { capture: true });
   console.log("Disposable Supabase stack started (credentials suppressed).");
   status();
 }
@@ -293,7 +301,7 @@ try {
       );
     } else {
       const drift = run(
-        "supabase",
+        supabase,
         ["--workdir", work, "db", "diff", "--local", "--schema", "public"],
         { capture: true },
       );
@@ -301,7 +309,7 @@ try {
       assertNoSchemaDrift(drift);
       console.log("Public schema drift check: identical.");
       const generated = run(
-        "supabase",
+        supabase,
         [
           "--workdir",
           work,

@@ -1,12 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  api as verificationApi,
+  project as verificationProject,
+} from "../../scripts/verification-target.mjs";
 import { expect, test, type Page } from "@playwright/test";
 import { fixture } from "./global-setup";
 import type { Database } from "../../src/lib/supabase/database.types";
 
 function service() {
   if (
-    process.env.VITE_SUPABASE_URL !== "http://127.0.0.1:58431" ||
-    process.env.E2E_DISPOSABLE_PROJECT !== "liftoff-verification-isolated"
+    process.env.VITE_SUPABASE_URL !== verificationApi ||
+    process.env.E2E_DISPOSABLE_PROJECT !== verificationProject
   )
     throw new Error("Disposable local backend required");
   return createClient<Database>(

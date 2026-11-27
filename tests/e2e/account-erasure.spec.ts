@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { project as verificationProject } from "../../scripts/verification-target.mjs";
 import { execFileSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../src/lib/supabase/database.types";
@@ -19,7 +20,7 @@ function controlErasureClock(userId: string, afterWarning: boolean) {
     "docker",
     [
       "exec",
-      "supabase_db_liftoff-verification-isolated",
+      `supabase_db_${verificationProject}`,
       "psql",
       "-U",
       "postgres",
