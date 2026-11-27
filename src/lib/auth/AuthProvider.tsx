@@ -29,6 +29,7 @@ async function loadProfile(userId: string) {
     .maybeSingle();
 
   if (error?.details === "account_recovery_only") return "recovering" as const;
+  if (error?.details === "account_suspension_only") return "suspended" as const;
   if (error) throw error;
   return data as Profile | null;
 }
@@ -57,8 +58,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const nextProfile = await withSessionDeadline(loadProfile(nextSession.user.id));
       if (revision.current !== requestRevision) return;
-      if (nextProfile === "recovering") {
-        setStatus("recovering");
+      if (nextProfile === "recovering" || nextProfile === "suspended") {
+        setStatus(nextProfile);
         return;
       }
       setProfile(nextProfile);
@@ -117,9 +118,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const nextProfile = await withSessionDeadline(loadProfile(session.user.id));
     if (!nextProfile || revision.current !== requestRevision)
       throw new Error("Your profile could not be refreshed.");
-    if (nextProfile === "recovering") {
+    if (nextProfile === "recovering" || nextProfile === "suspended") {
       setProfile(null);
-      setStatus("recovering");
+      setStatus(nextProfile);
       return;
     }
     setProfile(nextProfile);
@@ -137,6 +138,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     return result;
   }, []);
+
+  useEffect(() => {
+    const check = () => {
+      if (session?.user) void refreshProfile().catch(() => undefined);
+    };
+    window.addEventListener("account-suspended", check);
+    window.addEventListener("focus", check);
+    const timer = window.setInterval(check, 30000);
+    return () => {
+      window.removeEventListener("account-suspended", check);
+      window.removeEventListener("focus", check);
+      window.clearInterval(timer);
+    };
+  }, [session?.user, refreshProfile]);
 
   const role =
     !profile || !isKnownAppRole(profile.role)

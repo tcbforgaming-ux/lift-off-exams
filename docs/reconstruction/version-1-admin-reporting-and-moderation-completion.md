@@ -147,3 +147,197 @@ to this checkpoint.
 
 Billing analytics and Demo conversion remain open under the approved initial
 analytics scope; neither is estimated from missing data.
+
+## November 27: Remaining Work Follow-Up
+
+Branch: `codex/local-reconstruction`. Starting HEAD:
+`7738608e0da7a64cc6e071d9cfaebfd846293900`.
+Existing reporting: `78e0ef4287d96c2ad7783ee8d1914986e674c32e`;
+publication guard: `3d5c917816cc465867222e3fd08d673e105294ef`;
+banned names: `7738608e0da7a64cc6e071d9cfaebfd846293900`.
+The preceding sections are historical, not this follow-up's final state.
+
+The dirty baseline included unrelated CI/README/verification tooling,
+Admin navigation changes, earlier Demo/preview reports and tests, and the
+password-reset fix and test. These remain outside the milestone commits.
+Verification used the entire current tree, including those changes; four
+of the unit assertions belong to the existing password-reset tests.
+
+### 1. Student Suspension and Appeals
+
+- Migrations `20261127000100_student_moderation.sql` and
+  `20261127000200_moderation_mail.sql` preserve staff roles and owner
+  quorum. Admins/Owners may moderate students only. Duration/reason changes,
+  reinstatement and appeal decisions require versions and retry keys.
+  The account, notice queue and audit commit together.
+- `/admin/moderation` accepts a Student User ID, supports 24 hours,
+  7/30 days or indefinite suspension and displays history and appeals.
+  `/account/suspension` exposes only the account holder's status and one
+  written appeal. Approval restores access; denial retains restriction.
+  Expiry is checked against database time on each request, without cron.
+  Legacy student restrictions are backfilled without guessing their reason.
+- The existing PostgREST pre-request gate covers public RPCs and table
+  endpoints, including old JWTs. Shared per-account locks let ordinary
+  in-flight requests finish before a staff change commits. Restrictive
+  policies independently guard tables with existing policies. Intentionally
+  server-only pipeline tables retain no client policies or grants.
+- Auth permits sign-in/out. The app handles `account_suspension_only`
+  after a denied request, on focus and on a 30-second profile check.
+  Account-deletion recovery retains precedence. UI redirects are not
+  the security boundary.
+- `account_lifecycle_allows_actor` includes suspension; existing Team
+  Invite and Stripe portal Edge Functions already call it. Pipeline
+  functions use scheduler secrets, Stripe webhooks verify provider events,
+  and the obsolete owner deletion endpoint remains disabled.
+- `moderation_mail` plus `user_notifications` persist delivery status.
+  SKIP LOCKED leases and token-bound acknowledgments make workers retryable.
+  Failed delivery retries after five minutes. The Resend adapter reuses a
+  stable notice ID as its provider idempotency key. Delivery is at least
+  once: finite provider deduplication cannot guarantee exactly-once email
+  after an arbitrarily delayed lost response.
+
+### 2. Report Prioritization and Dispositions
+
+- `20261127000400_report_priority_and_dispositions.sql` preserves legacy
+  rows and status constraints; a separate nullable disposition records
+  the approved mapping in the decision register.
+- `/admin/reports` uses bounded (open-count, updated-time, ID) cursors.
+  Staff can change the threshold with optimistic versioning and a reason.
+  Live reports may change ranks during traversal; refreshing starts over.
+  Question-quality flags are not used as report-queue priority.
+- The detail page exposes Valid, Work In Progress, Fixed, Invalid and
+  Spam. A logical retry key survives network failure. Actions, notices
+  and audit are transactional and optimistic versions reject competing
+  decisions. Legacy correction, lifecycle and report actions keep their
+  original contracts and now also notify the reporter, never another
+  account or the entire platform.
+
+### 3. Near-Duplicate Discovery
+
+- `20261127000300_near_duplicate_discovery.sql` adds the bounded
+  `/admin/duplicates` queue using the existing 0.80 normalized trigram
+  rule. Candidate links open the established evidence and decision panel.
+- Manual and JSON previews show advisory matches without changing the
+  canonical import token. Existing exact-duplicate enforcement remains.
+  Content/evidence changes require renewed review and publication checks
+  the current repository. Pending candidates do not enter the near-match
+  pool; no existing published content is silently replaced.
+
+### 4. Referenced-Tag Retirement
+
+- `20261127000500_referenced_tag_retirement.sql` adds audited,
+  revision-checked retirement/restoration to the existing catalog UI.
+  Labels stay on questions, blueprint versions, saved Test membership and
+  completed snapshots. Retirement is not cascading deletion or retagging.
+- New authoring rejects retired labels. Generate hides retired custom
+  topics; its RPC independently validates them. Successful same-key
+  retries retain their original Test ID. Saved blueprint generation and
+  replay retain their historical meaning. Restoration re-enables selection.
+- The catalog URL now survives the restricted post-login redirect
+  allowlist; role authorization remains unchanged.
+
+### Hosted Follow-Up
+
+No hosted database, public traffic, billing event, or Make/OpenAI batch was
+changed. Review the hosted preflight and backup before applying the five
+November 27 migrations in timestamp order. Deploy `deliver-moderation-mail`
+with `verify_jwt=false` as recorded in config; it enforces its own secret.
+Set `MODERATION_MAIL_SECRET`, `SUPABASE_URL`, `SERVICE_ROLE_KEY` (or the
+provided service-role secret), `RESEND_API_KEY`, verified
+`RESEND_FROM_EMAIL`, and the approved HTTPS `APP_URL`. Schedule server
+POSTs with `x-moderation-secret` every few minutes. Never ship that secret
+to the browser. Verify real delivery and appeal links on staging; local
+adapters do not establish provider delivery.
+
+### Final Local Acceptance Evidence
+
+All four follow-up milestones are **Complete locally**. This supersedes the
+historical partial statuses above, not unrelated open billing/Demo metrics.
+The tested input was starting HEAD plus the complete working tree described
+above, including preserved baseline verification fixes. No hosted test or
+production delivery result is claimed.
+
+| Milestone                      | Acceptance evidence                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Student suspension and appeals | `042_student_moderation.sql`: student-only role boundary, transactional rollback, cross-user appeal denial, one appeal/retry, timed expiry, indefinite suspension, duration changes, approval/denial, restoration, stale decisions and leased mail. `student-moderation.spec.ts`: suspend an already-signed-in account, deny direct Quiz/table requests, appeal and restore. Existing account-erasure browser and DB suites pass unchanged. |
+| Report queue and actions       | `043_admin_remaining_workflows.sql`: threshold boundaries, stable page traversal, all five dispositions, version conflicts, idempotent retry and reporter-only notices. `admin-followup.spec.ts`: update threshold, concurrent identical committed requests with lost responses, retry without duplicated work, and Fixed. Existing reports pagination/filter tests pass.                                                                   |
+| Near-duplicate discovery       | `043_admin_remaining_workflows.sql` and existing `040_near_duplicate_review.sql`: published repository scope, 0.80 matching, exact/unrelated cases, reviewed-content invalidation, role denial and publication controls. `duplicate-discovery.spec.ts`: second page of 27 candidates, manual and JSON advisory findings. Existing candidate review/authoring tests pass.                                                                    |
+| Referenced-tag retirement      | `043_admin_remaining_workflows.sql` and `admin-followup.spec.ts`: active question, saved blueprint, generated Test ID and completed result exist before retirement; associations and snapshots remain unchanged. New choices/authoring reject retired tags; restoration works through catalog UI.                                                                                                                                           |
+
+Commands ran from this worktree with the pinned CLI and documented Chrome:
+
+```powershell
+$env:LIFTOFF_VERIFY_SUPABASE_CLI = (Resolve-Path '.tmp/verification-cli-2.109.1/supabase.exe').Path
+$env:LIFTOFF_VERIFY_CHROME = '1'
+pnpm test:backend
+pnpm test:hosted-grants
+pnpm test:pipeline
+pnpm test:pipeline:db
+pnpm test:backend:e2e
+pnpm test:moderation-mail
+pnpm verify
+git diff --check
+```
+
+| Final command               | Exit | Actual result                                                                                                                                   |
+| --------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test:backend`         | 0    | Guarded reset, 43 SQL files / 1,081 assertions pass; public schema drift identical; generated public types identical.                           |
+| `pnpm test:hosted-grants`   | 0    | Repeats the same 1,081 assertions, then 8 local hosted-default grant assertions pass. These are overlapping, not 1,081 additional unique tests. |
+| `pnpm test:pipeline`        | 0    | 7 verification-runner contracts and 26 offline importer fixture cases pass.                                                                     |
+| `pnpm test:pipeline:db`     | 0    | 16 actual-handler persistence/concurrency cases pass.                                                                                           |
+| `pnpm test:backend:e2e`     | 0    | Full suite: 60 passed, no failures or skips, Chrome, 3.1 minutes.                                                                               |
+| `pnpm test:moderation-mail` | 0    | Worker TypeScript contracts and 2 delivery adapter tests pass, including provider failure and ambiguous acknowledgment.                         |
+| `pnpm verify`               | 0    | Type checking, lint, formatting, 26 unit files / 93 tests, production build pass.                                                               |
+| `git diff --check`          | 0    | No whitespace errors.                                                                                                                           |
+
+Final integrated logs are local ignored `.tmp/admin-final-integrated-*.log`;
+application verification is `.tmp/admin-final-verify.log`; mail adapter evidence
+is `.tmp/admin-moderation-mail.log`. Earlier failed exploratory runs were fixed,
+then these final commands reran against the same completed implementation.
+One real defect found during verification was ordering successive indefinite
+suspensions in a transaction: use `clock_timestamp()` and prefer the active
+record rather than an arbitrary equal-`now()` history row. The added assertion
+fails before that fix and passes in the final database run.
+
+The marker is `.tmp/isolated-verification-59471/disposable.json`, project
+`liftoff-verification-59471`, API `http://127.0.0.1:59471`, database `59472`,
+shadow `59479`, browser `4176`. Interactive `58421`, preview `4175` and hosted
+Supabase were not modified. The runner copies migrations into that marked
+disposable project before reset; it does not reset the interactive database.
+
+### Changed Surface and Verification Limits
+
+- Forward migrations: the five `20261127000100` through `20261127000500`
+  files listed above. Public types regenerated in
+  `src/lib/supabase/database.types.ts`; no applied migration was edited.
+- Student client/server surface: `src/lib/auth/{AuthContext,AuthProvider,moderation,redirects}`,
+  `src/app/{RouteGate,routes}`, `src/components/layout/AppShell.tsx`,
+  `src/lib/supabase/browserClient.ts`, `StudentModerationPage.tsx`,
+  `SuspensionPage.tsx`, `supabase/config.toml` and the new moderation-mail
+  shared adapter/Edge Function. Only this task's AppShell hunks are staged.
+- Report surface: `src/lib/reports/{reports,reports.test}.ts`,
+  `ReportQueuePage.tsx`, `ReportDetailPage.tsx`, `ReportPrioritySettings.tsx`.
+- Duplicate/tag surface: `NearDuplicateQueuePage.tsx`,
+  `QuestionAuthoringPage.tsx`, `CatalogManagementPage.tsx`,
+  `PracticeSetupPage.tsx` and their protected route/redirect entries.
+- New tests: SQL `042` and `043`; browser `student-moderation`,
+  `admin-followup`, `duplicate-discovery`; `scripts/moderation-mail.test.mjs`
+  and `scripts/check-moderation-types.mjs`; package script for the latter.
+- Updated documentation: this report, decision register, completion ledger,
+  and 59 scoped local-evidence matrix rows. Existing unrelated matrix and
+  documentation changes are preserved outside these checkpoints.
+- [Protected RPC inventory](admin-protected-surface-inventory.csv) records
+  129 authenticated public signatures and grants; its reproducible query is
+  `scripts/admin-protected-surface-inventory.sql`. The common pre-request gate
+  protects those HTTP entry points, not just the representative RPCs directly
+  exercised by tests. Edge actors are reviewed above; anonymous Demo and
+  secret-authorized maintenance/provider callbacks are intentionally separate.
+- No 80,000-question performance benchmark, real Resend delivery, hosted
+  migration, provider schedule, public cutover, or hosted RLS assertion was
+  run. Report priority can change during cursor traversal when live reports
+  change; refresh begins a new traversal. Local tests use stable fixtures.
+- Local checkpoint commits separate student moderation, duplicate discovery,
+  tag retirement and report actions. Shared cross-milestone SQL/browser
+  assertions are included in the final integration checkpoint; final evidence
+  applies to their combined tree. The preserved dirty baseline remains
+  necessary verification input and is not silently included in the commits.

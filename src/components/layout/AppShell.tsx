@@ -22,11 +22,14 @@ export function AppShell({ children }: AppShellProps) {
     (route) => route.navigation !== "admin",
   );
 
-  if (status === "recovering") {
+  if (status === "recovering" || status === "suspended") {
     return (
       <div className="app-shell">
         <header className="topbar">
-          <NavLink to="/account/deletion" className="brand">
+          <NavLink
+            to={status === "suspended" ? "/account/suspension" : "/account/deletion"}
+            className="brand"
+          >
             Lift Off Exams
           </NavLink>
           <Button type="button" variant="ghost" onClick={() => void signOut()}>

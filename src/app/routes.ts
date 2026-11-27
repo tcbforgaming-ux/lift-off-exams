@@ -124,6 +124,14 @@ const AdminDashboardPage = lazy(() =>
     default: module.AdminDashboardPage,
   })),
 );
+const StudentModerationPage = lazy(() =>
+  import("../pages/admin/StudentModerationPage").then((m) => ({
+    default: m.StudentModerationPage,
+  })),
+);
+const SuspensionPage = lazy(() =>
+  import("../pages/app/SuspensionPage").then((m) => ({ default: m.SuspensionPage })),
+);
 const BannedNamesPage = lazy(() =>
   import("../pages/admin/BannedNamesPage").then((module) => ({
     default: module.BannedNamesPage,
@@ -417,6 +425,21 @@ export const routes = [
     navigation: "admin",
     auth: "protected",
     requiredRole: "admin",
+  },
+  {
+    path: "/admin/moderation",
+    label: "Student Moderation",
+    element: StudentModerationPage,
+    navigation: "admin",
+    auth: "protected",
+    requiredRole: "admin",
+  },
+  {
+    path: "/account/suspension",
+    label: "Suspension",
+    element: SuspensionPage,
+    navigation: "hidden",
+    auth: "protected",
   },
   {
     path: "/admin/governance",

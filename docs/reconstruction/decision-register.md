@@ -52,3 +52,17 @@ approvals.
 - Keep the approved strict scarcity rule: do not substitute other categories,
   relax filters, shorten presets, or charge quota when generation fails.
   Generate Updated Test uses the original saved rules against the current bank.
+
+## November 27: Remaining Admin Work
+
+- Valid opens correction work (in_review + valid), Work In Progress is
+  in_review + work_in_progress, Fixed is resolved + fixed, and Invalid
+  and Spam are rejected + invalid/spam. Admins and Owners supply a reason
+  and public message; notify only the reporter.
+- Queue priority is the question's current open/in-review report count,
+  separate from quality-rate flags. Default threshold three; editable by staff.
+- Near-match discovery compares with repository questions only. Pending
+  candidates retain exact-duplicate checks and repository publication rechecks.
+- Retiring a tag hides it from new authoring/custom choices, not from
+  question associations, saved blueprint rules, membership, or historical
+  results. Restoration re-enables selection without retagging questions.

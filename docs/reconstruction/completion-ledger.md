@@ -157,3 +157,8 @@ availability separately from definition correctness. No hosted changes were made
 [Admin reporting checkpoint](version-1-admin-reporting-and-moderation-completion.md)
 documents staff aggregate and question-quality metrics, report filters, and
 the approved policies for duplicate review, suspensions, appeals, and names.
+
+The November 27 follow-up in that report covers student suspension/appeals,
+durable moderation notices, report dispositions and priority settings,
+near-match discovery, and referenced-tag retirement. Hosted delivery and
+scheduling remain separate from isolated local verification.

@@ -15,6 +15,8 @@ const localPaths = new Set([
   "/owner-invitation",
   "/owner-access",
   "/account/deletion",
+  "/account/suspension",
+  "/admin/moderation",
   "/profile",
   "/generate",
   "/quiz",

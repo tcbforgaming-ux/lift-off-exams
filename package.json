@@ -22,6 +22,7 @@
     "account-erasure:local": "node scripts/verify-backend.mjs erasure",
     "test:pipeline": "node --test scripts/verification-contracts.test.mjs && node scripts/check-pipeline-types.mjs && node --experimental-vm-modules scripts/test-pipeline.mjs",
     "test:pipeline:db": "node scripts/verify-backend.mjs pipeline",
+    "test:moderation-mail": "node scripts/check-moderation-types.mjs && node --test scripts/moderation-mail.test.mjs",
     "test:e2e": "node scripts/verify-backend.mjs e2e",
     "verify": "pnpm typecheck && pnpm lint && pnpm format && pnpm test && pnpm build",
     "db:reset": "supabase db reset",

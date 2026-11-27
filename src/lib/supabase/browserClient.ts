@@ -12,10 +12,23 @@ export function getSupabaseBrowserClient() {
   const env = getClientEnv();
   browserClient = createClient<Database>(env.supabaseUrl, env.supabaseAnonKey, {
     global: {
-      fetch: (input, init) => {
+      fetch: async (input, init) => {
         const url = input instanceof Request ? input.url : String(input);
-        if (!url.includes("/auth/v1/token?grant_type=refresh_token"))
-          return fetch(input, init);
+        if (!url.includes("/auth/v1/token?grant_type=refresh_token")) {
+          const response = await fetch(input, init);
+          if (response.status === 403) {
+            const failure = (await response
+              .clone()
+              .json()
+              .catch(() => null)) as { details?: string } | null;
+            if (
+              failure?.details === "account_suspension_only" &&
+              !url.includes("/rest/v1/profiles")
+            )
+              window.dispatchEvent(new Event("account-suspended"));
+          }
+          return response;
+        }
         // Release the SDK's refresh lock even if the network never responds.
         const deadline = AbortSignal.timeout(SESSION_BOOTSTRAP_TIMEOUT_MS);
         const callerSignal =

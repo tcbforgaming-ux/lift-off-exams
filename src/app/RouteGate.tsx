@@ -50,6 +50,14 @@ export function RouteGate({
     );
   }
 
+  if (status === "suspended") {
+    return location.pathname === "/account/suspension" ? (
+      <Component />
+    ) : (
+      <Navigate to="/account/suspension" replace />
+    );
+  }
+
   if (status === "authenticated" && auth === "guest") {
     const from = (location.state as { from?: unknown } | null)?.from;
     return <Navigate to={sanitizeRedirectPath(from)} replace />;

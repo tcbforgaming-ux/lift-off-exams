@@ -2461,6 +2461,7 @@ export type Database = {
         Returns: string
       }
       check_display_name_allowed: { Args: { p_name: string }; Returns: boolean }
+      claim_moderation_mail: { Args: never; Returns: Json }
       clear_test_session_answer: {
         Args: {
           p_expected_session_version: number
@@ -2555,10 +2556,15 @@ export type Database = {
         }
         Returns: Json
       }
+      enforce_account_erasure: { Args: never; Returns: undefined }
       enforce_account_lifecycle: { Args: never; Returns: undefined }
       escape_repository_like: { Args: { p_value: string }; Returns: string }
       expire_owner_removal_votes: { Args: never; Returns: number }
       finish_infinite_run: { Args: { p_run: string }; Returns: Json }
+      finish_moderation_mail: {
+        Args: { p_id: string; p_lease: string; p_sent: boolean }
+        Returns: boolean
+      }
       generate_custom_practice: {
         Args: {
           p_blueprint_id: string
@@ -2650,6 +2656,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_my_suspension: { Args: never; Returns: Json }
       get_my_test_analytics: {
         Args: { p_from?: string; p_range?: string; p_to?: string }
         Returns: Json
@@ -2974,7 +2981,23 @@ export type Database = {
         Args: { p_after?: string; p_search?: string }
         Returns: Json
       }
+      list_student_moderation: {
+        Args: { p_before?: string; p_id?: string }
+        Returns: Json
+      }
       mark_inactive_owners: { Args: { p_before?: string }; Returns: number }
+      moderate_student: {
+        Args: {
+          p_action: string
+          p_days?: number
+          p_id?: string
+          p_key: string
+          p_reason: string
+          p_user: string
+          p_version?: number
+        }
+        Returns: string
+      }
       normalize_generated_difficulty: {
         Args: { p_value: string }
         Returns: string
@@ -3385,6 +3408,10 @@ export type Database = {
           report_id: string
           report_status: string
         }[]
+      }
+      submit_suspension_appeal: {
+        Args: { p_id: string; p_text: string }
+        Returns: Json
       }
       submit_test_session: {
         Args: { p_expected_session_version: number; p_session_id: string }
