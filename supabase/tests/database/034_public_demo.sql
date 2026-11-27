@@ -12,6 +12,7 @@ select (select count(*) from public.test_sessions) sessions,
   (select count(*) from public.test_results) results,
   (select count(*) from public.user_question_status) statuses,
   (select count(*) from private.personal_answer_evidence) evidence,
+  (select count(*) from private.weekly_free_activity_claims) weekly_claims,
   (select count(*) from private.test_export_receipts) receipts,
   (select count(*) from private.hardcore_runs) hardcore;
 set local role anon;
@@ -39,6 +40,7 @@ select ok((select sessions=(select count(*) from public.test_sessions)
   and results=(select count(*) from public.test_results)
   and statuses=(select count(*) from public.user_question_status)
   and evidence=(select count(*) from private.personal_answer_evidence)
+  and weekly_claims=(select count(*) from private.weekly_free_activity_claims)
   and receipts=(select count(*) from private.test_export_receipts)
   and hardcore=(select count(*) from private.hardcore_runs) from demo_counts),
   'neither anonymous nor signed-in demo mutates account evidence, usage or export receipts');
