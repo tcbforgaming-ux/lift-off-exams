@@ -43,19 +43,23 @@ describe("separate dashboard shells", () => {
       "/dashboard",
     );
   });
-  it("keeps administrative tools out of the user navigation", () => {
-    renderShell("/dashboard");
-    expect(
-      screen.queryByRole("navigation", { name: "Admin navigation" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: "Report Queue" }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Admin Dashboard" })).toHaveAttribute(
-      "href",
-      "/admin",
-    );
-  });
+  it.each(["admin", "owner"])(
+    "offers dashboard switching to a signed-in %s",
+    (role) => {
+      auth.role = role;
+      renderShell("/dashboard");
+      expect(
+        screen.queryByRole("navigation", { name: "Admin navigation" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: "Report Queue" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Admin Dashboard" })).toHaveAttribute(
+        "href",
+        "/admin",
+      );
+    },
+  );
   it("does not expose staff navigation to students", () => {
     auth.role = "student";
     renderShell("/admin");
@@ -66,13 +70,17 @@ describe("separate dashboard shells", () => {
       screen.queryByRole("link", { name: "Admin Dashboard" }),
     ).not.toBeInTheDocument();
   });
-  it("offers an admin entry link on the login screen without showing protected tools", () => {
-    auth.status = "unauthenticated";
-    renderShell("/login");
-    expect(screen.getByRole("link", { name: "Admin Dashboard" })).toHaveAttribute(
-      "href",
-      "/admin",
-    );
-    expect(screen.queryByRole("link", { name: "Questions" })).not.toBeInTheDocument();
+  it.each([
+    ["/", "unauthenticated"],
+    ["/login", "unauthenticated"],
+    ["/signup", "unauthenticated"],
+    ["/", "loading"],
+    ["/", "error"],
+  ])("hides the admin link on %s when the session is %s", (path, status) => {
+    auth.status = status;
+    renderShell(path);
+    expect(
+      screen.queryByRole("link", { name: "Admin Dashboard" }),
+    ).not.toBeInTheDocument();
   });
 });

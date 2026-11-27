@@ -16,7 +16,7 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const { profile, role, signOut, status } = useAuth();
   const authenticated = status === "authenticated";
-  const staff = authenticated && (role === "admin" || role === "owner");
+  const staff = authenticated && canAccessRole(role, "admin");
   const { pathname } = useLocation();
   const visibleRoutes = primaryNavigationRoutes.filter(
     (route) => route.navigation !== "admin",
@@ -122,7 +122,7 @@ export function AppShell({ children }: AppShellProps) {
         </nav>
         <div className="topbar-actions">
           <ThemeToggle />
-          {(staff || !authenticated) && (
+          {staff && (
             <ButtonLink to={paths.admin} variant="secondary">
               Admin Dashboard
             </ButtonLink>

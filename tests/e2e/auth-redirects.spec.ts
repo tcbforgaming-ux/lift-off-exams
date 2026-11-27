@@ -25,6 +25,7 @@ test("real standard login cannot turn an admin destination into authorization", 
   await submit(page, fixture.email);
   await expect(page).toHaveURL(/\/unauthorized$/);
   await expect(page.getByRole("heading", { name: "Admin Dashboard" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Admin Dashboard" })).toHaveCount(0);
 });
 test("real customer destination and direct login use consistent defaults", async ({
   page,

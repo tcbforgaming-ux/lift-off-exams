@@ -4,9 +4,14 @@ import { fixture } from "./global-setup";
 test("staff can switch dashboards and persist dark mode across reloads", async ({
   page,
 }) => {
+  const adminLink = page.getByRole("link", { name: "Admin Dashboard" });
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Log In", exact: true })).toBeVisible();
+  await expect(adminLink).toHaveCount(0);
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole("link", { name: "Admin Dashboard" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Log In", exact: true })).toBeVisible();
+  await expect(adminLink).toHaveCount(0);
   await page.getByLabel("Email").fill(fixture.adminEmail);
   await page.getByLabel("Password").fill(fixture.password);
   await page.getByRole("button", { name: "Log In" }).click();
